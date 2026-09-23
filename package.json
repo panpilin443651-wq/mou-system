@@ -12,6 +12,7 @@
     "db:migrate": "prisma migrate dev",
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
+    "db:set-password": "tsx prisma/set-password.ts",
     "db:reset": "prisma migrate reset"
   },
   "prisma": {
