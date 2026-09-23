@@ -16,7 +16,7 @@ import { DepartmentFilters } from "../department-filters";
 import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "รายงานผลและแผนดำเนินงาน | ระบบรายงานผล MOU" };
+export const metadata = { title: "รายงานผลการดำเนินงาน | ระบบรายงานผล MOU" };
 
 // หน้านี้รวมเมนู "รายงานผล" กับ "แผนดำเนินงาน" ไว้ที่เดียว
 // เพราะทั้งสองทำงานกับตัวชี้วัดชุดเดียวกันของส่วนงานเดียวกัน ผู้ใช้จะได้ไม่ต้องสลับเมนูไปมา
@@ -49,7 +49,7 @@ export default async function ReportsPage({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold sm:text-2xl">รายงานผลและแผนดำเนินงาน</h1>
+        <h1 className="text-xl font-bold sm:text-2xl">รายงานผลการดำเนินงาน</h1>
         <p className="mt-1 text-sm text-slate-600">
           {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"}
           {current

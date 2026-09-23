@@ -132,7 +132,7 @@ export default async function ReportPage({
           href={`/reports?dept=${indicator.departmentId}`}
           className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
         >
-          ← กลับไปรายการรายงานผลและแผนดำเนินงาน
+          ← กลับไปรายการรายงานผลการดำเนินงาน
         </Link>
 
         <h1 className="mt-2 text-xl font-bold sm:text-2xl">

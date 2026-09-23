@@ -27,7 +27,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
     // รายงานผลกับแผนดำเนินงานรวมเป็นเมนูเดียว (หน้า /plans พาไปที่หน้านี้)
     {
       href: "/reports",
-      label: "รายงานผลและแผนดำเนินงาน",
+      label: "รายงานผลการดำเนินงาน",
       show: menus.reports || menus.plans,
     },
     { href: "/admin", label: "ตั้งค่าระบบ", show: menus.admin },
