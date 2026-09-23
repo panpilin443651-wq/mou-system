@@ -6,8 +6,8 @@
    กำหนดไว้ที่เดียวเป็นชื่อความหมาย (brand / accent) แทนการเขียนชื่อสีตรงๆ
    ในแต่ละหน้า เวลาจะเปลี่ยนโทนสีทั้งระบบจึงแก้แค่ไฟล์นี้ไฟล์เดียว
 
-   brand  = ฟ้า  ใช้กับปุ่มหลัก ลิงก์ และสิ่งที่กำลังถูกเลือกอยู่
-   accent = เหลือง ใช้เน้นเฉพาะจุดสำคัญ ไม่ใช้เป็นพื้นกว้าง เพราะอ่านยาก
+   brand  = น้ำเงิน ใช้กับปุ่มหลัก ลิงก์ หัวข้อ และสิ่งที่กำลังถูกเลือกอยู่
+   accent = เหลืองทอง ใช้เน้นเฉพาะจุดสำคัญ ไม่ใช้เป็นพื้นกว้าง เพราะอ่านยาก
    พื้นหลัง = ขาว/เทาอ่อน เพื่อให้ตัวหนังสือไทยอ่านสบายตาเป็นเวลานาน
 
    สีเตือน (amber) และสีผิดพลาด (red) ไม่ได้เปลี่ยนตามธีม
@@ -17,32 +17,34 @@
 @theme {
   --font-sans: "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
 
-  /* สีหลัก - ฟ้า */
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
-  --color-brand-200: #bfdbfe;
-  --color-brand-300: #93c5fd;
-  --color-brand-400: #60a5fa;
-  --color-brand-500: #3b82f6;
-  --color-brand-600: #2563eb;
-  --color-brand-700: #1d4ed8;
-  --color-brand-800: #1e40af;
-  --color-brand-900: #1e3a8a;
+  /* สีหลัก - น้ำเงิน
+     brand-700 คือสีน้ำเงินหลักที่ใช้กับปุ่ม ส่วน brand-800 เข้มกว่าชัดเจน
+     จึงใช้เป็นสีตอนเอาเมาส์ไปชี้ ผู้ใช้จะเห็นว่าปุ่มตอบสนอง */
+  --color-brand-50: #eff4fb;
+  --color-brand-100: #d9e7f5;
+  --color-brand-200: #b3cdea;
+  --color-brand-300: #85aadb;
+  --color-brand-400: #5686c6;
+  --color-brand-500: #3468ad;
+  --color-brand-600: #24528f;
+  --color-brand-700: #1b3b6f;
+  --color-brand-800: #142b52;
+  --color-brand-900: #0e1e3a;
 
-  /* สีหัวข้อ - เขียวอมฟ้า ตามที่กำหนดไว้ */
-  --color-heading: #028090;
+  /* สีหัวข้อ - น้ำเงินหลัก ค่าเดียวกับ brand-700 ให้ทั้งระบบเป็นโทนเดียวกัน */
+  --color-heading: #1b3b6f;
 
-  /* สีเน้น - เหลือง */
-  --color-accent-50: #fefce8;
-  --color-accent-100: #fef9c3;
-  --color-accent-200: #fef08a;
-  --color-accent-300: #fde047;
-  --color-accent-400: #facc15;
-  --color-accent-500: #eab308;
-  --color-accent-600: #ca8a04;
-  --color-accent-700: #a16207;
-  --color-accent-800: #854d0e;
-  --color-accent-900: #713f12;
+  /* สีเน้น - เหลืองทอง accent-400 ใช้ค่าสีเดียวกับหยดน้ำยางในตราสัญลักษณ์ (#ed9f21) */
+  --color-accent-50: #fffaeb;
+  --color-accent-100: #fff1c6;
+  --color-accent-200: #ffe28a;
+  --color-accent-300: #ffcf4d;
+  --color-accent-400: #ed9f21;
+  --color-accent-500: #dc8c0c;
+  --color-accent-600: #b86e08;
+  --color-accent-700: #93520b;
+  --color-accent-800: #78410f;
+  --color-accent-900: #633510;
 }
 
 html {
@@ -51,8 +53,8 @@ html {
 
 body {
   font-family: var(--font-sans);
-  /* พื้นหลังฟ้าจางมาก ทำให้การ์ดสีขาวลอยเด่นขึ้นโดยไม่รบกวนสายตา */
-  background-color: #f6f9fd;
+  /* พื้นหลังน้ำเงินจางมาก ทำให้การ์ดสีขาวลอยเด่นขึ้นโดยไม่รบกวนสายตา */
+  background-color: #f5f8fc;
   color: #0f172a;
 }
 
@@ -81,6 +83,12 @@ h3 {
   h2,
   h3 {
     color: var(--color-heading);
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* รูปตราสัญลักษณ์ก็ต้องสั่งให้พิมพ์สีจริงเหมือนกัน */
+  img {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

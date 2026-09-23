@@ -12,6 +12,8 @@ const notoSansThai = Noto_Sans_Thai({
 export const metadata: Metadata = {
   title: "ระบบรายงานผลการดำเนินงานตาม MOU",
   description: "ระบบรายงานและติดตามผลการดำเนินงานตามบันทึกข้อตกลงประเมินผลการดำเนินงาน",
+  // รูปเล็กที่แสดงบนแท็บเบราว์เซอร์ ใช้ตราสัญลักษณ์เดียวกับในระบบ
+  icons: { icon: "/logo-mark.svg" },
 };
 
 export default function RootLayout({
@@ -23,7 +25,7 @@ export default function RootLayout({
     // lang="th" ช่วยให้เบราว์เซอร์ตัดคำและแสดงฟอนต์ไทยได้ถูกต้อง
     <html lang="th">
       {/* antialiased ทำให้ตัวอักษรคมขึ้น */}
-      <body className={`${notoSansThai.className} antialiased bg-slate-50 text-slate-900`}>
+      <body className={`${notoSansThai.className} antialiased`}>
         {children}
       </body>
     </html>

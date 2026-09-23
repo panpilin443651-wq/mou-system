@@ -3,7 +3,10 @@ import { requireUser } from "@/lib/session";
 import { canViewDepartment } from "@/lib/permissions";
 import { QUARTERS } from "@/lib/plan";
 import { isPlaceholderCriteria } from "@/lib/scoring";
-import { getReportDocument, reportSections } from "@/lib/report-document";
+import {
+  getReportDocument,
+} from "@/lib/report-document";
+import { Logo } from "@/components/logo";
 import { PrintButton } from "./print-button";
 
 export const dynamic = "force-dynamic";
@@ -35,7 +38,6 @@ export default async function PrintReportPage({
   if (!canViewDepartment(user, doc.indicator.departmentId)) notFound();
 
   const { indicator: ind, report: r } = doc;
-  const attachments = r?.attachments ?? [];
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -66,6 +68,7 @@ export default async function PrintReportPage({
       {/* ---------- ตัวเอกสาร ---------- */}
       <article className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <header className="text-center">
+          <Logo variant="full" size={96} className="mx-auto mb-3 h-24 w-24" />
           <h1 className="text-lg font-bold">{doc.title}</h1>
           <p className="mt-1 text-sm text-slate-700">{doc.subtitle}</p>
         </header>
@@ -92,7 +95,7 @@ export default async function PrintReportPage({
                 <td className="border border-slate-300 px-2 py-1.5">{ind.unit}</td>
                 <td className="border border-slate-300 px-2 py-1.5 tabular-nums">{ind.weight}</td>
                 <td className="border border-slate-300 px-2 py-1.5 tabular-nums">
-                  {ind.targetValue}
+                  {ind.targetValue ?? ind.targetText ?? "-"}
                 </td>
                 <td className="border border-slate-300 px-2 py-1.5 tabular-nums">
                   {r?.actualValue ?? "-"}
@@ -132,6 +135,16 @@ export default async function PrintReportPage({
               ))}
             </tbody>
           </table>
+          {ind.conditions.length > 0 && (
+            <div className="mt-2 break-inside-avoid text-sm">
+              <p className="font-medium">เงื่อนไข</p>
+              <ol className="list-decimal pl-5">
+                {ind.conditions.map((cond, i) => (
+                  <li key={i}>{cond}</li>
+                ))}
+              </ol>
+            </div>
+          )}
         </section>
 
         <section className="mt-5">
@@ -145,36 +158,6 @@ export default async function PrintReportPage({
           )}
         </section>
 
-        {reportSections(doc).map((s) => (
-          <section key={s.no} className="mt-5 break-inside-avoid">
-            <h2 className="text-base font-semibold">
-              {s.no}. {s.label}
-            </h2>
-            <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed">{s.value ?? "-"}</p>
-          </section>
-        ))}
-
-        <section className="mt-5 break-inside-avoid">
-          <h2 className="text-base font-semibold">ไฟล์แนบหลักฐาน</h2>
-          {attachments.length === 0 ? (
-            <p className="mt-1 text-sm">-</p>
-          ) : (
-            [1, 2, 3, 4, 5].map((level) => {
-              const files = attachments.filter((a) => a.criteriaLevel === level);
-              if (files.length === 0) return null;
-              return (
-                <div key={level} className="mt-2">
-                  <p className="text-sm font-medium">ระดับ {level}</p>
-                  <ul className="mt-1 list-inside list-disc text-sm">
-                    {files.map((f) => (
-                      <li key={f.id}>{f.originalName}</li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            })
-          )}
-        </section>
       </article>
     </div>
   );

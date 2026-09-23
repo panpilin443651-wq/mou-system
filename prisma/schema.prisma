@@ -59,6 +59,21 @@ enum PlanSection {
 // ตารางข้อมูลพื้นฐาน
 // ============================================================================
 
+/// สายบังคับบัญชา เช่น "รองผวก. (ป.)" - ใช้จัดกลุ่มส่วนงานในหน้าภาพรวม
+model CommandLine {
+  id        String @id @default(cuid())
+  name      String @unique
+  /// ลำดับที่แสดงในหน้าภาพรวมและหน้าตั้งค่า
+  sortOrder Int    @default(0)
+
+  departments Department[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([sortOrder])
+}
+
 /// ส่วนงาน / หน่วยงานที่ไม่สังกัดส่วนงาน (30 หน่วย)
 model Department {
   id   String         @id @default(cuid())
@@ -69,6 +84,11 @@ model Department {
   /// ลำดับการแสดงผลในรายการและ Dashboard
   sortOrder Int     @default(0)
   isActive  Boolean @default(true)
+
+  /// สายบังคับบัญชาที่สังกัด - ส่วนกลางเปลี่ยนได้ที่ ตั้งค่าระบบ > สายบังคับบัญชา
+  /// null = ยังไม่ได้จัดเข้าสายใด
+  commandLineId String?
+  commandLine   CommandLine? @relation(fields: [commandLineId], references: [id], onDelete: SetNull)
 
   users      User[]
   indicators Indicator[]
@@ -98,9 +118,11 @@ model User {
   isActive    Boolean   @default(true)
   lastLoginAt DateTime?
 
-  submittedReports QuarterlyReport[] @relation("ReportSubmitter")
-  uploadedFiles    Attachment[]
-  auditLogs        AuditLog[]
+  submittedReports  QuarterlyReport[] @relation("ReportSubmitter")
+  uploadedFiles     Attachment[]
+  auditLogs         AuditLog[]
+  editedMouScores   MouScore[]
+  uploadedPlanFiles PlanAttachment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -156,7 +178,14 @@ model Indicator {
   unit          String // หน่วยวัด เช่น "บาท/ไร่", "ร้อยละ", "ระดับ", "ล้านบาท"
   /// ค่าเป้าหมายหลักทั้งปี = ค่าเกณฑ์วัดระดับ 3 ตามรูปแบบ MOU ของ กยท.
   /// ใช้เป็นตัวหารในการคำนวณ % ความก้าวหน้า
-  targetValue   Float
+  /// null = ค่าเป้าหมายไม่ใช่ตัวเลข (ดู targetText) ระบบจึงคิด % ความก้าวหน้าให้ไม่ได้
+  targetValue   Float?
+  /// ค่าเป้าหมายหลักแบบข้อความ ใช้เมื่อ MOU กำหนดเป้าหมายระดับ 3 เป็นคำบรรยาย ไม่ใช่ตัวเลข
+  targetText    String?
+
+  /// เงื่อนไขของตัวชี้วัด (ใช้กับทั้งตัวชี้วัด ไม่ได้แยกตามระดับ)
+  /// เช่น "รายงานผลภายในวันที่ 15 ของเดือนถัดไป" มีได้หลายข้อ เรียงตามที่กรอก
+  conditions String[] @default([])
   /// ผลการดำเนินงานปีก่อน (Base line 2568) - null ถ้า MOU ระบุเป็น "-"
   baselineValue Float?
   /// น้ำหนักของตัวชี้วัด (%) - ผลรวมทุกตัวชี้วัดของส่วนงานต้องเท่ากับ 100
@@ -176,10 +205,12 @@ model Indicator {
 
   status IndicatorStatus @default(ACTIVE)
 
-  criteria   ScoreCriteria[]
-  plans      ActionPlan[]
-  planHeader PlanHeader?
-  reports    QuarterlyReport[]
+  criteria         ScoreCriteria[]
+  plans            ActionPlan[]
+  planHeader       PlanHeader?
+  planLevelReports PlanLevelReport[]
+  reports          QuarterlyReport[]
+  mouScores        MouScore[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -207,6 +238,7 @@ model ScoreCriteria {
   description String // คำอธิบายเกณฑ์ตามที่ระบุใน MOU
 
   /// ค่าเป้าหมายของระดับนี้ (รูปแบบหลักที่ MOU ใช้)
+  /// null = เกณฑ์ระดับนี้เป็นข้อความ (อยู่ใน description) ไม่ใช่ตัวเลข
   targetValue Float?
 
   /// ช่วงค่าของเกณฑ์นี้ - ใช้เมื่อ MOU กำหนดเป็นช่วงแทนค่าเดี่ยว
@@ -252,8 +284,12 @@ model ActionPlan {
 
   /// อยู่ตารางบน (เป้าหมายตัวชี้วัด) หรือตารางล่าง (ขั้นตอนการดำเนินงาน)
   section   PlanSection @default(STEP)
-  /// ลำดับที่แสดงในตาราง (คอลัมน์แรกของแบบฟอร์ม)
+  /// ลำดับที่แสดงในตาราง (คอลัมน์แรกของแบบฟอร์ม) นับแยกในแต่ละ section และแต่ละระดับ
   sortOrder Int         @default(0)
+
+  /// ขั้นตอนการดำเนินงานนี้อยู่ใต้ค่าเกณฑ์ระดับไหน (1-5) - ใช้กับ section STEP
+  /// null = TARGET หรือแถว STEP เก่าที่สร้างก่อนแยกตามระดับ
+  criteriaLevel Int?
 
   /// ข้อความในคอลัมน์ "เป้าหมายตัวชี้วัด" หรือ "ขั้นตอนการดำเนินงาน" แล้วแต่ section
   title       String
@@ -271,10 +307,13 @@ model ActionPlan {
 
   /// "สาเหตุที่ไม่สามารถดำเนินการได้ตามเป้าหมาย/ตามแผน"
   causeNote        String?
-  /// "การดำเนินการแก้ไข"
+  /// "แนวทางการดำเนินการแก้ไข"
   correctiveAction String?
-  /// "หลักฐานประกอบผลการดำเนินงาน" - เขียนอ้างอิงเป็นข้อความ เช่น "เอกสารแนบ 1"
+  /// หลักฐานแบบข้อความของเดิม - หน้าเว็บเปลี่ยนไปแนบไฟล์แทนแล้ว (ดู attachments)
+  /// คงคอลัมน์ไว้ไม่ให้ข้อความที่เคยกรอกหาย
   evidence         String?
+  /// "หลักฐานประกอบผลการดำเนินงาน" แบบแนบไฟล์
+  attachments      PlanAttachment[]
   /// "คำอธิบายเพิ่มเติม (ถ้ามี)"
   note             String?
 
@@ -282,6 +321,47 @@ model ActionPlan {
   updatedAt DateTime @updatedAt
 
   @@index([indicatorId, section, sortOrder])
+}
+
+/// "รายงานผลการดำเนินงาน" ของค่าเกณฑ์แต่ละระดับ ในตารางติดตามการดำเนินงานตามแผน
+/// 1 ตัวชี้วัด มีได้ระดับละ 1 ข้อความ
+model PlanLevelReport {
+  id String @id @default(cuid())
+
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  /// ค่าเกณฑ์ระดับ 1-5
+  level Int
+  text  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([indicatorId, level])
+}
+
+/// ไฟล์หลักฐานประกอบผลการดำเนินงาน ของบรรทัดหนึ่งในแผนดำเนินงาน
+///
+/// แยกจาก Attachment (ไฟล์แนบของรายงานรายไตรมาส) เพราะผูกกับคนละสิ่ง
+/// แผนเป็นของทั้งปี ไม่มีไตรมาส และไม่อยู่ใต้ช่วงเวลาเปิด-ปิดรับผล
+model PlanAttachment {
+  id String @id @default(cuid())
+
+  actionPlanId String
+  actionPlan   ActionPlan @relation(fields: [actionPlanId], references: [id], onDelete: Cascade)
+
+  originalName String
+  /// URL ของไฟล์บน Vercel Blob - ไม่ส่งให้เบราว์เซอร์เห็น ดาวน์โหลดผ่าน /api/plan-attachments/[id]
+  storagePath  String
+  mimeType     String
+  sizeBytes    Int
+
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedAt   DateTime @default(now())
+
+  @@index([actionPlanId])
 }
 
 // ============================================================================
@@ -324,8 +404,6 @@ model QuarterlyReport {
   objective       String?
   /// 5.1 แผนงาน/โครงการ/การดำเนินงานสำคัญ ที่ช่วยปรับปรุงการดำเนินงานของตัวชี้วัดนี้
   keyProjects     String?
-  /// 5.2 รายงานผลการดำเนินงานตามแผนงาน/โครงการ/กิจกรรมดังกล่าว
-  progressReport  String?
   /// 5.2.2 ปัญหาอุปสรรคและการแก้ไข
   problems        String?
   /// 5.3.1 ปัจจัยที่สนับสนุน
@@ -338,7 +416,9 @@ model QuarterlyReport {
   submittedById String?
   submittedBy   User?        @relation("ReportSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
 
-  attachments Attachment[]
+  attachments      Attachment[]
+  /// 4. รายงานผลการดำเนินงาน แยกเป็นแต่ละค่าเกณฑ์
+  criteriaProgress CriteriaProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -346,6 +426,34 @@ model QuarterlyReport {
   /// 1 ตัวชี้วัด มีได้ 1 รายงานต่อ 1 ไตรมาสเท่านั้น
   @@unique([indicatorId, quarter])
   @@index([status])
+}
+
+/// รายงานผลการดำเนินงานตามแผนงาน/โครงการ/กิจกรรมดังกล่าว แยกตามค่าเกณฑ์แต่ละระดับ
+///
+/// ทำไมแยกตาราง ไม่เก็บเป็นช่องเดียวใน QuarterlyReport เหมือนหัวข้ออื่น?
+///   MOU กำหนดเงื่อนไขไว้คนละอย่างในแต่ละระดับคะแนน ผลการดำเนินงานจึงต้องเขียน
+///   แยกทีละระดับให้ตรงกับหลักฐานที่แนบไว้ในระดับเดียวกัน (ดู Attachment.criteriaLevel)
+///   ถ้ารวมเป็นข้อความก้อนเดียว ผู้ตรวจจะแยกไม่ออกว่าย่อหน้าไหนคู่กับไฟล์ไหน
+///
+/// ระดับคะแนนของแต่ละตัวชี้วัดมีไม่เท่ากัน จึงไม่ใช้ช่องตายตัว 5 ช่อง
+model CriteriaProgress {
+  id String @id @default(cuid())
+
+  reportId String
+  report   QuarterlyReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  /// ระดับคะแนน 1-5 ที่ข้อความนี้อธิบายถึง (ตรงกับ ScoreCriteria.level)
+  level Int
+
+  /// ผลการดำเนินงานของระดับนี้
+  text String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// 1 รายงาน มีข้อความได้ระดับละ 1 ข้อความเท่านั้น
+  @@unique([reportId, level])
+  @@index([reportId])
 }
 
 /// ไฟล์แนบหลักฐานประกอบรายงาน
@@ -422,6 +530,53 @@ model WindowException {
   createdAt DateTime @default(now())
 
   @@unique([windowId, departmentId])
+}
+
+// ============================================================================
+// คะแนนประเมินรายตัวชี้วัด (ชุดของส่วนกลาง)
+// ============================================================================
+
+/// คะแนนที่ส่วนกลางประเมินให้ตัวชี้วัดหนึ่งข้อ ในไตรมาสหนึ่ง
+///
+/// คนละชุดกับ QuarterlyReport ซึ่งเป็นผลที่ส่วนงาน "กรอกเอง" เข้ามาในระบบ
+/// ตารางนี้คือคะแนนที่ส่วนกลางตรวจแล้วให้ ซึ่งเดิมทำกันในไฟล์ Excel
+/// (คะแนน MOU/*.xlsx) และย้ายเข้าระบบเพื่อให้แอดมินแก้ไขได้โดยไม่ต้องส่งไฟล์กันไปมา
+///
+/// ไม่เก็บ "คะแนนถ่วงน้ำหนักสะสม" ไว้ในตาราง เพราะคำนวณกลับได้เสมอจาก
+/// (ผล x น้ำหนักของตัวชี้วัด / 100) - ตรวจกับไฟล์ต้นฉบับครบ 596 ค่าแล้วว่าตรงกัน
+/// ถ้าเก็บไว้ด้วย พอแอดมินแก้ "ผล" แล้วลืมแก้ตัวเลขสะสม ข้อมูลจะขัดกันเอง
+model MouScore {
+  id String @id @default(cuid())
+
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  /// ไตรมาส 1-4
+  quarter Int
+
+  /// ค่าเป้าหมายตามแผนของไตรมาสนั้น (ระดับ 1-5)
+  plan Float?
+
+  /// ผลที่ทำได้จริง วัดเทียบกับแผนทั้งปี (ระดับ 1-5) - ใช้คิดคะแนนถ่วงน้ำหนักสะสม
+  actual Float?
+
+  /// คะแนนของไตรมาส วัดเทียบกับแผนของไตรมาสนั้น เต็ม 5
+  /// ส่วนใหญ่เท่ากับ ผล x 5 / แผน แต่ส่วนกลางปรับด้วยมือได้ จึงเก็บแยกเป็นช่องของตัวเอง
+  score Float?
+
+  /// หมายเหตุของไตรมาสนั้น เช่น "เนื่องจากไม่รายงานผล"
+  note String?
+
+  /// ใครแก้ล่าสุด - ไว้ตามตัวได้เวลาตัวเลขมีปัญหา
+  updatedById String?
+  updatedBy   User?   @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  /// 1 ตัวชี้วัด มีคะแนนได้ไตรมาสละ 1 ชุดเท่านั้น
+  @@unique([indicatorId, quarter])
+  @@index([indicatorId])
 }
 
 // ============================================================================

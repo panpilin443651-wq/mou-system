@@ -11,8 +11,16 @@ export const metadata = { title: "ตั้งค่าระบบ | ระบ�
 export default async function AdminPage() {
   await requireAdmin();
 
-  const [activeYear, yearCount, userCount, activeUserCount, departmentCount, coveredDepts] =
-    await Promise.all([
+  const [
+    activeYear,
+    yearCount,
+    userCount,
+    activeUserCount,
+    departmentCount,
+    coveredDepts,
+    lineCount,
+    unassignedDepts,
+  ] = await Promise.all([
       db.fiscalYear.findFirst({ where: { isActive: true } }),
       db.fiscalYear.count(),
       db.user.count(),
@@ -23,6 +31,8 @@ export default async function AdminPage() {
         select: { departmentId: true },
         distinct: ["departmentId"],
       }),
+      db.commandLine.count(),
+      db.department.count({ where: { isActive: true, commandLineId: null } }),
     ]);
 
   const indicatorCount = activeYear
@@ -83,6 +93,18 @@ export default async function AdminPage() {
       warning:
         activeYear && windowCount < 4
           ? `ปี ${activeYear.year} ตั้งช่วงเวลาไว้แค่ ${windowCount} จาก 4 ไตรมาส`
+          : null,
+      ready: true,
+    },
+    {
+      href: "/admin/command-lines",
+      title: "สายบังคับบัญชา",
+      description:
+        "เพิ่ม เปลี่ยนชื่อ และจัดลำดับสายบังคับบัญชา ย้ายส่วนงานข้ามสาย ใช้จัดกลุ่มคะแนนในหน้าภาพรวม",
+      stat: `${lineCount.toLocaleString("th-TH")} สาย · ${(departmentCount - unassignedDepts).toLocaleString("th-TH")} จาก ${departmentCount.toLocaleString("th-TH")} ส่วนงานจัดเข้าสายแล้ว`,
+      warning:
+        unassignedDepts > 0
+          ? `ยังไม่ระบุสาย ${unassignedDepts} ส่วนงาน — จะแสดงในกลุ่ม "ยังไม่ระบุสาย" ในหน้าภาพรวม`
           : null,
       ready: true,
     },

@@ -9,7 +9,7 @@ import {
 } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { PLAN_SECTION_ITEM_LABEL, summarizeRow, toMonths } from "@/lib/plan";
-import { isPlaceholderCriteria } from "@/lib/scoring";
+import { isPlaceholderCriteria, targetLabel } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "รายละเอียดตัวชี้วัด | ระบบรายงานผล MOU" };
@@ -57,7 +57,7 @@ export default async function IndicatorDetailPage({
       label: "Base line",
       value: indicator.baselineValue === null ? "-" : String(indicator.baselineValue),
     },
-    { label: "ค่าเป้าหมาย (ระดับ 3)", value: String(indicator.targetValue) },
+    { label: "ค่าเป้าหมาย (ระดับ 3)", value: targetLabel(indicator) },
     { label: "ทิศทาง", value: isLowerBetter ? "ค่าน้อยยิ่งดี" : "ค่ามากยิ่งดี" },
     { label: "การปรับค่าเกณฑ์วัด", value: indicator.adjustmentNote ?? "-" },
   ];
@@ -158,6 +158,17 @@ export default async function IndicatorDetailPage({
             </tbody>
           </table>
         </div>
+        {/* เงื่อนไขของตัวชี้วัด ต่อท้ายค่าเกณฑ์ระดับ 5 */}
+        {indicator.conditions.length > 0 && (
+          <div className="border-t border-slate-200 px-4 py-4 sm:px-5">
+            <h3 className="text-sm font-semibold">เงื่อนไข</h3>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-slate-700">
+              {indicator.conditions.map((cond, i) => (
+                <li key={i}>{cond}</li>
+              ))}
+            </ol>
+          </div>
+        )}
         {/* ตัวชี้วัดบางตัวใน MOU ไม่ได้เขียนเกณฑ์เป็นระดับ 1-5
             แต่ให้คะแนนย่อยตามกิจกรรมที่ทำได้ จึงแสดงแยกไว้ตรงนี้ */}
         {indicator.criteriaNote && (
@@ -234,7 +245,7 @@ export default async function IndicatorDetailPage({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">แผนดำเนินงาน</h2>
           <Link
-            href={`/plans/${indicator.id}`}
+            href={`/reports/${indicator.id}/1#plan`}
             className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium transition hover:bg-slate-50"
           >
             {canManagePlan(user, indicator.departmentId) ? "จัดการแผน" : "ดูแผนทั้งหมด"}

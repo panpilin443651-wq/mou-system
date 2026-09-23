@@ -8,6 +8,7 @@ import { requireUser } from "@/lib/session";
 import { canManageIndicators } from "@/lib/permissions";
 import { indicatorSchema, firstError } from "@/lib/validation";
 import { writeAudit, diffFields } from "@/lib/audit";
+import { parseTargetInput } from "@/lib/scoring";
 
 // ============================================================================
 // Server Action สำหรับจัดการตัวชี้วัด
@@ -39,6 +40,28 @@ function parseForm(formData: FormData) {
     level3: formData.get("level3") ?? "",
     level4: formData.get("level4") ?? "",
     level5: formData.get("level5") ?? "",
+    conditions: formData.getAll("conditions").map(String),
+  });
+}
+
+type ParsedInput = NonNullable<ReturnType<typeof parseForm>["data"]>;
+
+/**
+ * แปลงค่าเกณฑ์ 5 ระดับจากฟอร์ม เป็นข้อมูลที่จะเก็บ
+ *
+ * ช่องค่าเกณฑ์รับได้ทั้งตัวเลขและข้อความ
+ *   ตัวเลข  → เก็บที่ targetValue ใช้คิดคะแนนอัตโนมัติ
+ *   ข้อความ → เก็บที่ description และ targetValue = null (ระบบคิดคะแนนจากข้อความไม่ได้)
+ */
+function criteriaFromInput(input: ParsedInput) {
+  const raw = [input.level1, input.level2, input.level3, input.level4, input.level5];
+  return raw.map((value, i) => {
+    const parsed = parseTargetInput(value);
+    return {
+      level: i + 1,
+      targetValue: parsed.value,
+      text: parsed.text,
+    };
   });
 }
 
@@ -55,7 +78,8 @@ export async function createIndicator(
   if (!parsed.success) return { error: firstError(parsed.error) };
   const input = parsed.data;
 
-  const levels = [input.level1, input.level2, input.level3, input.level4, input.level5];
+  const levels = criteriaFromInput(input);
+  const main = levels[2];
 
   let newId: string;
   try {
@@ -70,17 +94,20 @@ export async function createIndicator(
         groupName: input.groupName,
         unit: input.unit,
         // ค่าเป้าหมายหลักคือค่าเกณฑ์ระดับ 3 ตามรูปแบบ MOU ของ กยท.
-        targetValue: input.level3,
+        // เป็นตัวเลขหรือข้อความก็ได้ ถ้าเป็นข้อความระบบจะคิด % ความก้าวหน้าให้ไม่ได้
+        targetValue: main.targetValue,
+        targetText: main.text,
+        conditions: input.conditions,
         baselineValue: input.baselineValue,
         weight: input.weight,
         direction: input.direction,
         adjustmentNote: input.adjustmentNote,
         status: input.status,
         criteria: {
-          create: levels.map((value, i) => ({
-            level: i + 1,
-            targetValue: value,
-            description: `ระดับ ${i + 1} = ${value} ${input.unit}`,
+          create: levels.map((c) => ({
+            level: c.level,
+            targetValue: c.targetValue,
+            description: c.text ?? `ระดับ ${c.level} = ${c.targetValue} ${input.unit}`,
           })),
         },
       },
@@ -126,7 +153,8 @@ export async function updateIndicator(
   if (!parsed.success) return { error: firstError(parsed.error) };
   const input = parsed.data;
 
-  const levels = [input.level1, input.level2, input.level3, input.level4, input.level5];
+  const levels = criteriaFromInput(input);
+  const main = levels[2];
 
   try {
     // ใช้ transaction เพื่อให้ตัวชี้วัดกับเกณฑ์คะแนนเปลี่ยนพร้อมกันทั้งชุด
@@ -143,7 +171,9 @@ export async function updateIndicator(
           dimension: input.dimension,
           groupName: input.groupName,
           unit: input.unit,
-          targetValue: input.level3,
+          targetValue: main.targetValue,
+          targetText: main.text,
+          conditions: input.conditions,
           baselineValue: input.baselineValue,
           weight: input.weight,
           direction: input.direction,
@@ -152,16 +182,28 @@ export async function updateIndicator(
         },
       });
 
-      for (const [i, value] of levels.entries()) {
-        const level = i + 1;
+      for (const c of levels) {
+        const before = existing.criteria.find((x) => x.level === c.level);
+        // ค่าเกณฑ์ที่เป็นตัวเลข ไม่เขียนทับ description เดิม
+        // เพราะตัวชี้วัดที่นำเข้าจาก MOU มีข้อความเกณฑ์ฉบับเต็มเก็บอยู่ ถ้าทับจะหายไป
+        // ยกเว้นระดับที่เดิมเป็นข้อความแล้วเปลี่ยนเป็นตัวเลข description เดิมคือค่าเกณฑ์เก่า ต้องเปลี่ยนตาม
+        const description =
+          c.text !== null
+            ? c.text
+            : before && before.targetValue === null
+              ? `ระดับ ${c.level} = ${c.targetValue} ${input.unit}`
+              : undefined;
         await tx.scoreCriteria.upsert({
-          where: { indicatorId_level: { indicatorId, level } },
-          update: { targetValue: value },
+          where: { indicatorId_level: { indicatorId, level: c.level } },
+          update: {
+            targetValue: c.targetValue,
+            ...(description !== undefined ? { description } : {}),
+          },
           create: {
             indicatorId,
-            level,
-            targetValue: value,
-            description: `ระดับ ${level} = ${value} ${input.unit}`,
+            level: c.level,
+            targetValue: c.targetValue,
+            description: c.text ?? `ระดับ ${c.level} = ${c.targetValue} ${input.unit}`,
           },
         });
       }

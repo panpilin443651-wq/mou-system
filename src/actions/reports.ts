@@ -57,16 +57,8 @@ export async function saveReportAction(
   const parsed = reportSchema.safeParse({
     intent: formData.get("intent") ?? "draft",
     actualValue: formData.get("actualValue") ?? "",
-    narrative: formData.get("narrative") ?? "",
     scoreOverride: formData.get("scoreOverride") ?? "",
     scoreNote: formData.get("scoreNote") ?? "",
-    responsible: formData.get("responsible") ?? "",
-    objective: formData.get("objective") ?? "",
-    keyProjects: formData.get("keyProjects") ?? "",
-    progressReport: formData.get("progressReport") ?? "",
-    problems: formData.get("problems") ?? "",
-    supportFactors: formData.get("supportFactors") ?? "",
-    obstacleFactors: formData.get("obstacleFactors") ?? "",
   });
   if (!parsed.success) return { error: firstError(parsed.error) };
   const input = parsed.data;
@@ -95,19 +87,13 @@ export async function saveReportAction(
     scoreLevel,
     scoreOverridden: overridden,
     scoreNote: input.scoreNote,
-    narrative: input.narrative,
-    responsible: input.responsible,
-    objective: input.objective,
-    keyProjects: input.keyProjects,
-    progressReport: input.progressReport,
-    problems: input.problems,
-    supportFactors: input.supportFactors,
-    obstacleFactors: input.obstacleFactors,
     status: submitting ? ("SUBMITTED" as const) : ("DRAFT" as const),
     submittedAt: submitting ? new Date() : null,
     submittedById: submitting ? user.id : null,
   };
 
+  // ช่องปัญหาอุปสรรค ปัจจัย และผลรายค่าเกณฑ์ ถูกเอาออกจากฟอร์มแล้ว (17 ก.ย. 2569)
+  // ไม่เขียนทับคอลัมน์และตาราง CriteriaProgress เดิม ข้อมูลที่เคยกรอกจึงไม่หาย
   await db.quarterlyReport.upsert({
     where: { indicatorId_quarter: { indicatorId, quarter } },
     update: data,

@@ -1,266 +1,458 @@
 {
-  "source": "คะแนน MOU/ส่งให้ HR คะแนน MOU 69 และน้ำหนัก.xlsx",
-  "fiscalYear": 2569,
-  "columns": {
-    "mouScore": "คะแนนถ่วงน้ำหนักของส่วนงาน (MOU)",
-    "paScore": "คะแนนถ่วงน้ำหนักของส่วนงานที่รับผิดชอบตัวชี้วัดองค์กร (PA)"
-  },
-  "departments": [
+  "years": [
     {
-      "rank": 1,
-      "code": "กยท.ข.ตบ.",
-      "sourceName": "กยท.ข.ตบ.",
-      "mouScore": 4.945,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 2,
-      "code": "กยท.ข.ตก.",
-      "sourceName": "กยท.ข.ตก.",
-      "mouScore": 4.935,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 3,
-      "code": "กยท.ข.อนล.",
-      "sourceName": "กยท.ข.อนล.",
-      "mouScore": 4.82744,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 4,
-      "code": "กยท.ข.ตล.",
-      "sourceName": "กยท.ข.ตล.",
-      "mouScore": 4.73,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 5,
-      "code": "สผว.",
-      "sourceName": "สผว.",
-      "mouScore": 4.70606,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 6,
-      "code": "ฝกค.",
-      "sourceName": "ฝกค.",
-      "mouScore": 4.6508,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 7,
-      "code": "สตส.",
-      "sourceName": "สตส.",
-      "mouScore": 4.547,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 8,
-      "code": "กยท.ข.กอ.",
-      "sourceName": "กยท.ข.กอ.",
-      "mouScore": 4.52587,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 9,
-      "code": "ฝยศ.",
-      "sourceName": "ฝยศ.",
-      "mouScore": 4.45667,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 10,
-      "code": "ฝอย.",
-      "sourceName": "ฝอย.",
-      "mouScore": 4.39753,
-      "paScore": 0.31537,
-      "inSystem": true
-    },
-    {
-      "rank": 11,
-      "code": "ฝกม.",
-      "sourceName": "ฝกม.",
-      "mouScore": 4.2525,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 12,
-      "code": "สวย.",
-      "sourceName": "สวย.",
-      "mouScore": 4.19761,
-      "paScore": 0.28905,
-      "inSystem": true
-    },
-    {
-      "rank": 13,
-      "code": "กยท.ข.น.",
-      "sourceName": "กยท.ข.น.",
-      "mouScore": 4.07071,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 14,
-      "code": "ฝสผ.",
-      "sourceName": "ฝสผ.",
-      "mouScore": 3.9317,
-      "paScore": 0.12359,
-      "inSystem": true
-    },
-    {
-      "rank": 15,
-      "code": "ฝบท.",
-      "sourceName": "ฝบท.",
-      "mouScore": 3.86534,
-      "paScore": 0.03905,
-      "inSystem": true
-    },
-    {
-      "rank": 16,
-      "code": "กจร.5",
-      "sourceName": "กจร.5",
-      "mouScore": 3.8,
-      "paScore": 0.03905,
-      "inSystem": true
-    },
-    {
-      "rank": 17,
-      "code": "กจส.3",
-      "sourceName": "กจส.3",
-      "mouScore": 3.7125,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 18,
-      "code": "ฝทม.",
-      "sourceName": "ฝทม.",
-      "mouScore": 3.64912,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 19,
-      "code": "กจร.1",
-      "sourceName": "กจร.1",
-      "mouScore": 3.41743,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 20,
-      "code": "ฝศย.",
-      "sourceName": "ฝศย.",
-      "mouScore": 3.38588,
-      "paScore": 0.09662,
-      "inSystem": true
-    },
-    {
-      "rank": 21,
-      "code": "กยท.ข.อนบ.",
-      "sourceName": "กยท.ข.อนบ.",
-      "mouScore": 3.36886,
-      "paScore": 0.21467,
-      "inSystem": true
-    },
-    {
-      "rank": 22,
-      "code": "ฝพก.",
-      "sourceName": "ฝพก.",
-      "mouScore": 3.2508,
-      "paScore": 0.12586,
-      "inSystem": true
-    },
-    {
-      "rank": 23,
-      "code": "นธก.",
-      "sourceName": "หน่วยธุรกิจ",
-      "mouScore": 2.83283,
-      "paScore": 0.06537,
-      "inSystem": true
-    },
-    {
-      "rank": 24,
-      "code": "ฝทส.",
-      "sourceName": "ฝทส.",
-      "mouScore": 2.815,
-      "paScore": 0.03905,
-      "inSystem": true
-    },
-    {
-      "rank": 25,
-      "code": "หกป.",
-      "sourceName": "หกป.",
-      "mouScore": 2.81066,
-      "paScore": 0.03678,
-      "inSystem": true
-    },
-    {
-      "rank": 26,
-      "code": "กจร.6",
-      "sourceName": "กจร.6",
-      "mouScore": 2.54174,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 27,
-      "code": "กจร.4",
-      "sourceName": "กจร.4",
-      "mouScore": 2.3433,
-      "paScore": 0.06537,
-      "inSystem": true
-    },
-    {
-      "rank": 28,
-      "code": "กจส.2",
-      "sourceName": "กจส.2",
-      "mouScore": 2.20541,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 29,
-      "code": "กจร.2",
-      "sourceName": "กจร.2",
-      "mouScore": 2.13901,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 30,
-      "code": "กจม.",
-      "sourceName": "กจม.",
-      "mouScore": 1.7925,
-      "paScore": 0.08095,
-      "inSystem": false
-    },
-    {
-      "rank": 31,
-      "code": "กจส.1",
-      "sourceName": "กจส.1",
-      "mouScore": 1.78773,
-      "paScore": 0.08323,
-      "inSystem": true
-    },
-    {
-      "rank": 32,
-      "code": "กจร.3",
-      "sourceName": "กจร.3",
-      "mouScore": 1.43844,
-      "paScore": 0.0631,
-      "inSystem": false
+      "source": "คะแนน MOU/คะแนนจัดลำดับ MOU 69.xlsx",
+      "sheet": "คะแนนรวม",
+      "fiscalYear": 2569,
+      "latestQuarter": 3,
+      "columns": {
+        "quarterScore": "คะแนนไตรมาส",
+        "yearScore": "คะแนนปี"
+      },
+      "lines": [
+        {
+          "name": "ผวก.กยท.",
+          "sheet": null,
+          "averageYearScore": null
+        },
+        {
+          "name": "รองผวก. (ป.)",
+          "sheet": "ร.ผวก. (ป)",
+          "averageYearScore": 3.382640749402113
+        },
+        {
+          "name": "รองผวก. (บ.)",
+          "sheet": "ร.ผวก. (บ)",
+          "averageYearScore": 3.066755
+        },
+        {
+          "name": "รองผวก. (ธ.)",
+          "sheet": "ร.ผวก.(ธ)",
+          "averageYearScore": 2.5509075
+        }
+      ],
+      "departments": [
+        {
+          "rank": 1,
+          "code": "ฝกม.",
+          "sourceName": "ฝกม.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.901003333333334,
+            "4": null
+          },
+          "yearScore": 4.590000000000001,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 2,
+          "code": "กจร.4",
+          "sourceName": "กจร.4",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.809336666666667,
+            "4": null
+          },
+          "yearScore": 4.125,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 3,
+          "code": "กจร.6",
+          "sourceName": "กจร.6",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.514336666666667,
+            "4": null
+          },
+          "yearScore": 3.8348099999999996,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 4,
+          "code": "ฝยศ.",
+          "sourceName": "ฝยศ.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.951003333333333,
+            "4": null
+          },
+          "yearScore": 3.7297650000000004,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 5,
+          "code": "กยท.ข.กอ.",
+          "sourceName": "กยท.ข.กอ.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.351003333333334,
+            "4": null
+          },
+          "yearScore": 3.711532251082251,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 6,
+          "code": "ฝพก.",
+          "sourceName": "ฝพก",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.848736666666667,
+            "4": null
+          },
+          "yearScore": 3.69742,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 7,
+          "code": "กจร.5",
+          "sourceName": "กจร.5",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.751003333333333,
+            "4": null
+          },
+          "yearScore": 3.6554499999999996,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 8,
+          "code": "กยท.ข.ตก.",
+          "sourceName": "กยท.ข.ตก.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.690021038961039,
+            "4": null
+          },
+          "yearScore": 3.5564666233766236,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 9,
+          "code": "ฝกค.",
+          "sourceName": "ฝกค.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.451003333333333,
+            "4": null
+          },
+          "yearScore": 3.4905500000000003,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 10,
+          "code": "กยท.ข.ตบ.",
+          "sourceName": "กยท.ข.ตบ.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.372286523441128,
+            "4": null
+          },
+          "yearScore": 3.476056818181818,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 11,
+          "code": "กยท.ข.อนล.",
+          "sourceName": "กยท.ข.อนล.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.414016726190476,
+            "4": null
+          },
+          "yearScore": 3.366359090909091,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 12,
+          "code": "ฝอย.",
+          "sourceName": "ฝอย",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.5776699999999995,
+            "4": null
+          },
+          "yearScore": 3.3617500000000007,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 13,
+          "code": "สวย.",
+          "sourceName": "สวย",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.89767,
+            "4": null
+          },
+          "yearScore": 3.27028,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 14,
+          "code": "กยท.ข.ตล.",
+          "sourceName": "กยท.ข.ตล.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.342820161832377,
+            "4": null
+          },
+          "yearScore": 3.1127360606060606,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 15,
+          "code": "ฝสผ.",
+          "sourceName": "ฝสผ",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.709336666666667,
+            "4": null
+          },
+          "yearScore": 3.0987700000000005,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 16,
+          "code": "กยท.ข.น.",
+          "sourceName": "กยท.ข.น.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.31814,
+            "4": null
+          },
+          "yearScore": 3.072388636363636,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 17,
+          "code": "ฝทม.",
+          "sourceName": "ฝทม.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.26767,
+            "4": null
+          },
+          "yearScore": 2.9541600000000003,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 18,
+          "code": "สผว.",
+          "sourceName": "สผว.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.951003333333333,
+            "4": null
+          },
+          "yearScore": 2.8981800000000004,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 19,
+          "code": "ฝบท.",
+          "sourceName": "ฝบท",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.58712,
+            "4": null
+          },
+          "yearScore": 2.87454,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 20,
+          "code": "กยท.ข.อนบ.",
+          "sourceName": "กยท.ข.อนบ.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.767986836359486,
+            "4": null
+          },
+          "yearScore": 2.868640261707989,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 21,
+          "code": "กจร.2",
+          "sourceName": "กจร.2",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.339336666666667,
+            "4": null
+          },
+          "yearScore": 2.7223100000000002,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 22,
+          "code": "สตส.",
+          "sourceName": "สตส.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.451003333333333,
+            "4": null
+          },
+          "yearScore": 2.68272,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 23,
+          "code": "กจร.1",
+          "sourceName": "กจร.1",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.62267,
+            "4": null
+          },
+          "yearScore": 2.6523100000000004,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 24,
+          "code": "กจส.3",
+          "sourceName": "กจส.3",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.001003333333333,
+            "4": null
+          },
+          "yearScore": 2.5372700000000004,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 25,
+          "code": "ฝศย.",
+          "sourceName": "ฝศย",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.6685033333333332,
+            "4": null
+          },
+          "yearScore": 2.3987000000000003,
+          "line": "รองผวก. (ป.)",
+          "inSystem": true
+        },
+        {
+          "rank": 26,
+          "code": "ฝทส.",
+          "sourceName": "ฝทส",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.210136666666667,
+            "4": null
+          },
+          "yearScore": 2.3783399999999997,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 27,
+          "code": "หกป.",
+          "sourceName": "หกป.",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 4.143936666666667,
+            "4": null
+          },
+          "yearScore": 2.0025399999999998,
+          "line": "รองผวก. (บ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 28,
+          "code": "กจส.1",
+          "sourceName": "กจส.1",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.171453333333334,
+            "4": null
+          },
+          "yearScore": 1.95772,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 29,
+          "code": "นธก.",
+          "sourceName": "BU",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.028316666666667,
+            "4": null
+          },
+          "yearScore": 1.9569900000000002,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        },
+        {
+          "rank": 30,
+          "code": "กจส.2",
+          "sourceName": "กจส.2",
+          "quarterScores": {
+            "1": null,
+            "2": null,
+            "3": 3.139636666666667,
+            "4": null
+          },
+          "yearScore": 1.9486299999999996,
+          "line": "รองผวก. (ธ.)",
+          "inSystem": true
+        }
+      ]
     }
   ]
 }

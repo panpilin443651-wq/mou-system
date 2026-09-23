@@ -197,6 +197,8 @@ export async function copyIndicatorsAction(
         groupName: ind.groupName,
         unit: ind.unit,
         targetValue: ind.targetValue,
+        targetText: ind.targetText,
+        conditions: ind.conditions,
         baselineValue: ind.baselineValue,
         weight: ind.weight,
         direction: ind.direction,

@@ -69,6 +69,7 @@ export default async function NewIndicatorPage({
           direction: "HIGHER_IS_BETTER",
           status: "ACTIVE",
           levels: ["1", "2", "3", "4", "5"],
+          conditions: [],
         }}
       />
     </div>

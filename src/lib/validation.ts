@@ -30,6 +30,20 @@ const optionalNumber = z
   .refine((v) => v === null || !Number.isNaN(v), "ต้องเป็นตัวเลข")
   .nullable();
 
+/** ค่าเกณฑ์ระดับหนึ่ง ต้องกรอก เป็นตัวเลขหรือข้อความก็ได้ */
+const criteriaText = (fieldName: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, `กรุณากรอก${fieldName}`)
+    .max(1000, `${fieldName}ยาวเกินไป (ไม่เกิน 1,000 ตัวอักษร)`);
+
+/** รายการเงื่อนไขของตัวชี้วัด */
+const conditionList = z
+  .array(z.string().trim().max(500, "เงื่อนไขยาวเกินไป (ไม่เกิน 500 ตัวอักษรต่อข้อ)"))
+  .max(30, "เงื่อนไขมากเกินไป (ไม่เกิน 30 ข้อ)")
+  .transform((list) => list.filter((c) => c !== ""));
+
 export const indicatorSchema = z.object({
   departmentId: z.string().min(1, "กรุณาเลือกส่วนงาน"),
   fiscalYearId: numberFromForm("ปีบัญชี"),
@@ -57,12 +71,16 @@ export const indicatorSchema = z.object({
   direction: z.enum(["HIGHER_IS_BETTER", "LOWER_IS_BETTER"]),
   status: z.enum(["DRAFT", "ACTIVE", "ARCHIVED"]),
 
-  // ค่าเกณฑ์วัดระดับ 1-5 ตามรูปแบบ MOU
-  level1: numberFromForm("ค่าเกณฑ์ระดับ 1"),
-  level2: numberFromForm("ค่าเกณฑ์ระดับ 2"),
-  level3: numberFromForm("ค่าเกณฑ์ระดับ 3"),
-  level4: numberFromForm("ค่าเกณฑ์ระดับ 4"),
-  level5: numberFromForm("ค่าเกณฑ์ระดับ 5"),
+  // ค่าเกณฑ์วัดระดับ 1-5 ตามรูปแบบ MOU - เป็นตัวเลขหรือข้อความก็ได้
+  // (แยกว่าเป็นตัวเลขหรือไม่ที่ parseTargetInput ตอนบันทึก)
+  level1: criteriaText("ค่าเกณฑ์ระดับ 1"),
+  level2: criteriaText("ค่าเกณฑ์ระดับ 2"),
+  level3: criteriaText("ค่าเกณฑ์ระดับ 3 (ค่าเป้าหมายหลัก)"),
+  level4: criteriaText("ค่าเกณฑ์ระดับ 4"),
+  level5: criteriaText("ค่าเกณฑ์ระดับ 5"),
+
+  // เงื่อนไขของตัวชี้วัด มีได้หลายข้อ ช่องที่เว้นว่างถูกตัดทิ้ง
+  conditions: conditionList,
 });
 
 export type IndicatorInput = z.infer<typeof indicatorSchema>;
@@ -137,21 +155,10 @@ export const reportSchema = z
       .transform((v) => (v === "" ? null : Number(v)))
       .refine((v) => v === null || !Number.isNaN(v), "ผลงานที่ทำได้ต้องเป็นตัวเลข")
       .nullable(),
-    narrative: z
-      .string()
-      .trim()
-      .max(3000, "คำอธิบายยาวเกินไป")
-      .transform((v) => (v === "" ? null : v))
-      .nullable(),
 
-    // ช่องตามแบบฟอร์มรายงานผลของ กยท. (เอกสารแนบ 3)
-    responsible: longText("ผู้รับผิดชอบ", 300),
-    objective: longText("วัตถุประสงค์", 2000),
-    keyProjects: longText("แผนงาน/โครงการ", 4000),
-    progressReport: longText("รายงานผลการดำเนินงาน", 4000),
-    problems: longText("ปัญหาอุปสรรคและการแก้ไข", 4000),
-    supportFactors: longText("ปัจจัยที่สนับสนุน", 2000),
-    obstacleFactors: longText("ปัจจัยที่เป็นปัญหา/อุปสรรค", 2000),
+    // ช่องตามแบบฟอร์มรายงานผล
+    // เอาช่อง คำอธิบายผล / ผู้รับผิดชอบ / วัตถุประสงค์ / แผนงานสำคัญ ออกแล้ว (17 ก.ย. 2569)
+    // คอลัมน์ในฐานข้อมูลยังอยู่ ข้อมูลที่เคยกรอกไว้จึงไม่หาย แค่ไม่ได้แสดงและแก้ไม่ได้
     /** เว้นว่าง = ใช้คะแนนที่ระบบคำนวณให้ */
     scoreOverride: z
       .string()
@@ -238,12 +245,16 @@ export const planNumber = z
  * แล้วค่อยไล่พิมพ์ทีหลัง ถ้าบังคับให้กรอกจะกดเพิ่มบรรทัดที่สองไม่ได้เลย
  * (บรรทัดเปล่าไม่ทำให้ตัวเลขเพี้ยน เพราะยอดรวมคิดจากช่องเดือนล้วน ๆ)
  */
+/** "รายงานผลการดำเนินงาน" ของค่าเกณฑ์หนึ่งระดับ ในตารางติดตามการดำเนินงานตามแผน */
+export const planLevelReportText = longText("รายงานผลการดำเนินงานของระดับ", 4000);
+
 export const planRowSchema = z.object({
   title: z.string().trim().max(500, "ชื่อรายการยาวเกินไป (ไม่เกิน 500 ตัวอักษร)"),
   targetValue: planNumber,
   unit: longText("หน่วยนับ", 50),
   causeNote: longText("สาเหตุที่ไม่สามารถดำเนินการได้", 1000),
-  correctiveAction: longText("การดำเนินการแก้ไข", 1000),
-  evidence: longText("หลักฐานประกอบผลการดำเนินงาน", 500),
-  note: longText("คำอธิบายเพิ่มเติม", 1000),
+  correctiveAction: longText("แนวทางการดำเนินการแก้ไข", 1000),
+  // "คำอธิบายเพิ่มเติม" เอาออกจากแบบฟอร์มแล้ว (17 ก.ย. 2569) - ไม่อ่านไม่เขียน ข้อความเดิมในฐานข้อมูลไม่หาย
 });
+
+

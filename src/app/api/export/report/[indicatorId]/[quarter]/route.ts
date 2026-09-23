@@ -14,10 +14,10 @@ import {
 import { getCurrentUser } from "@/lib/session";
 import { canViewDepartment } from "@/lib/permissions";
 import { QUARTERS } from "@/lib/plan";
+import { isPlaceholderCriteria } from "@/lib/scoring";
 import {
   getReportDocument,
   reportFileName,
-  reportSections,
 } from "@/lib/report-document";
 
 // ============================================================================
@@ -114,7 +114,7 @@ export async function GET(
             cell(`ข้อ ${ind.code} ${ind.name}`),
             cell(ind.unit),
             cell(String(ind.weight)),
-            cell(String(ind.targetValue)),
+            cell(ind.targetValue === null ? (ind.targetText ?? "-") : String(ind.targetValue)),
             cell(r?.actualValue === null || r === null ? "-" : String(r.actualValue)),
           ],
         }),
@@ -145,6 +145,14 @@ export async function GET(
       ],
     }),
 
+    // เงื่อนไขของตัวชี้วัด ต่อท้ายตารางค่าเกณฑ์ 5 ระดับ
+    ...(ind.conditions.length > 0
+      ? [
+          body("เงื่อนไข"),
+          ...ind.conditions.map((cond, i) => body(`${i + 1}. ${cond}`, 400)),
+        ]
+      : []),
+
     heading("สรุปผล"),
     body(
       `ความก้าวหน้า ${r?.progressPct === null || r === null ? "-" : `${r.progressPct}%`} · คะแนนที่ได้ ${doc.scoreText} · ${doc.submittedText}`
@@ -154,31 +162,11 @@ export async function GET(
       : []),
   ];
 
-  // หัวข้อข้อความยาวตามลำดับในแบบฟอร์ม
-  for (const s of reportSections(doc)) {
-    children.push(heading(`${s.no}. ${s.label}`));
-    for (const line of (s.value ?? "-").split("\n")) children.push(body(line));
-  }
-
-  // รายการไฟล์แนบ แยกตามระดับคะแนนเหมือนที่กรอกในระบบ
-  const attachments = r?.attachments ?? [];
-  children.push(heading("ไฟล์แนบหลักฐาน"));
-  if (attachments.length === 0) {
-    children.push(body("-"));
-  } else {
-    for (const level of [1, 2, 3, 4, 5]) {
-      const files = attachments.filter((a) => a.criteriaLevel === level);
-      if (files.length === 0) continue;
-      children.push(body(`ระดับ ${level}`));
-      for (const f of files) children.push(body(`• ${f.originalName}`, 400));
-    }
-  }
-
   const document = new Document({
     styles: {
       default: {
         document: { run: { font: FONT, size: 30 } },
-        heading2: { run: { font: FONT, size: 32, bold: true, color: "028090" } },
+        heading2: { run: { font: FONT, size: 32, bold: true, color: "1B3B6F" } },
       },
     },
     sections: [

@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/session";
 import { canManageIndicators } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { updateIndicator } from "@/actions/indicators";
+import { isPlaceholderCriteria } from "@/lib/scoring";
 import { IndicatorForm } from "../../indicator-form";
 
 export const dynamic = "force-dynamic";
@@ -40,11 +41,12 @@ export default async function EditIndicatorPage({
   if (!indicator) notFound();
 
   // เติมค่าเกณฑ์ให้ครบ 5 ช่องเสมอ เผื่อข้อมูลเก่าที่มีไม่ครบ
+  // ระดับที่เป็นตัวเลขแสดงตัวเลข ระดับที่เป็นข้อความแสดงข้อความเกณฑ์
   const levelValue = (level: number) => {
     const found = indicator.criteria.find((c) => c.level === level);
-    return found?.targetValue === null || found?.targetValue === undefined
-      ? ""
-      : String(found.targetValue);
+    if (!found) return "";
+    if (found.targetValue !== null) return String(found.targetValue);
+    return isPlaceholderCriteria(found.description) ? "" : found.description;
   };
 
   // ผูก id ของตัวชี้วัดเข้ากับ action ตั้งแต่ฝั่งเซิร์ฟเวอร์
@@ -94,6 +96,7 @@ export default async function EditIndicatorPage({
             levelValue(4),
             levelValue(5),
           ],
+          conditions: indicator.conditions,
         }}
       />
     </div>

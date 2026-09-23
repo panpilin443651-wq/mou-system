@@ -44,11 +44,10 @@ const COL_YEAR_PCT = COL_CUM + 3; // U % ทั้งปี
 const COL_CAUSE = COL_CUM + 4;
 const COL_FIX = COL_CUM + 5;
 const COL_EVIDENCE = COL_CUM + 6;
-const COL_NOTE = COL_CUM + 7;
-const COL_LAST = COL_NOTE;
+const COL_LAST = COL_EVIDENCE;
 
-const HEADING = "FF028090"; // สีหัวข้อของระบบ ใช้ให้ตรงกับหน้าเว็บและไฟล์ Word
-const HEADER_BG = "FFEAF6F8";
+const HEADING = "FF1B3B6F"; // สีหัวข้อของระบบ ใช้ให้ตรงกับหน้าเว็บและไฟล์ Word
+const HEADER_BG = "FFEEF3FB"; // น้ำเงินจาง ตรงกับ brand-50 บนหน้าเว็บ
 
 /** แปลงเลขคอลัมน์เป็นตัวอักษร (A, B, ... AA) สำหรับเขียนสูตรใน Excel */
 function colLetter(index: number): string {
@@ -85,7 +84,7 @@ function resolveUpto(raw: string | null, fiscalYear: number): number {
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ indicatorId: string }> }
+  { params }: { params: Promise<{ indicatorId: string }> },
 ) {
   const user = await getCurrentUser();
   if (!user) return new Response("กรุณาเข้าสู่ระบบ", { status: 401 });
@@ -98,7 +97,21 @@ export async function GET(
       department: { select: { code: true, name: true } },
       fiscalYear: { select: { year: true } },
       planHeader: true,
-      plans: { orderBy: [{ section: "asc" }, { sortOrder: "asc" }] },
+      criteria: { orderBy: { level: "asc" } },
+      planLevelReports: true,
+      plans: {
+        orderBy: [
+          { section: "asc" },
+          { criteriaLevel: "asc" },
+          { sortOrder: "asc" },
+        ],
+        include: {
+          attachments: {
+            orderBy: { uploadedAt: "asc" },
+            select: { originalName: true },
+          },
+        },
+      },
     },
   });
   if (!indicator) return new Response("ไม่พบตัวชี้วัดนี้", { status: 404 });
@@ -110,24 +123,33 @@ export async function GET(
 
   const upto = resolveUpto(
     new URL(request.url).searchParams.get("upto"),
-    indicator.fiscalYear.year
+    indicator.fiscalYear.year,
   );
 
   const book = new ExcelJS.Workbook();
   book.creator = "ระบบรายงานผล MOU - การยางแห่งประเทศไทย";
   book.created = new Date();
 
-  const sheet = book.addWorksheet(`ตัวชี้วัดที่ ${indicator.code}`.slice(0, 31), {
-    views: [{ state: "frozen", xSplit: COL_KIND, ySplit: 0 }],
-    pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 },
-  });
+  const sheet = book.addWorksheet(
+    `ตัวชี้วัดที่ ${indicator.code}`.slice(0, 31),
+    {
+      views: [{ state: "frozen", xSplit: COL_KIND, ySplit: 0 }],
+      pageSetup: {
+        orientation: "landscape",
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+      },
+    },
+  );
 
   sheet.getColumn(COL_INDEX).width = 8;
   sheet.getColumn(COL_TITLE).width = 42;
   sheet.getColumn(COL_TARGET).width = 12;
   sheet.getColumn(COL_UNIT).width = 10;
   sheet.getColumn(COL_KIND).width = 7;
-  for (let i = 0; i < MONTH_COUNT; i++) sheet.getColumn(COL_MONTH_FIRST + i).width = 8;
+  for (let i = 0; i < MONTH_COUNT; i++)
+    sheet.getColumn(COL_MONTH_FIRST + i).width = 8;
   sheet.getColumn(COL_CUM).width = 11;
   sheet.getColumn(COL_CUM_PCT).width = 11;
   sheet.getColumn(COL_YEAR).width = 11;
@@ -135,7 +157,6 @@ export async function GET(
   sheet.getColumn(COL_CAUSE).width = 26;
   sheet.getColumn(COL_FIX).width = 22;
   sheet.getColumn(COL_EVIDENCE).width = 22;
-  sheet.getColumn(COL_NOTE).width = 22;
 
   let r = 1;
 
@@ -147,7 +168,11 @@ export async function GET(
     `ส่วนงาน/หน่วยงาน ${indicator.department.code} ${indicator.department.name} ` +
     `ประจำปีบัญชี ${indicator.fiscalYear.year}`;
   titleCell.font = { bold: true, size: 14, color: { argb: HEADING } };
-  titleCell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+  titleCell.alignment = {
+    horizontal: "center",
+    vertical: "middle",
+    wrapText: true,
+  };
   sheet.getRow(r).height = 34;
   r += 1;
 
@@ -161,7 +186,10 @@ export async function GET(
     sheet.getCell(r, COL_INDEX).font = { bold: true };
     sheet.mergeCells(r, COL_TITLE, r, COL_LAST);
     sheet.getCell(r, COL_TITLE).value = value;
-    sheet.getCell(r, COL_TITLE).alignment = { wrapText: true, vertical: "middle" };
+    sheet.getCell(r, COL_TITLE).alignment = {
+      wrapText: true,
+      vertical: "middle",
+    };
     r += 1;
   }
   r += 1;
@@ -191,24 +219,36 @@ export async function GET(
       [COL_YEAR, PLAN_SECTION_YEAR_LABEL[section]],
       [COL_YEAR_PCT, "ร้อยละ"],
       [COL_CAUSE, PLAN_SECTION_CAUSE_LABEL[section]],
-      [COL_FIX, "การดำเนินการแก้ไข"],
+      [COL_FIX, "แนวทางการดำเนินการแก้ไข"],
       [COL_EVIDENCE, "หลักฐานประกอบผลการดำเนินงาน"],
-      [COL_NOTE, "คำอธิบายเพิ่มเติม (ถ้ามี)"],
     ];
     for (const [col, label] of spanned) {
       sheet.mergeCells(head1, col, head2, col);
       const cell = sheet.getCell(head1, col);
       cell.value = label;
-      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true,
+      };
     }
 
-    sheet.mergeCells(head1, COL_MONTH_FIRST, head1, COL_MONTH_FIRST + MONTH_COUNT - 1);
+    sheet.mergeCells(
+      head1,
+      COL_MONTH_FIRST,
+      head1,
+      COL_MONTH_FIRST + MONTH_COUNT - 1,
+    );
     const monthGroup = sheet.getCell(head1, COL_MONTH_FIRST);
     monthGroup.value =
       section === "TARGET"
         ? "กำหนดเป้าหมายแต่ละเดือน"
         : "กำหนดระยะเวลาการดำเนินงานแต่ละขั้นตอน/กิจกรรม";
-    monthGroup.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    monthGroup.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+      wrapText: true,
+    };
 
     FISCAL_MONTHS.forEach((m, i) => {
       const cell = sheet.getCell(head2, COL_MONTH_FIRST + i);
@@ -220,7 +260,11 @@ export async function GET(
       for (let c = COL_INDEX; c <= COL_LAST; c++) {
         const cell = sheet.getCell(rowNo, c);
         cell.font = { bold: true };
-        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: HEADER_BG } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: HEADER_BG },
+        };
         box(cell);
       }
     }
@@ -230,7 +274,8 @@ export async function GET(
     // ---- บรรทัดข้อมูล: 1 รายการ = 2 แถว (แผน/ผล) ----
     const pctRows: number[] = [];
 
-    rows.forEach((row, index) => {
+    /** เขียน 1 รายการ (2 แถว แผน/ผล) label = เลขลำดับที่แสดง เช่น "3" หรือ "2.1" */
+    const writeRow = (row: (typeof rows)[number], label: string) => {
       const planMonths = toMonths(row.planMonths);
       const actualMonths = toMonths(row.actualMonths);
       const summary = summarizeRow({ planMonths, actualMonths }, upto);
@@ -239,14 +284,20 @@ export async function GET(
       const rowActual = r + 1;
 
       for (const [col, value] of [
-        [COL_INDEX, index + 1],
+        [COL_INDEX, label],
         [COL_TITLE, row.title],
         [COL_TARGET, row.targetValue],
         [COL_UNIT, row.unit ?? ""],
         [COL_CAUSE, row.causeNote ?? ""],
         [COL_FIX, row.correctiveAction ?? ""],
-        [COL_EVIDENCE, row.evidence ?? ""],
-        [COL_NOTE, row.note ?? ""],
+        // หลักฐานเป็นไฟล์แนบแล้ว ในไฟล์ Excel จึงเขียนเป็นรายชื่อไฟล์
+        // ถ้าเป็นแถวเก่าที่เคยกรอกหลักฐานเป็นข้อความไว้ ให้คงข้อความนั้นไว้ด้วย
+        [
+          COL_EVIDENCE,
+          [row.evidence, ...row.attachments.map((a) => a.originalName)]
+            .filter(Boolean)
+            .join("\n"),
+        ],
       ] as [number, string | number | null][]) {
         sheet.mergeCells(rowPlan, col, rowActual, col);
         const cell = sheet.getCell(rowPlan, col);
@@ -299,16 +350,68 @@ export async function GET(
           result: value / 100,
         };
         sheet.getCell(rowPlan, col).numFmt = "0.0%";
-        sheet.getCell(rowPlan, col).alignment = { horizontal: "right", vertical: "middle" };
+        sheet.getCell(rowPlan, col).alignment = {
+          horizontal: "right",
+          vertical: "middle",
+        };
       }
       pctRows.push(rowPlan);
 
       for (const rowNo of [rowPlan, rowActual]) {
-        for (let c = COL_INDEX; c <= COL_LAST; c++) box(sheet.getCell(rowNo, c));
+        for (let c = COL_INDEX; c <= COL_LAST; c++)
+          box(sheet.getCell(rowNo, c));
       }
 
       r += 2;
-    });
+    };
+
+    /** แถวที่กินเต็มความกว้างตาราง ใช้กับหัวค่าเกณฑ์และรายงานผลของระดับ */
+    const writeWide = (
+      value: string,
+      opts: { bold?: boolean; fill?: string; height?: number },
+    ) => {
+      sheet.mergeCells(r, COL_INDEX, r, COL_LAST);
+      const cell = sheet.getCell(r, COL_INDEX);
+      cell.value = value;
+      cell.alignment = { wrapText: true, vertical: "top" };
+      if (opts.bold) cell.font = { bold: true };
+      if (opts.fill)
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: opts.fill },
+        };
+      for (let c = COL_INDEX; c <= COL_LAST; c++) box(sheet.getCell(r, c));
+      if (opts.height) sheet.getRow(r).height = opts.height;
+      r += 1;
+    };
+
+    if (section === "TARGET") {
+      rows.forEach((row, index) => writeRow(row, String(index + 1)));
+    } else {
+      // ขั้นตอนการดำเนินงาน แบ่งตามค่าเกณฑ์ระดับ 1-5 เหมือนหน้าเว็บ
+      const levels = indicator.criteria.map((c) => c.level);
+      for (const c of indicator.criteria) {
+        writeWide(`ค่าเกณฑ์ระดับ ${c.level}`, { bold: true, fill: HEADER_BG });
+        rows
+          .filter((row) => row.criteriaLevel === c.level)
+          .forEach((row, index) => writeRow(row, `${c.level}.${index + 1}`));
+        const report =
+          indicator.planLevelReports.find((p) => p.level === c.level)?.text ??
+          "";
+        writeWide(`รายงานผลการดำเนินงานของระดับ ${c.level}: ${report}`, {
+          height: report ? 36 : undefined,
+        });
+      }
+      const orphans = rows.filter(
+        (row) =>
+          row.criteriaLevel === null || !levels.includes(row.criteriaLevel),
+      );
+      if (orphans.length > 0) {
+        writeWide("ขั้นตอนที่ยังไม่ระบุค่าเกณฑ์ระดับ", { bold: true });
+        orphans.forEach((row, index) => writeRow(row, String(index + 1)));
+      }
+    }
 
     // ---- บรรทัดค่าเฉลี่ยท้ายตาราง ----
     sheet.mergeCells(r, COL_INDEX, r, COL_MONTH_FIRST + MONTH_COUNT);
@@ -322,7 +425,9 @@ export async function GET(
       cell.value =
         pctRows.length === 0
           ? 0
-          : { formula: `AVERAGE(${pctRows.map((n) => `${letter}${n}`).join(",")})` };
+          : {
+              formula: `AVERAGE(${pctRows.map((n) => `${letter}${n}`).join(",")})`,
+            };
       cell.numFmt = "0.0%";
       cell.font = { bold: true };
       cell.alignment = { horizontal: "right" };
@@ -345,7 +450,8 @@ export async function GET(
 
   return new Response(buffer, {
     headers: {
-      "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "Content-Type":
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       // ชื่อไฟล์ภาษาไทยต้องส่งเป็น filename* แบบเข้ารหัส UTF-8
       // ไม่งั้นเบราว์เซอร์บันทึกเป็นชื่อที่อ่านไม่ออก
       "Content-Disposition": `attachment; filename="plan.xlsx"; filename*=UTF-8''${encodeURIComponent(fileName)}`,

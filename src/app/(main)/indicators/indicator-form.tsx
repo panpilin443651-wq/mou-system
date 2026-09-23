@@ -22,7 +22,10 @@ export type IndicatorFormValues = {
   weight: string;
   direction: "HIGHER_IS_BETTER" | "LOWER_IS_BETTER";
   status: "DRAFT" | "ACTIVE" | "ARCHIVED";
+  /** ค่าเกณฑ์ระดับ 1-5 เป็นตัวเลขหรือข้อความก็ได้ */
   levels: [string, string, string, string, string];
+  /** เงื่อนไขของตัวชี้วัด (ของทั้งตัวชี้วัด ไม่แยกตามระดับ) */
+  conditions: string[];
 };
 
 type Props = {
@@ -88,6 +91,25 @@ export function IndicatorForm({
   const [state, formAction] = useActionState(action, { error: null } as FormState);
   const [levels, setLevels] = useState(initial.levels);
   const [unit, setUnit] = useState(initial.unit);
+
+  // แต่ละเงื่อนไขมี key ของตัวเอง ไม่ใช้ลำดับ index เป็น key
+  // เพราะถ้าลบข้อกลาง React จะเอาข้อความของข้อถัดไปมาใส่ช่องผิดตัว
+  const nextKey = useRef(0);
+  const [conditions, setConditions] = useState(() =>
+    initial.conditions.map((text) => ({ key: nextKey.current++, text }))
+  );
+
+  function addCondition() {
+    setConditions((prev) => [...prev, { key: nextKey.current++, text: "" }]);
+  }
+
+  function updateCondition(key: number, text: string) {
+    setConditions((prev) => prev.map((c) => (c.key === key ? { ...c, text } : c)));
+  }
+
+  function removeCondition(key: number) {
+    setConditions((prev) => prev.filter((c) => c.key !== key));
+  }
 
   // ทิศทางคำนวณจากค่าเกณฑ์ให้อัตโนมัติ แต่ผู้ใช้แก้ทับได้
   // ถ้าค่าระดับ 5 น้อยกว่าระดับ 1 แปลว่าตัวชี้วัดนี้ค่าน้อยยิ่งดี
@@ -289,23 +311,70 @@ export function IndicatorForm({
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
         <h2 className="font-semibold">ค่าเกณฑ์วัด 5 ระดับ</h2>
         <p className="mt-1 text-sm text-slate-600">
-          ค่าเป้าหมายหลักของตัวชี้วัดจะใช้ค่าระดับ 3 ตามรูปแบบ MOU
+          ค่าเป้าหมายหลักของตัวชี้วัดใช้ค่าระดับ 3 ตามรูปแบบ MOU · กรอกเป็นตัวเลขหรือข้อความก็ได้
+          (ถ้าเป็นตัวเลข ระบบคิดคะแนนและ % ความก้าวหน้าให้อัตโนมัติ ถ้าเป็นข้อความ ส่วนกลางให้คะแนนเอง)
         </p>
 
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-5">
+        <div className="mt-4 space-y-3">
           {levels.map((value, i) => (
-            <Field key={i} label={`ระดับ ${i + 1}`} htmlFor={`level${i + 1}`} required>
+            <div key={i} className="grid gap-1.5 sm:grid-cols-[8rem_1fr] sm:items-center sm:gap-3">
+              <label htmlFor={`level${i + 1}`} className="text-sm font-medium">
+                ระดับ {i + 1} <span className="text-red-600">*</span>
+                {i === 2 && (
+                  <span className="block text-xs font-normal text-brand-800">ค่าเป้าหมายหลัก</span>
+                )}
+              </label>
               <input
                 id={`level${i + 1}`}
                 name={`level${i + 1}`}
                 value={value}
                 onChange={(e) => setLevel(i, e.target.value)}
                 required
-                inputMode="decimal"
+                placeholder="ตัวเลข เช่น 94.00 หรือข้อความ เช่น จัดทำแผนแล้วเสร็จ"
                 className={inputClass}
               />
-            </Field>
+            </div>
           ))}
+        </div>
+
+        {/* เงื่อนไขของทั้งตัวชี้วัด ต่อท้ายค่าเกณฑ์ระดับ 5 */}
+        <div className="mt-5 border-t border-slate-200 pt-4">
+          <h3 className="text-sm font-semibold">เงื่อนไข</h3>
+          <p className="mt-0.5 text-xs text-slate-500">
+            เงื่อนไขของตัวชี้วัดนี้ตาม MOU เพิ่มได้หลายข้อ · เว้นว่างได้ถ้าไม่มี
+          </p>
+
+          <div className="mt-3 space-y-2">
+            {conditions.map((c, n) => (
+              <div key={c.key} className="flex items-center gap-2">
+                <span className="w-20 shrink-0 text-sm text-slate-600">ข้อ {n + 1}</span>
+                <input
+                  name="conditions"
+                  value={c.text}
+                  onChange={(e) => updateCondition(c.key, e.target.value)}
+                  aria-label={`เงื่อนไขข้อ ${n + 1}`}
+                  placeholder="เช่น รายงานผลภายในวันที่ 15 ของเดือนถัดไป"
+                  className={inputClass}
+                />
+                <button
+                  type="button"
+                  onClick={() => removeCondition(c.key)}
+                  aria-label={`ลบเงื่อนไขข้อ ${n + 1}`}
+                  className="min-h-11 shrink-0 rounded-lg px-3 text-sm text-red-700 transition hover:bg-red-50"
+                >
+                  ลบ
+                </button>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={addCondition}
+              className="rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-brand-800 transition hover:border-brand-600 hover:bg-brand-50"
+            >
+              + เพิ่มเงื่อนไข
+            </button>
+          </div>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">

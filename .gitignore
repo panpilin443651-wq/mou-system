@@ -37,7 +37,11 @@ yarn-error.log*
 /ผลการดำเนินงาน/
 /คะแนน MOU/
 /เอกสารรายงานผล/
+/ผลจากส่วนงาน/
 
 # typescript
 *.tsbuildinfo
 .neon
+
+# ภาพหน้าจอที่ถ่ายไว้ดูธีมสี - ไม่ต้องเก็บใน git
+/screenshots/

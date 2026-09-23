@@ -21,10 +21,7 @@ export async function getReportDocument(indicatorId: string, quarter: number) {
       criteria: { orderBy: { level: "asc" } },
       reports: {
         where: { quarter },
-        include: {
-          attachments: { orderBy: [{ criteriaLevel: "asc" }, { uploadedAt: "asc" }] },
-          submittedBy: { select: { name: true } },
-        },
+        include: { submittedBy: { select: { name: true } } },
       },
     },
   });
@@ -47,24 +44,8 @@ export async function getReportDocument(indicatorId: string, quarter: number) {
   };
 }
 
-/** หัวข้อข้อความยาวตามลำดับในแบบฟอร์ม ใช้ทั้ง Word และหน้าพิมพ์ */
-export function reportSections(doc: ReportDocument) {
-  const r = doc.report;
-  return [
-    { no: "1", label: "ผู้รับผิดชอบ", value: r?.responsible ?? null },
-    { no: "2", label: "วัตถุประสงค์", value: r?.objective ?? null },
-    { no: "3", label: "แผนงาน / โครงการ / การดำเนินงานสำคัญ", value: r?.keyProjects ?? null },
-    {
-      no: "4",
-      label: "รายงานผลการดำเนินงานตามแผนงาน/โครงการ/กิจกรรมดังกล่าว",
-      value: r?.progressReport ?? null,
-    },
-    { no: "5", label: "ปัญหาอุปสรรค และการแก้ไข", value: r?.problems ?? null },
-    { no: "6.1", label: "ปัจจัยที่สนับสนุน", value: r?.supportFactors ?? null },
-    { no: "6.2", label: "ปัจจัยที่เป็นปัญหา/อุปสรรค", value: r?.obstacleFactors ?? null },
-    { no: "7", label: "คำอธิบายผลการดำเนินงานเพิ่มเติม", value: r?.narrative ?? null },
-  ];
-}
+// หัวข้อข้อความยาว (ปัญหาอุปสรรค ปัจจัย) และผลรายค่าเกณฑ์พร้อมไฟล์แนบ
+// ถูกเอาออกจากรายงานผลแล้ว (17 ก.ย. 2569) เอกสารจึงเหลือข้อมูลตัวชี้วัด ค่าเกณฑ์ และสรุปผล
 
 /** ชื่อไฟล์ที่ผู้ใช้จะได้ ตั้งให้สื่อความหมายและเรียงง่ายเมื่อมีหลายไฟล์ */
 export function reportFileName(doc: ReportDocument, extension: string) {

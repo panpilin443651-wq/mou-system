@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/session";
 import { ROLE_LABEL, visibleMenus } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { logoutAction } from "@/actions/auth";
+import { Logo } from "@/components/logo";
 import { MobileNav } from "./mobile-nav";
 
 // โฟลเดอร์ (main) ที่มีวงเล็บ = จัดกลุ่มไฟล์โดยไม่กลายเป็นส่วนหนึ่งของ URL
@@ -23,8 +24,12 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const links = [
     { href: "/dashboard", label: "ภาพรวม", show: menus.dashboard },
     { href: "/indicators", label: "ส่วนงานและหน่วยงาน", show: menus.indicators },
-    { href: "/reports", label: "รายงานผล", show: menus.reports },
-    { href: "/plans", label: "แผนดำเนินงาน", show: menus.plans },
+    // รายงานผลกับแผนดำเนินงานรวมเป็นเมนูเดียว (หน้า /plans พาไปที่หน้านี้)
+    {
+      href: "/reports",
+      label: "รายงานผลและแผนดำเนินงาน",
+      show: menus.reports || menus.plans,
+    },
     { href: "/admin", label: "ตั้งค่าระบบ", show: menus.admin },
     { href: "/account", label: "บัญชีของฉัน", show: true },
   ].filter((l) => l.show);
@@ -40,10 +45,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <MobileNav links={links} />
 
-          <Link href="/dashboard" className="min-w-0 flex-1">
-            <span className="block truncate font-semibold">ระบบรายงานผล MOU</span>
-            <span className="block truncate text-xs text-slate-500">
-              {department ? `${department.code} ${department.name}` : ROLE_LABEL[user.role]}
+          <Link href="/dashboard" className="flex min-w-0 flex-1 items-center gap-2.5">
+            <Logo size={36} className="h-9 w-9 shrink-0" />
+            <span className="min-w-0">
+              <span className="block truncate font-semibold text-brand-800">ระบบรายงานผล MOU</span>
+              <span className="block truncate text-xs text-slate-500">
+                {department ? `${department.code} ${department.name}` : ROLE_LABEL[user.role]}
+              </span>
             </span>
           </Link>
 

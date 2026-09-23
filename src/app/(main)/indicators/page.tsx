@@ -1,79 +1,42 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/session";
-import { canManageIndicators, departmentScope } from "@/lib/permissions";
+import { canManageIndicators, canManageMouScores, departmentScope } from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { Filters } from "./filters";
+import {
+  visibleDepartments,
+  filterDepartments,
+  selectedDepartment,
+} from "@/lib/department-picker";
+import {
+  departmentMouScores,
+  latestTotalsByDepartment,
+  MOU_QUARTERS,
+  type DepartmentMouScores,
+} from "@/lib/mou-scores";
+import { formatThaiDateTime } from "@/lib/datetime";
+import { DepartmentFilters } from "../department-filters";
+import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
+import { IndicatorScoreTable } from "./indicator-score-table";
+import { MouScoreForm } from "./mou-score-form";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน | ระบบรายงานผล MOU" };
 
-const PAGE_SIZE = 50;
-
 export default async function IndicatorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; dept?: string; dim?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; dept?: string; edit?: string }>;
 }) {
   const user = await requireUser();
   const sp = await searchParams;
 
   const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
-  const page = Math.max(1, Number(sp.page ?? "1") || 1);
   const canManage = canManageIndicators(user);
-  const canPickDepartment = user.role !== "DEPT_USER";
 
-  // เงื่อนไขกรอง - departmentScope บังคับให้ DEPT_USER เห็นเฉพาะของตัวเองเสมอ
-  // ถ้าผู้ใช้ส่ง dept ที่ไม่ใช่ของตัวเองมาใน URL ค่านั้นจะถูกทับด้วย scope
-  const where: Prisma.IndicatorWhereInput = {
-    ...(fiscalYear ? { fiscalYearId: fiscalYear.id } : {}),
-    ...(canPickDepartment && sp.dept ? { departmentId: sp.dept } : {}),
-    ...(sp.dim ? { dimension: sp.dim } : {}),
-    ...(sp.q
-      ? {
-          OR: [
-            { name: { contains: sp.q, mode: "insensitive" } },
-            { code: { startsWith: sp.q } },
-          ],
-        }
-      : {}),
-    ...departmentScope(user),
-  };
-
-  const [total, indicators, departments, dimensionRows] = await Promise.all([
-    db.indicator.count({ where }),
-    db.indicator.findMany({
-      where,
-      include: { department: { select: { code: true, name: true } } },
-      orderBy: [{ department: { sortOrder: "asc" } }, { code: "asc" }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    canPickDepartment
-      ? db.department.findMany({
-          where: { isActive: true },
-          select: { id: true, code: true, name: true },
-          orderBy: { sortOrder: "asc" },
-        })
-      : Promise.resolve([]),
-    db.indicator.findMany({
-      where: fiscalYear ? { fiscalYearId: fiscalYear.id } : {},
-      select: { dimension: true },
-      distinct: ["dimension"],
-      orderBy: { dimension: "asc" },
-    }),
-  ]);
-
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-
-  function pageLink(target: number) {
-    const next = new URLSearchParams();
-    if (sp.q) next.set("q", sp.q);
-    if (sp.dept) next.set("dept", sp.dept);
-    if (sp.dim) next.set("dim", sp.dim);
-    next.set("page", String(target));
-    return `/indicators?${next.toString()}`;
-  }
+  const departments = await visibleDepartments(user);
+  const matched = filterDepartments(departments, sp.q);
+  const current = selectedDepartment(matched, sp.dept);
 
   return (
     <div className="space-y-4">
@@ -81,8 +44,8 @@ export default async function IndicatorsPage({
         <div>
           <h1 className="text-xl font-bold sm:text-2xl">ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน</h1>
           <p className="mt-1 text-sm text-slate-600">
-            {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"} · พบ{" "}
-            {total.toLocaleString("th-TH")} รายการ
+            {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"}
+            {current ? ` · ${current.code} ${current.name}` : ` · ${matched.length} ส่วนงาน`}
           </p>
         </div>
 
@@ -96,99 +59,236 @@ export default async function IndicatorsPage({
         )}
       </div>
 
-      <Filters
-        showDepartment={canPickDepartment}
-        departments={departments.map((d) => ({ value: d.id, label: `${d.code} ${d.name}` }))}
-        dimensions={dimensionRows
-          .map((d) => d.dimension)
-          .filter((d): d is string => Boolean(d))
-          .map((d) => ({ value: d, label: d }))}
+      <DepartmentFilters
+        basePath="/indicators"
+        show={departments.length > 1}
+        departments={matched.map((d) => ({ value: d.id, label: `${d.code} ${d.name}` }))}
       />
 
-      {indicators.length === 0 ? (
+      {!fiscalYear ? (
         <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          ไม่พบตัวชี้วัดตามเงื่อนไขที่เลือก
+          ยังไม่ได้ตั้งปีบัญชีที่ใช้งานอยู่ ตั้งได้ที่เมนู ตั้งค่าระบบ
         </p>
+      ) : current === null ? (
+        <DepartmentSummary
+          fiscalYearId={fiscalYear.id}
+          user={user}
+          departments={matched}
+        />
       ) : (
-        <>
-          {/* ตารางกว้างเกินจอมือถือ จึงให้เลื่อนแนวนอนในกรอบตัวเอง
-              ไม่ปล่อยให้ทั้งหน้าเลื่อนซ้ายขวา */}
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table className="w-full min-w-[52rem] text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-600">
-                  <th className="px-4 py-2.5 font-medium">ส่วนงาน</th>
-                  <th className="px-3 py-2.5 font-medium">ข้อ</th>
-                  <th className="px-3 py-2.5 font-medium">ชื่อตัวชี้วัด</th>
-                  <th className="px-3 py-2.5 font-medium">มิติ</th>
-                  <th className="px-3 py-2.5 font-medium">หน่วย</th>
-                  <th className="px-3 py-2.5 text-right font-medium">เป้าหมาย</th>
-                  <th className="px-4 py-2.5 text-right font-medium">น้ำหนัก</th>
-                </tr>
-              </thead>
-              <tbody>
-                {indicators.map((ind) => (
-                  <tr key={ind.id} className="border-b border-slate-100 last:border-0 hover:bg-slate-50">
-                    <td className="whitespace-nowrap px-4 py-2.5" title={ind.department.name}>
-                      {ind.department.code}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 tabular-nums">{ind.code}</td>
-                    <td className="px-3 py-2.5">
-                      <Link
-                        href={`/indicators/${ind.id}`}
-                        className="-my-2.5 block py-3 text-brand-800 underline-offset-2 hover:underline"
-                      >
-                        {ind.name}
-                      </Link>
-                      {ind.status !== "ACTIVE" && (
-                        <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
-                          {ind.status === "DRAFT" ? "ร่าง" : "เก็บเข้าคลัง"}
-                        </span>
-                      )}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-slate-600">
-                      {ind.dimension ?? "-"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-slate-600">{ind.unit}</td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
-                      {ind.targetValue}
-                    </td>
-                    <td className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">
-                      {ind.weight}%
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-slate-600">
-                หน้า {page} จาก {totalPages}
-              </span>
-              <div className="flex gap-2">
-                {page > 1 && (
-                  <Link
-                    href={pageLink(page - 1)}
-                    className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 transition hover:bg-slate-50"
-                  >
-                    ก่อนหน้า
-                  </Link>
-                )}
-                {page < totalPages && (
-                  <Link
-                    href={pageLink(page + 1)}
-                    className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 transition hover:bg-slate-50"
-                  >
-                    ถัดไป
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </>
+        <DepartmentScores
+          fiscalYearId={fiscalYear.id}
+          department={current}
+          showBack={departments.length > 1}
+          canEdit={canManageMouScores(user)}
+          editQuarter={parseQuarter(sp.edit)}
+          searchQuery={sp.q}
+        />
       )}
     </div>
   );
 }
+
+/** อ่านไตรมาสจาก ?edit= - คืน null ถ้าไม่ได้สั่งแก้ไขหรือเลขไม่ถูกต้อง */
+function parseQuarter(raw: string | undefined): number | null {
+  const n = Number(raw);
+  return MOU_QUARTERS.includes(n as (typeof MOU_QUARTERS)[number]) ? n : null;
+}
+
+/** ชั้นที่ 1 - รายชื่อส่วนงาน พร้อมจำนวนตัวชี้วัด น้ำหนักรวม และคะแนนงวดล่าสุด */
+async function DepartmentSummary({
+  fiscalYearId,
+  user,
+  departments,
+}: {
+  fiscalYearId: number;
+  user: Parameters<typeof departmentScope>[0];
+  departments: { id: string; code: string; name: string }[];
+}) {
+  const where: Prisma.IndicatorWhereInput = { fiscalYearId, ...departmentScope(user) };
+
+  // นับทีเดียวทุกหน่วย แทนการยิงคำถามทีละส่วนงาน 30 รอบ
+  const [grouped, latestTotals] = await Promise.all([
+    db.indicator.groupBy({
+      by: ["departmentId"],
+      where,
+      _count: { _all: true },
+      _sum: { weight: true },
+    }),
+    latestTotalsByDepartment(fiscalYearId),
+  ]);
+
+  const byDepartment = new Map(grouped.map((g) => [g.departmentId, g]));
+
+  const rows: DepartmentRow[] = departments.map((d) => {
+    const g = byDepartment.get(d.id);
+    const total = latestTotals.get(d.id);
+
+    return {
+      id: d.id,
+      code: d.code,
+      name: d.name,
+      stats: [
+        { label: "ตัวชี้วัด", value: (g?._count._all ?? 0).toLocaleString("th-TH") },
+        { label: "น้ำหนักรวม", value: `${g?._sum.weight ?? 0}%` },
+        {
+          label: "คะแนนล่าสุด",
+          value: total ? `${total.value.toFixed(3)} (${total.label})` : "–",
+        },
+      ],
+    };
+  });
+
+  return (
+    <DepartmentList
+      rows={rows}
+      hrefFor={(id) => `/indicators?dept=${id}`}
+      emptyText="ไม่พบส่วนงานหรือหน่วยงานตามคำค้น"
+    />
+  );
+}
+
+/** ชั้นที่ 2 - คะแนนรายตัวชี้วัดของส่วนงานที่เลือก (และโหมดแก้ไขของส่วนกลาง) */
+async function DepartmentScores({
+  fiscalYearId,
+  department,
+  showBack,
+  canEdit,
+  editQuarter,
+  searchQuery,
+}: {
+  fiscalYearId: number;
+  department: { id: string; code: string; name: string };
+  showBack: boolean;
+  canEdit: boolean;
+  editQuarter: number | null;
+  searchQuery: string | undefined;
+}) {
+  const scores = await departmentMouScores(fiscalYearId, department.id);
+
+  function link(params: Record<string, string | undefined>) {
+    const next = new URLSearchParams();
+    if (searchQuery) next.set("q", searchQuery);
+    next.set("dept", department.id);
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) next.set(key, value);
+    }
+    return `/indicators?${next.toString()}`;
+  }
+
+  if (scores.rows.length === 0) {
+    return (
+      <div className="space-y-4">
+        {showBack && <BackToDepartments href="/indicators" />}
+        <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+          ส่วนงานนี้ยังไม่มีตัวชี้วัดในปีบัญชีที่ใช้งานอยู่
+        </p>
+      </div>
+    );
+  }
+
+  // โหมดแก้ไข - เฉพาะส่วนกลาง และต้องระบุไตรมาสมาด้วย
+  if (editQuarter !== null && canEdit) {
+    return (
+      <div className="space-y-4">
+        <Link
+          href={link({})}
+          className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+        >
+          ← กลับไปหน้าคะแนน
+        </Link>
+
+        <div>
+          <h2 className="text-base font-semibold">กรอกคะแนนไตรมาส {editQuarter}</h2>
+          <p className="mt-1 text-sm text-slate-600">
+            {department.code} {department.name} · {scores.rows.length} ตัวชี้วัด
+          </p>
+        </div>
+
+        <QuarterTabs current={editQuarter} link={link} />
+
+        <MouScoreForm
+          departmentId={department.id}
+          quarter={editQuarter}
+          rows={scores.rows}
+          backHref={link({})}
+        />
+      </div>
+    );
+  }
+
+  // ถ้ายังไม่มีข้อมูลสักไตรมาส ให้แสดงไตรมาส 2-4 ไว้เป็นโครงตาม MOU ปีนี้
+  const quarters = scores.quartersWithData.length > 0 ? scores.quartersWithData : [2, 3, 4];
+
+  // งวดท้ายสุดที่มีตัวเลข - งวดที่ยังไม่ถึงกำหนดประเมินจะว่างไว้
+  const latest = [...scores.totals.cumulative]
+    .reverse()
+    .find((c): c is { label: string; value: number } => c.value !== null);
+
+  return (
+    <div className="space-y-4">
+      {showBack && <BackToDepartments href="/indicators" />}
+
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-base font-semibold">คะแนนรายตัวชี้วัด</h2>
+        {latest && (
+          <p className="text-sm text-slate-600">
+            คะแนนรวมงวด {latest.label}{" "}
+            <span className="font-semibold text-brand-800">{latest.value.toFixed(3)}</span> จาก 5
+          </p>
+        )}
+      </div>
+
+      {canEdit && (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+          <span className="px-1 text-sm text-slate-600">กรอก / แก้คะแนน:</span>
+          <QuarterTabs current={null} link={link} />
+        </div>
+      )}
+
+      <IndicatorScoreTable scores={scores} quarters={quarters} />
+
+      <p className="text-xs text-slate-500">
+        คะแนนชุดนี้เป็นคะแนนที่ส่วนกลางประเมิน คนละชุดกับผลที่ส่วนงานกรอกในเมนู
+        &quot;รายงานผล&quot; · ช่องว่างคือยังไม่ประเมิน ไม่ใช่ได้ 0 คะแนน ·
+        คะแนนถ่วงน้ำหนักสะสมคำนวณจาก ผล × น้ำหนัก ÷ 100
+        {scores.lastEdit && (
+          <>
+            {" · แก้ล่าสุด "}
+            {formatThaiDateTime(scores.lastEdit.at)}
+            {scores.lastEdit.by ? ` โดย ${scores.lastEdit.by}` : ""}
+          </>
+        )}
+      </p>
+    </div>
+  );
+}
+
+/** ปุ่มเลือกไตรมาสที่จะกรอก */
+function QuarterTabs({
+  current,
+  link,
+}: {
+  current: number | null;
+  link: (params: Record<string, string | undefined>) => string;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {MOU_QUARTERS.map((q) => (
+        <Link
+          key={q}
+          href={link({ edit: String(q) })}
+          className={
+            q === current
+              ? "inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
+              : "inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-50"
+          }
+        >
+          ไตรมาส {q}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+export type { DepartmentMouScores };

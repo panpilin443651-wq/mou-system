@@ -28,10 +28,11 @@ export type Criteria = { level: number; targetValue: number | null };
  */
 export function calcProgressPct(
   actualValue: number | null,
-  targetValue: number,
+  targetValue: number | null,
   direction: ScoreDirection
 ): number | null {
-  if (actualValue === null) return null;
+  // ค่าเป้าหมายที่เป็นข้อความ (targetValue = null) เอามาหารไม่ได้ จึงไม่มี % ความก้าวหน้า
+  if (actualValue === null || targetValue === null) return null;
 
   let raw: number;
   if (direction === "LOWER_IS_BETTER") {
@@ -96,6 +97,30 @@ export function isPlaceholderCriteria(description: string | null | undefined): b
   return /^ระดับ\s*[1-5]\s*=\s*/.test(description.trim());
 }
 
+/**
+ * แยกค่าที่ผู้ใช้กรอกในช่องค่าเกณฑ์/ค่าเป้าหมาย ว่าเป็นตัวเลขหรือข้อความ
+ *
+ * MOU บางตัวชี้วัดกำหนดเกณฑ์เป็นคำบรรยาย เช่น "จัดทำแผนแล้วเสร็จ" ไม่ใช่ตัวเลข
+ * ตัวเลขใส่จุลภาคคั่นหลักได้ ("1,250.50") ส่วนอย่างอื่นถือเป็นข้อความทั้งหมด
+ */
+export function parseTargetInput(raw: string): { value: number | null; text: string | null } {
+  const trimmed = raw.trim();
+  if (trimmed === "") return { value: null, text: null };
+  const numeric = trimmed.replace(/,/g, "");
+  if (/^-?\d+(\.\d+)?$/.test(numeric)) return { value: Number(numeric), text: null };
+  return { value: null, text: trimmed };
+}
+
+/** ค่าเป้าหมายหลักสำหรับแสดงผล ใช้ตัวเลขถ้ามี ไม่งั้นใช้ข้อความ */
+export function targetLabel(indicator: {
+  targetValue: number | null;
+  targetText: string | null;
+  unit: string;
+}): string {
+  if (indicator.targetValue !== null) return `${indicator.targetValue} ${indicator.unit}`;
+  return indicator.targetText ?? "-";
+}
+
 /** ข้อความอธิบายคะแนนสำหรับแสดงบนหน้าจอ */
 export function scoreLabel(scoreLevel: number | null): string {
   if (scoreLevel === null) return "ยังไม่ได้ประเมิน";
@@ -119,7 +144,7 @@ export function weightedScore(scoreLevel: number | null, weight: number): number
 export function scoreClass(scoreLevel: number | null): string {
   if (scoreLevel === null) return "bg-slate-100 text-slate-600";
   if (scoreLevel >= 4) return "bg-emerald-50 text-emerald-800";
-  if (scoreLevel === 3) return "bg-sky-50 text-sky-800";
+  if (scoreLevel === 3) return "bg-brand-50 text-brand-800";
   if (scoreLevel >= 1) return "bg-amber-50 text-amber-800";
   return "bg-red-50 text-red-700";
 }

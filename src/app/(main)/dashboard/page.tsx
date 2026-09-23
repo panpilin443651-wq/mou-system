@@ -2,32 +2,27 @@ import Link from "next/link";
 import { requireUser } from "@/lib/session";
 import { ROLE_LABEL } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { getDashboardData } from "@/lib/dashboard";
 import {
-  getDashboardData,
-  parseQuarterFilter,
-  quarterFilterLabel,
-} from "@/lib/dashboard";
-import { QUARTERS, QUARTER_MONTHS } from "@/lib/plan";
-import { ScoreBar } from "./score-bar";
-import {
-  departmentScores,
-  MOU_SCORE_MAX,
+  averageYearScore,
+  departmentScoresFor,
+  groupScoresByLines,
+  yearsWithScores,
+  type DepartmentScoreData,
+  type DepartmentScoreRow,
+  type QuarterKey,
 } from "@/lib/department-scores";
+import { YearScoreChart } from "./year-score-chart";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ภาพรวม | ระบบรายงานผล MOU" };
 
-export default async function DashboardPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
+export default async function DashboardPage() {
   const user = await requireUser();
-  const sp = await searchParams;
-  const quarter = parseQuarterFilter(sp.q);
+  // เอาแถบเลือกไตรมาสออกแล้ว ตัวเลขสรุปจึงใช้ไตรมาสล่าสุดที่ส่งแล้วเสมอ
+  const quarter = "latest";
 
   const data = await getDashboardData(user, quarter);
-  const showComparison = data.departments.length > 1;
 
   // รหัสส่วนงานของผู้ใช้ ใช้ทั้งไฮไลต์แถวและจำกัดสิ่งที่มองเห็น
   const myDepartment = user.departmentId
@@ -38,18 +33,59 @@ export default async function DashboardPage({
     : null;
   const myCode = myDepartment?.code ?? null;
 
+  // ไฟล์คะแนนอ้างส่วนงานด้วยรหัส แต่หน้ารายงานผลรับ id จึงต้องแปลงก่อนทำลิงก์
+  // หน้ารายงานผลตรวจสิทธิ์เองอีกชั้น ถ้าเปิด dept ที่ไม่มีสิทธิ์จะไม่เห็นข้อมูล
+  const allDepartments = await db.department.findMany({
+    select: { id: true, code: true, isActive: true, commandLineId: true },
+    orderBy: { sortOrder: "asc" },
+  });
+  const departmentIdByCode = new Map(allDepartments.map((d) => [d.code, d.id]));
+
+  // สายบังคับบัญชาตามที่ส่วนกลางจัดไว้ใน ตั้งค่าระบบ > สายบังคับบัญชา
+  const commandLines = await db.commandLine.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { id: true, name: true },
+  });
+  const activeDepartments = allDepartments.filter((d) => d.isActive);
+
+  // คะแนนจากไฟล์สรุปของส่วนกลาง ของปีบัญชีที่ใช้งานอยู่
+  // เปลี่ยนปีบัญชีที่ ตั้งค่าระบบ แล้วหน้านี้เปลี่ยนตามทันที ไม่ค้างเป็นปีเก่า
+  const scores = departmentScoresFor(data.fiscalYear?.year ?? null);
+
   // ผู้รับผิดชอบส่วนงานเห็นเฉพาะแถวของตัวเอง ตามกฎการมองเห็นเดียวกับทั้งระบบ
   // ส่วนกลางและผู้บริหารเห็นทุกแถวเพื่อเปรียบเทียบกัน
-  const visibleScores =
-    user.role === "DEPT_USER"
-      ? departmentScores.departments.filter((d) => d.code === myCode)
-      : departmentScores.departments;
+  const visibleScores = !scores
+    ? []
+    : user.role === "DEPT_USER"
+      ? scores.departments.filter((d) => d.code === myCode)
+      : scores.departments;
+
+  // คะแนนชุดเดียวกัน แต่จัดกลุ่มตามสายบังคับบัญชา ใช้กฎการมองเห็นเดียวกัน
+  const lineGroups = !scores
+    ? []
+    : groupScoresByLines(
+        scores,
+        commandLines.map((l) => ({
+          name: l.name,
+          codes: activeDepartments.filter((d) => d.commandLineId === l.id).map((d) => d.code),
+        })),
+        activeDepartments.filter((d) => d.commandLineId === null).map((d) => d.code),
+        user.role === "DEPT_USER" ? new Set(myCode ? [myCode] : []) : null
+      );
+
+  // คะแนนเฉลี่ยบนการ์ด ใช้คะแนนปีจากไฟล์สรุปของส่วนกลาง ชุดเดียวกับกราฟและตารางข้างล่าง
+  // (เดิมคิดจากผลที่กรอกในระบบ ซึ่งยังไม่มีใครกรอก การ์ดจึงขึ้น – ตลอด)
+  // ผู้รับผิดชอบส่วนงานเห็นคะแนนของส่วนงานตัวเอง ส่วนกลางและผู้บริหารเห็นค่าเฉลี่ยทุกส่วนงาน
+  const averageScore = averageYearScore(visibleScores);
 
   const tiles = [
     {
-      label: "ตัวชี้วัดที่ดูอยู่",
-      value: data.indicatorCount.toLocaleString("th-TH"),
-      hint: user.role === "DEPT_USER" ? "ของส่วนงานคุณ" : `${data.departments.length} ส่วนงาน`,
+      label: "ส่วนงาน",
+      value: data.departments.length.toLocaleString("th-TH"),
+      hint:
+        user.role === "DEPT_USER"
+          ? "ส่วนงานของคุณ"
+          : `${data.indicatorCount.toLocaleString("th-TH")} ตัวชี้วัด`,
     },
     {
       label: "ส่งผลแล้ว",
@@ -57,15 +93,21 @@ export default async function DashboardPage({
       hint: `${data.submittedCount.toLocaleString("th-TH")} จาก ${data.indicatorCount.toLocaleString("th-TH")} ตัวชี้วัด`,
     },
     {
-      label: "คะแนนเฉลี่ย",
-      value: data.averageWeightedScore === null ? "–" : data.averageWeightedScore.toFixed(2),
-      hint: "จากคะแนนเต็ม 5",
+      label: user.role === "DEPT_USER" ? "คะแนนปี" : "คะแนนเฉลี่ย",
+      value: averageScore === null ? "–" : averageScore.toFixed(3),
+      hint: !scores
+        ? `ยังไม่มีคะแนนของปีบัญชี ${data.fiscalYear?.year ?? "-"}`
+        : `คะแนนปี เต็ม 5 · สะสมถึงไตรมาส ${scores.latestQuarter}${
+            user.role === "DEPT_USER" ? "" : ` · ${visibleScores.length} ส่วนงาน`
+          }`,
     },
     {
       label: "ยังไม่ส่งเลย",
       value: data.notStartedDepartments.length.toLocaleString("th-TH"),
       hint:
-        data.notStartedDepartments.length === 0
+        data.departments.length === 0
+          ? "ปีบัญชีนี้ยังไม่มีตัวชี้วัด"
+          : data.notStartedDepartments.length === 0
           ? "ทุกส่วนงานเริ่มส่งแล้ว"
           : `ส่วนงาน: ${data.notStartedDepartments.slice(0, 4).join(" · ")}${
               data.notStartedDepartments.length > 4 ? " …" : ""
@@ -96,36 +138,6 @@ export default async function DashboardPage({
         </a>
       </div>
 
-      {/* ตัวกรองไตรมาส วางไว้แถวเดียวเหนือทุกอย่าง เพื่อให้เห็นชัดว่ากรองอะไรอยู่ */}
-      <nav className="flex flex-wrap gap-2" aria-label="เลือกไตรมาส">
-        <Link
-          href="/dashboard"
-          aria-current={quarter === "latest" ? "page" : undefined}
-          className={
-            quarter === "latest"
-              ? "inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
-              : "inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
-          }
-        >
-          ล่าสุดที่ส่งแล้ว
-        </Link>
-        {QUARTERS.map((q) => (
-          <Link
-            key={q}
-            href={`/dashboard?q=${q}`}
-            aria-current={quarter === q ? "page" : undefined}
-            className={
-              quarter === q
-                ? "inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
-                : "inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
-            }
-          >
-            ไตรมาส {q}
-            <span className="ml-1 text-xs opacity-75">({QUARTER_MONTHS[q]})</span>
-          </Link>
-        ))}
-      </nav>
-
       <dl className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {tiles.map((t) => (
           <div
@@ -146,177 +158,227 @@ export default async function DashboardPage({
         </p>
       )}
 
-      {/* คะแนนภาพรวมของแต่ละส่วนงาน ตามไฟล์สรุปของส่วนกลาง
-          แยกจากตัวเลขที่ระบบคำนวณเอง เพราะเป็นคนละชุดข้อมูล
-          ถ้าเอามาปนกันโดยไม่บอก ผู้อ่านจะแยกไม่ออกว่าเลขไหนมาจากไหน */}
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
-          <h2 className="font-semibold">คะแนนภาพรวมของแต่ละส่วนงาน</h2>
-          <p className="mt-0.5 text-sm text-slate-600">
-            ปีบัญชี {departmentScores.fiscalYear} · จากไฟล์สรุปของส่วนกลาง{" "}
-            <span className="text-slate-500">({departmentScores.source})</span>
+      {!scores ? (
+        // ยังไม่ได้นำเข้าไฟล์คะแนนของปีบัญชีนี้ บอกให้ชัดแทนการโชว์คะแนนปีอื่น
+        <section className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center sm:px-6">
+          <h2 className="font-semibold">
+            ยังไม่มีคะแนนภาพรวมของปีบัญชี {data.fiscalYear?.year ?? "-"}
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            กราฟและตารางคะแนนของแต่ละส่วนงานจะแสดงเมื่อนำเข้าไฟล์สรุปคะแนนของปีนี้แล้ว
+            {yearsWithScores().length > 0 &&
+              ` · ตอนนี้มีข้อมูลของปีบัญชี ${yearsWithScores().join(", ")}`}
           </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[46rem] text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-600">
-                <th className="px-4 py-2.5 font-medium sm:px-5">ลำดับ</th>
-                <th className="px-3 py-2.5 font-medium">ส่วนงาน</th>
-                <th className="w-64 px-3 py-2.5 font-medium">
-                  คะแนนถ่วงน้ำหนัก (MOU) เต็ม 5
-                </th>
-                <th className="px-4 py-2.5 text-right font-medium sm:px-5">
-                  ตัวชี้วัดองค์กร (PA)
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleScores.map((d) => (
-                <tr
-                  key={d.rank}
-                  className={`border-b border-slate-100 last:border-0 ${d.code === myCode ? "bg-accent-50" : ""}`}
-                >
-                  <td className="px-4 py-2.5 tabular-nums text-slate-500 sm:px-5">{d.rank}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5">
-                    {d.sourceName}
-                    {!d.inSystem && (
-                      <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
-                        ไม่มีในระบบแล้ว
-                      </span>
-                    )}
-                    {d.code === myCode && (
-                      <span className="ml-2 rounded bg-accent-200 px-1.5 py-0.5 text-xs font-medium text-accent-900">
-                        ส่วนงานของคุณ
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2.5">
-                    <div className="flex items-center gap-3">
-                      <ScoreBar value={d.mouScore} max={MOU_SCORE_MAX} label={d.sourceName} />
-                      <span className="w-12 shrink-0 text-right tabular-nums">
-                        {d.mouScore.toFixed(3)}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums sm:px-5">
-                    {d.paScore === null ? "–" : d.paScore.toFixed(5)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <p className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500 sm:px-5">
-          ตัวเลขชุดนี้มาจากไฟล์สรุปของส่วนกลาง ไม่ได้คำนวณจากผลที่กรอกในระบบ
-          จึงไม่เปลี่ยนตามการกรอกผลรายไตรมาส · ส่วนตัวเลขที่ระบบคำนวณเองอยู่ในหัวข้อถัดไป
-        </p>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
-          <h2 className="font-semibold">สรุปตามมิติ</h2>
-          <p className="mt-0.5 text-sm text-slate-600">
-            คะแนนเฉลี่ยของตัวชี้วัดที่ส่งผลแล้วในแต่ละมิติ · {quarterFilterLabel(quarter)}
-          </p>
-        </div>
-
-        {data.dimensions.length === 0 ? (
-          <p className="px-4 py-6 text-sm text-slate-600 sm:px-5">ยังไม่มีข้อมูลตัวชี้วัด</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[40rem] text-sm">
-              <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-600">
-                  <th className="px-4 py-2.5 font-medium sm:px-5">มิติ</th>
-                  <th className="px-3 py-2.5 text-right font-medium">ตัวชี้วัด</th>
-                  <th className="px-3 py-2.5 text-right font-medium">ส่งแล้ว</th>
-                  <th className="px-3 py-2.5 text-right font-medium">สัดส่วนน้ำหนัก</th>
-                  <th className="w-56 px-4 py-2.5 font-medium sm:px-5">คะแนนเฉลี่ย (เต็ม 5)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.dimensions.map((d) => (
-                  <tr key={d.dimension} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-2.5 sm:px-5">{d.dimension}</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{d.indicatorCount}</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{d.submittedCount}</td>
-                    <td className="px-3 py-2.5 text-right tabular-nums">{d.weightShare}%</td>
-                    <td className="px-4 py-2.5 sm:px-5">
-                      {d.averageScore === null ? (
-                        <span className="text-slate-400">ยังไม่มีผล</span>
-                      ) : (
-                        <div className="flex items-center gap-3">
-                          <ScoreBar value={d.averageScore} label={d.dimension} />
-                          <span className="w-10 shrink-0 text-right tabular-nums">
-                            {d.averageScore.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        </section>
+      ) : (
+        <>
+        {/* กราฟเปรียบเทียบคะแนนปีระหว่างส่วนงาน ข้อมูลชุดเดียวกับตารางข้างล่าง
+            ซ่อนเมื่อเห็นได้ส่วนงานเดียว เพราะกราฟแท่งเดียวไม่มีอะไรให้เปรียบเทียบ */}
+        {visibleScores.length > 1 && (
+          <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+            <div className={SECTION_HEAD}>
+              <h2 className="font-semibold">เปรียบเทียบคะแนนปีของแต่ละส่วนงาน</h2>
+              <p className="mt-0.5 text-sm text-slate-600">
+                ปีบัญชี {scores.fiscalYear} · สะสมถึงไตรมาส {scores.latestQuarter} ·
+                เรียงจากคะแนนมากไปน้อย
+              </p>
+            </div>
+            <div className={SECTION_BODY}>
+              <YearScoreChart rows={visibleScores} myCode={myCode} />
+            </div>
+          </section>
         )}
-      </section>
 
-      {showComparison && (
+        {/* คะแนนภาพรวมของแต่ละส่วนงาน ตามไฟล์สรุปของส่วนกลาง
+            แยกจากตัวเลขที่ระบบคำนวณเอง เพราะเป็นคนละชุดข้อมูล
+            ถ้าเอามาปนกันโดยไม่บอก ผู้อ่านจะแยกไม่ออกว่าเลขไหนมาจากไหน */}
         <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
-            <h2 className="font-semibold">เปรียบเทียบส่วนงาน</h2>
+          <div className={SECTION_HEAD}>
+            <h2 className="font-semibold">คะแนนภาพรวมของแต่ละส่วนงาน</h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              เรียงตามคะแนนถ่วงน้ำหนัก (คะแนน × น้ำหนัก ÷ 100 รวมทุกตัวชี้วัด · เต็ม 5) ·{" "}
-              {quarterFilterLabel(quarter)}
+              ปีบัญชี {scores.fiscalYear} · ไตรมาส {scores.latestQuarter} ·
+              เรียงตามคะแนนปี · คะแนนเต็ม 5 ·
+              จากไฟล์สรุปของส่วนกลาง{" "}
+              <span className="text-slate-500">({scores.source})</span>
             </p>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[44rem] text-sm">
+          <div className={`${SECTION_BODY} overflow-x-auto`}>
+            <table className={TABLE}>
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-600">
-                  <th className="px-4 py-2.5 font-medium sm:px-5">ลำดับ</th>
-                  <th className="px-3 py-2.5 font-medium">ส่วนงาน</th>
-                  <th className="px-3 py-2.5 text-right font-medium">ส่งผลแล้ว</th>
-                  <th className="w-56 px-4 py-2.5 font-medium sm:px-5">คะแนนถ่วงน้ำหนัก</th>
+                <tr>
+                  <th className={`${TH} w-[14%]`}>ลำดับ</th>
+                  <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
+                  <th className={`${TH} w-[24%]`}>คะแนนไตรมาส</th>
+                  <th className={`${TH} w-[24%]`}>คะแนนปี</th>
                 </tr>
               </thead>
               <tbody>
-                {data.departments.map((d, i) => (
-                  <tr key={d.departmentId} className="border-b border-slate-100 last:border-0">
-                    <td className="px-4 py-2.5 tabular-nums text-slate-500 sm:px-5">
-                      {d.submittedCount === 0 ? "–" : i + 1}
-                    </td>
-                    <td className="px-3 py-2.5" title={d.name}>
-                      {d.code}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-2.5 text-right tabular-nums">
-                      {d.submittedCount}/{d.indicatorCount}
-                      <span className="ml-1 text-xs text-slate-500">({d.submittedPct}%)</span>
-                    </td>
-                    <td className="px-4 py-2.5 sm:px-5">
-                      <div className="flex items-center gap-3">
-                        <ScoreBar value={d.weightedScore} label={d.code} />
-                        <span className="w-10 shrink-0 text-right tabular-nums">
-                          {d.submittedCount === 0 ? "–" : d.weightedScore.toFixed(2)}
+                {visibleScores.map((d, i) => (
+                  <tr key={d.code} className={rowTone(d.code === myCode, i)}>
+                    <td className={`${TD} text-slate-500`}>{d.rank || "–"}</td>
+                    <td className={`${TD} whitespace-nowrap`}>
+                      {departmentIdByCode.has(d.code) ? (
+                        <Link
+                          href={`/reports?dept=${departmentIdByCode.get(d.code)}`}
+                          title={`ดูรายงานผลของ ${d.code}`}
+                          className="font-medium text-brand-700 underline decoration-brand-200 underline-offset-4 transition hover:text-brand-900 hover:decoration-brand-700"
+                        >
+                          {d.sourceName}
+                        </Link>
+                      ) : (
+                        d.sourceName
+                      )}
+                      {!d.inSystem && (
+                        <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-600">
+                          ไม่มีในระบบแล้ว
                         </span>
-                      </div>
+                      )}
+                      {d.code === myCode && (
+                        <span className="ml-2 rounded bg-accent-200 px-1.5 py-0.5 text-xs font-medium text-accent-900">
+                          ส่วนงานของคุณ
+                        </span>
+                      )}
                     </td>
+                    <QuarterCell d={d} scores={scores} />
+                    <YearCell d={d} />
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <p className="border-t border-slate-200 px-4 py-3 text-xs text-slate-500 sm:px-5">
-            ส่วนงานที่ยังส่งผลไม่ครบจะได้คะแนนรวมน้อยกว่าโดยธรรมชาติ
-            ให้ดูช่อง &quot;ส่งผลแล้ว&quot; ประกอบทุกครั้งก่อนเปรียบเทียบกัน
+          <p className={SECTION_FOOT}>
+            ตัวเลขชุดนี้มาจากไฟล์สรุปของส่วนกลาง ไม่ได้คำนวณจากผลที่กรอกในระบบ
+            จึงไม่เปลี่ยนตามการกรอกผลรายไตรมาส · คะแนนไตรมาสเทียบกับแผนของไตรมาสนั้น ·
+            คะแนนปีเทียบกับแผนทั้งปี สะสมถึงไตรมาสล่าสุด
           </p>
         </section>
+
+        {/* คะแนนชุดเดียวกับตารางข้างบน แต่จัดกลุ่มตามสายบังคับบัญชา
+            ตารางข้างบนตอบว่า "ส่วนงานไหนได้เท่าไร" ตารางนี้ตอบว่า "สายไหนไปได้ดีแค่ไหน"
+            คนละคำถาม จึงแยกเป็นคนละหัวข้อ ไม่ยุบรวมกัน */}
+        <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className={SECTION_HEAD}>
+            <h2 className="font-semibold">คะแนนภาพรวมส่วนงานแยกตามสายบังคับบัญชา</h2>
+            <p className="mt-0.5 text-sm text-slate-600">
+              ปีบัญชี {scores.fiscalYear} · ไตรมาส {scores.latestQuarter} ·
+              คะแนนเต็ม 5 ·
+              แต่ละสายเรียงจากคะแนนมากไปน้อย
+            </p>
+          </div>
+
+          {/* หนึ่งสายหนึ่งตาราง มีหัวข้อของตัวเอง ใช้ table-fixed และความกว้างคอลัมน์เท่ากัน
+              ให้คอลัมน์ของทุกตารางตรงแนวกันเวลาเลื่อนดูต่อกัน */}
+          <div className={`${SECTION_BODY} space-y-8`}>
+            {lineGroups.map((line) => (
+              <div key={line.name}>
+                <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h3 className="font-semibold text-brand-800">
+                    {line.name}
+                    <span className="ml-2 text-sm font-normal text-slate-500">
+                      {line.departments.length} ส่วนงาน
+                    </span>
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    {line.averageYearScore === null ? (
+                      "ยังไม่มีข้อมูลในไฟล์ปีนี้"
+                    ) : (
+                      <>
+                        คะแนนปีเฉลี่ยทั้งสาย{" "}
+                        <span className="font-semibold tabular-nums text-brand-800">
+                          {line.averageYearScore.toFixed(3)}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className={TABLE}>
+                    <thead>
+                      <tr>
+                        <th className={`${TH} w-[14%]`}>ลำดับรวม</th>
+                        <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
+                        <th className={`${TH} w-[24%]`}>คะแนนไตรมาส</th>
+                        <th className={`${TH} w-[24%]`}>คะแนนปี</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {line.departments.length === 0 ? (
+                        <tr>
+                          <td colSpan={4} className={`${TD} text-slate-500`}>
+                            ไม่มีส่วนงานในสายนี้
+                          </td>
+                        </tr>
+                      ) : (
+                        line.departments.map((d, i) => (
+                          <tr key={d.code} className={rowTone(d.code === myCode, i)}>
+                            <td className={`${TD} text-slate-500`}>{d.rank || "–"}</td>
+                            <td className={`${TD} whitespace-nowrap`}>
+                              {d.sourceName}
+                              {d.code === myCode && (
+                                <span className="ml-2 rounded bg-accent-200 px-1.5 py-0.5 text-xs font-medium text-accent-900">
+                                  ส่วนงานของคุณ
+                                </span>
+                              )}
+                            </td>
+                            <QuarterCell d={d} scores={scores} />
+                            <YearCell d={d} />
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className={SECTION_FOOT}>
+            &quot;ลำดับรวม&quot; คือลำดับเทียบกับทั้ง 30 ส่วนงาน ไม่ใช่ลำดับภายในสาย ·
+            ตัวเลขมาจากไฟล์สรุปของส่วนกลาง ไม่ได้คำนวณจากผลที่กรอกในระบบ
+          </p>
+        </section>
+        </>
       )}
     </div>
+  );
+}
+
+// ---- รูปแบบตารางคะแนน ใช้ร่วมกันทั้งสองตาราง ----
+// เส้นทุกช่องและหัวตารางสีเข้ม ให้อ่านเทียบแถวได้ง่ายเหมือนตารางในไฟล์ Excel ที่ผู้ใช้คุ้นเคย
+// ความกว้างคอลัมน์กำหนดเป็นสัดส่วนเดียวกันทุกตาราง (table-fixed) ให้ทุกตารางหน้าตาเท่ากันและตรงแนว
+const TABLE = "w-full min-w-[40rem] table-fixed border-collapse border border-slate-300 text-sm";
+const TH = "border border-brand-800 bg-brand-700 px-4 py-3.5 text-center font-semibold text-white";
+const TD = "border border-slate-300 px-4 py-3 text-center tabular-nums";
+
+// ระยะห่างภายในกล่องหัวข้อ ใช้ชุดเดียวกันทุกกล่อง
+const SECTION_HEAD = "border-b border-slate-200 px-5 py-4 sm:px-6";
+const SECTION_BODY = "px-5 py-5 sm:px-6";
+const SECTION_FOOT = "border-t border-slate-200 px-5 py-3 text-xs text-slate-500 sm:px-6";
+
+/** สลับสีพื้นแถว และไฮไลต์แถวของส่วนงานผู้ใช้ */
+function rowTone(isMine: boolean, index: number): string {
+  if (isMine) return "bg-accent-50";
+  return index % 2 === 1 ? "bg-slate-50 hover:bg-brand-50" : "bg-white hover:bg-brand-50";
+}
+
+/** คะแนนไตรมาสล่าสุดที่นำเข้า */
+function QuarterCell({ d, scores }: { d: DepartmentScoreRow; scores: DepartmentScoreData }) {
+  const score = d.quarterScores[String(scores.latestQuarter) as QuarterKey];
+  return (
+    <td className={`${TD} whitespace-nowrap`}>
+      {score === null ? <span className="text-slate-400">–</span> : score.toFixed(3)}
+    </td>
+  );
+}
+
+/** คะแนนปี */
+function YearCell({ d }: { d: DepartmentScoreRow }) {
+  return (
+    <td className={`${TD} whitespace-nowrap`}>
+      {d.yearScore === null ? <span className="text-slate-400">–</span> : d.yearScore.toFixed(3)}
+    </td>
   );
 }

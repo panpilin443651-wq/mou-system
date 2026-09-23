@@ -5,143 +5,251 @@ import { departmentScope } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { QUARTERS } from "@/lib/plan";
 import { scoreClass, weightedScore } from "@/lib/scoring";
-import { ReportFilters } from "./filters";
+import { formatPct, summarizeSection, toMonths } from "@/lib/plan";
+import { compareCode } from "@/lib/mou-scores";
+import {
+  visibleDepartments,
+  filterDepartments,
+  selectedDepartment,
+} from "@/lib/department-picker";
+import { DepartmentFilters } from "../department-filters";
+import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "รายงานผล | ระบบรายงานผล MOU" };
+export const metadata = { title: "รายงานผลและแผนดำเนินงาน | ระบบรายงานผล MOU" };
+
+// หน้านี้รวมเมนู "รายงานผล" กับ "แผนดำเนินงาน" ไว้ที่เดียว
+// เพราะทั้งสองทำงานกับตัวชี้วัดชุดเดียวกันของส่วนงานเดียวกัน ผู้ใช้จะได้ไม่ต้องสลับเมนูไปมา
+// หน้ากรอกยังแยกกันเหมือนเดิม: /reports/[id]/[ไตรมาส] กับ /plans/[id]
 
 const PAGE_SIZE = 50;
 
 export default async function ReportsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; dept?: string; state?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; dept?: string; page?: string }>;
 }) {
   const user = await requireUser();
   const sp = await searchParams;
 
   const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
-  const canPickDepartment = user.role !== "DEPT_USER";
 
-  const stateFilter: Prisma.IndicatorWhereInput =
-    sp.state === "none"
-      ? { reports: { none: {} } }
-      : sp.state === "draft"
-        ? { reports: { some: { status: "DRAFT" } } }
-        : sp.state === "submitted"
-          ? { reports: { some: { status: "SUBMITTED" } } }
-          : {};
+  const departments = await visibleDepartments(user);
+  const matched = filterDepartments(departments, sp.q);
+  const current = selectedDepartment(matched, sp.dept);
 
   // departmentScope บังคับให้ DEPT_USER เห็นเฉพาะของตัวเองเสมอ
-  const where: Prisma.IndicatorWhereInput = {
+  const baseWhere: Prisma.IndicatorWhereInput = {
     ...(fiscalYear ? { fiscalYearId: fiscalYear.id } : {}),
     status: { not: "ARCHIVED" },
-    ...(canPickDepartment && sp.dept ? { departmentId: sp.dept } : {}),
-    ...(sp.q
-      ? {
-          OR: [
-            { name: { contains: sp.q, mode: "insensitive" } },
-            { code: { startsWith: sp.q } },
-          ],
-        }
-      : {}),
-    ...stateFilter,
     ...departmentScope(user),
   };
 
-  const [total, indicators, departments] = await Promise.all([
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-xl font-bold sm:text-2xl">รายงานผลและแผนดำเนินงาน</h1>
+        <p className="mt-1 text-sm text-slate-600">
+          {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"}
+          {current
+            ? ` · ${current.code} ${current.name} · กดช่องไตรมาสเพื่อกรอกผล หรือกดช่องแผนเพื่อวางแผน`
+            : ` · เลือกส่วนงานเพื่อกรอกผลและวางแผน`}
+        </p>
+      </div>
+
+      <DepartmentFilters
+        basePath="/reports"
+        show={departments.length > 1}
+        departments={matched.map((d) => ({ value: d.id, label: `${d.code} ${d.name}` }))}
+      />
+
+      {current === null ? (
+        <DepartmentSummary baseWhere={baseWhere} departments={matched} />
+      ) : (
+        <ReportTable
+          baseWhere={baseWhere}
+          departmentId={current.id}
+          page={page}
+          showBack={departments.length > 1}
+          searchQuery={sp.q}
+        />
+      )}
+    </div>
+  );
+}
+
+/** ชั้นที่ 1 - รายชื่อส่วนงาน พร้อมความคืบหน้าการส่งผลของแต่ละหน่วย */
+async function DepartmentSummary({
+  baseWhere,
+  departments,
+}: {
+  baseWhere: Prisma.IndicatorWhereInput;
+  departments: { id: string; code: string; name: string }[];
+}) {
+  // นับทีเดียวทุกหน่วย แทนการยิงคำถามทีละส่วนงาน
+  const [totals, submitted, planned] = await Promise.all([
+    db.indicator.groupBy({
+      by: ["departmentId"],
+      where: baseWhere,
+      _count: { _all: true },
+    }),
+    db.indicator.groupBy({
+      by: ["departmentId"],
+      where: { ...baseWhere, reports: { some: { status: "SUBMITTED" } } },
+      _count: { _all: true },
+    }),
+    db.indicator.groupBy({
+      by: ["departmentId"],
+      where: { ...baseWhere, plans: { some: {} } },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const totalBy = new Map(totals.map((g) => [g.departmentId, g._count._all]));
+  const submittedBy = new Map(submitted.map((g) => [g.departmentId, g._count._all]));
+  const plannedBy = new Map(planned.map((g) => [g.departmentId, g._count._all]));
+
+  const rows: DepartmentRow[] = departments.map((d) => {
+    const total = totalBy.get(d.id) ?? 0;
+    const done = submittedBy.get(d.id) ?? 0;
+    const plannedCount = plannedBy.get(d.id) ?? 0;
+    return {
+      id: d.id,
+      code: d.code,
+      name: d.name,
+      stats: [
+        { label: "ตัวชี้วัด", value: total.toLocaleString("th-TH") },
+        { label: "วางแผนแล้ว", value: total === 0 ? "–" : `${plannedCount}/${total}` },
+        { label: "ส่งผลแล้ว", value: total === 0 ? "–" : `${done}/${total}` },
+      ],
+    };
+  });
+
+  return (
+    <DepartmentList
+      rows={rows}
+      hrefFor={(id) => `/reports?dept=${id}`}
+      emptyText="ไม่พบส่วนงานหรือหน่วยงานตามคำค้น"
+    />
+  );
+}
+
+/** ชั้นที่ 2 - ตัวชี้วัดของส่วนงานที่เลือก พร้อมสถานะแผนและผลรายไตรมาส */
+async function ReportTable({
+  baseWhere,
+  departmentId,
+  page,
+  showBack,
+  searchQuery,
+}: {
+  baseWhere: Prisma.IndicatorWhereInput;
+  departmentId: string;
+  page: number;
+  showBack: boolean;
+  searchQuery: string | undefined;
+}) {
+  const where: Prisma.IndicatorWhereInput = { ...baseWhere, departmentId };
+
+  const [total, indicators] = await Promise.all([
     db.indicator.count({ where }),
     db.indicator.findMany({
       where,
       include: {
-        department: { select: { code: true, name: true } },
-        reports: { select: { quarter: true, status: true, scoreLevel: true, progressPct: true } },
+        reports: { select: { quarter: true, status: true, scoreLevel: true } },
+        plans: { select: { planMonths: true, actualMonths: true } },
       },
-      orderBy: [{ department: { sortOrder: "asc" } }, { code: "asc" }],
+      orderBy: { code: "asc" },
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),
-    canPickDepartment
-      ? db.department.findMany({
-          where: { isActive: true },
-          select: { id: true, code: true, name: true },
-          orderBy: { sortOrder: "asc" },
-        })
-      : Promise.resolve([]),
   ]);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   function pageLink(target: number) {
     const next = new URLSearchParams();
-    if (sp.q) next.set("q", sp.q);
-    if (sp.dept) next.set("dept", sp.dept);
-    if (sp.state) next.set("state", sp.state);
+    if (searchQuery) next.set("q", searchQuery);
+    next.set("dept", departmentId);
     next.set("page", String(target));
     return `/reports?${next.toString()}`;
   }
 
   return (
     <div className="space-y-4">
-      <div>
-        <h1 className="text-xl font-bold sm:text-2xl">รายงานผล</h1>
-        <p className="mt-1 text-sm text-slate-600">
-          {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"} · พบ{" "}
-          {total.toLocaleString("th-TH")} ตัวชี้วัด · กดที่ช่องไตรมาสเพื่อกรอกผล
-        </p>
-      </div>
+      {showBack && <BackToDepartments href="/reports" />}
 
-      <ReportFilters
-        showDepartment={canPickDepartment}
-        departments={departments.map((d) => ({ value: d.id, label: `${d.code} ${d.name}` }))}
-      />
+      <p className="text-sm text-slate-600">พบ {total.toLocaleString("th-TH")} ตัวชี้วัด</p>
 
       {indicators.length === 0 ? (
         <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
-          ไม่พบตัวชี้วัดตามเงื่อนไขที่เลือก
+          ส่วนงานนี้ยังไม่มีตัวชี้วัดในปีบัญชีที่ใช้งานอยู่
         </p>
       ) : (
         <>
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-            <table className="w-full min-w-[52rem] text-sm">
+            <table className="w-full min-w-[54rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
-                  <th className="px-4 py-2.5 font-medium">ส่วนงาน</th>
-                  <th className="px-3 py-2.5 font-medium">ข้อ</th>
+                  <th className="px-4 py-2.5 font-medium">ข้อ</th>
                   <th className="px-3 py-2.5 font-medium">ชื่อตัวชี้วัด</th>
+                  <th className="whitespace-nowrap px-2 py-2.5 text-center font-medium">แผนดำเนินงาน</th>
                   {QUARTERS.map((q) => (
-                    <th key={q} className="px-2 py-2.5 text-center font-medium">
+                    <th key={q} className="whitespace-nowrap px-2 py-2.5 text-center font-medium">
                       ไตรมาส {q}
                     </th>
                   ))}
-                  <th className="px-4 py-2.5 text-right font-medium">คะแนนถ่วงน้ำหนัก</th>
+                  <th className="whitespace-nowrap px-4 py-2.5 text-right font-medium">คะแนนถ่วงน้ำหนัก</th>
                 </tr>
               </thead>
               <tbody>
-                {indicators.map((ind) => {
+                {/* เรียงเลขข้อแบบตัวเลข ฐานข้อมูลเรียงแบบตัวอักษรทำให้ "10" มาก่อน "2" */}
+                {[...indicators].sort((a, b) => compareCode(a.code, b.code)).map((ind) => {
                   // ใช้คะแนนของไตรมาสล่าสุดที่ส่งแล้ว เป็นตัวแทนคะแนนสะสมของตัวชี้วัดนี้
                   const submitted = ind.reports
                     .filter((r) => r.status === "SUBMITTED" && r.scoreLevel !== null)
                     .sort((a, b) => b.quarter - a.quarter);
                   const latest = submitted[0] ?? null;
                   const weighted = weightedScore(latest?.scoreLevel ?? null, ind.weight);
+                  // สูตรเดียวกับหน้าแผนและไฟล์ Excel เทียบผลทั้งปีกับแผนทั้งปี
+                  const plan = summarizeSection(
+                    ind.plans.map((p) => ({
+                      planMonths: toMonths(p.planMonths),
+                      actualMonths: toMonths(p.actualMonths),
+                    })),
+                    12
+                  );
 
                   return (
                     <tr
                       key={ind.id}
                       className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
                     >
-                      <td className="whitespace-nowrap px-4 py-2.5" title={ind.department.name}>
-                        {ind.department.code}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-2.5 tabular-nums">{ind.code}</td>
+                      <td className="whitespace-nowrap px-4 py-2.5 tabular-nums">{ind.code}</td>
                       <td className="px-3 py-2.5">
                         <Link
                           href={`/reports/${ind.id}/1`}
                           className="-my-2.5 block py-3 text-brand-800 underline-offset-2 hover:underline"
                         >
                           {ind.name}
+                        </Link>
+                      </td>
+
+                      <td className="whitespace-nowrap px-2 py-2.5 text-center">
+                        <Link
+                          href={`/reports/${ind.id}/1#plan`}
+                          className="-my-2.5 inline-flex min-h-11 items-center justify-center rounded px-2 text-xs font-medium transition hover:ring-1 hover:ring-brand-600"
+                          title="วางแผนและติดตามแผนดำเนินงาน"
+                        >
+                          {plan.count === 0 ? (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
+                              ยังไม่วางแผน
+                            </span>
+                          ) : (
+                            <span className="rounded bg-brand-50 px-1.5 py-0.5 tabular-nums text-brand-800">
+                              {plan.count} รายการ · {formatPct(plan.avgYearPct)}
+                            </span>
+                          )}
                         </Link>
                       </td>
 
@@ -187,7 +295,7 @@ export default async function ReportsPage({
           </div>
 
           <p className="text-xs text-slate-500">
-            ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
+            ช่องแผนดำเนินงานบอกจำนวนรายการในแผน และผลเทียบแผนทั้งปี · ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>
 
