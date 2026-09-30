@@ -62,11 +62,18 @@ async function main() {
   const models = Prisma.dmmf.datamodel.models;
 
   // ---- ปลายทางต้องว่าง ----
+  // ยกเว้นตารางที่ migration ใส่ข้อมูลตั้งต้นให้เอง (CommandLine 4 สาย จาก 20260917140000_command_lines)
+  // Neon มีชุดเดียวกัน (อาจถูกส่วนกลางแก้ไปแล้ว) จึงลบของตั้งต้นทิ้งแล้วใช้ของ Neon แทน
+  const SEEDED_BY_MIGRATION = new Set(["CommandLine"]);
   for (const model of models) {
     const delegate = (target as unknown as Record<string, { count: () => Promise<number> }>)[
       lowerFirst(model.name)
     ];
     const count = await delegate.count();
+    if (count > 0 && SEEDED_BY_MIGRATION.has(model.name)) {
+      console.log(`  ${model.name}: มีข้อมูลตั้งต้นจาก migration ${count} แถว จะแทนด้วยข้อมูลจาก Neon`);
+      continue;
+    }
     if (count > 0) {
       console.error(
         `ตาราง ${model.name} ใน Supabase มีข้อมูลอยู่แล้ว ${count} แถว ` +
@@ -102,7 +109,13 @@ async function main() {
         (skipped.length ? `  (คอลัมน์ใหม่ใช้ค่าเริ่มต้น: ${skipped.join(", ")})` : "")
     );
     total += rows.length;
-    if (!apply || rows.length === 0) continue;
+    if (!apply) continue;
+
+    if (SEEDED_BY_MIGRATION.has(model.name)) {
+      // ส่วนงาน (Department) ยังไม่ถูกคัดลอกตอนนี้ ลบได้โดยไม่ติด foreign key
+      await target.$executeRawUnsafe(`DELETE FROM "${model.name}"`);
+    }
+    if (rows.length === 0) continue;
 
     // Json ที่เป็น null ต้องส่งเป็น Prisma.DbNull ส่ง null ตรงๆ Prisma จะไม่ยอม
     const data = rows.map((row) => {
