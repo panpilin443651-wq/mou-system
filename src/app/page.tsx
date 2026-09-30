@@ -72,8 +72,27 @@ async function checkDatabase() {
   }
 }
 
+/**
+ * ค่าตั้งค่าของ Supabase ที่ยังไม่ได้ใส่
+ *
+ * ถ้าขาดตัวใดตัวหนึ่ง หน้า login จะพังเป็น "Application error" ที่ไม่บอกสาเหตุ
+ * จึงเช็กไว้ที่หน้านี้ก่อน แล้วบอกชื่อตัวแปรที่ขาดให้ชัด (บอกแค่ชื่อ ไม่แสดงค่า)
+ */
+function missingSupabaseEnv(): string[] {
+  const required: Record<string, string | undefined> = {
+    // เขียนชื่อเต็มตรงๆ Next.js จึงจะแทนค่า NEXT_PUBLIC_* ให้ตอน build
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  };
+  return Object.entries(required)
+    .filter(([, value]) => !value)
+    .map(([name]) => name);
+}
+
 export default async function HomePage() {
   const status = await checkDatabase();
+  const missingEnv = missingSupabaseEnv();
 
   // Vercel ตั้งตัวแปรนี้ให้เองทุกครั้งที่รันบนเซิร์ฟเวอร์ของเขา
   // ใช้แยกว่าจะบอกวิธีแก้แบบ "ตั้งค่าที่ Vercel" หรือ "รันคำสั่งในเครื่อง"
@@ -86,7 +105,26 @@ export default async function HomePage() {
       <h1 className="text-2xl font-bold sm:text-3xl">ระบบรายงานผลการดำเนินงานตาม MOU</h1>
       <p className="mt-2 text-slate-600">การยางแห่งประเทศไทย</p>
 
-      {status.connected && status.hasData && status.hasUsers ? (
+      {missingEnv.length > 0 ? (
+        <section className="mt-8 rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
+          <h2 className="font-semibold">ยังติดตั้งไม่เสร็จ</h2>
+          <p className="mt-3 text-sm text-red-700">ยังไม่ได้ตั้งค่าระบบ login (Supabase) ครบ</p>
+          <p className="mt-3 text-sm text-slate-700">ขาดค่าเหล่านี้:</p>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-slate-700">
+            {missingEnv.map((name) => (
+              <li key={name}>
+                <code className="rounded bg-slate-100 px-1.5 py-0.5">{name}</code>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-sm text-slate-700">
+            {onVercel
+              ? "เพิ่มที่ Vercel > Settings > Environment Variables (เลือกให้ใช้กับ Production และ Preview) แล้วกด Redeploy"
+              : "เพิ่มในไฟล์ .env แล้วรันเว็บใหม่"}{" "}
+            · หาค่าได้ที่ Supabase &gt; Project Settings &gt; API Keys
+          </p>
+        </section>
+      ) : status.connected && status.hasData && status.hasUsers ? (
         <div className="mt-8">
           <Link
             href="/login"
