@@ -63,7 +63,7 @@ export function PlanEvidenceUpload({ actionPlanId }: { actionPlanId: string }) {
         type="button"
         disabled={busy}
         onClick={() => inputRef.current?.click()}
-        className="w-full rounded border border-dashed border-slate-300 px-2 py-1.5 text-xs font-medium text-brand-800 transition hover:border-brand-600 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded border border-dashed border-slate-300 px-2 py-1.5 text-xs font-medium text-brand-ink transition hover:border-brand-600 hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {busy ? "กำลังอัปโหลด..." : "+ แนบเอกสาร"}
       </button>

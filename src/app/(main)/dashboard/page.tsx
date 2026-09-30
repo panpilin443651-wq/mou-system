@@ -145,7 +145,7 @@ export default async function DashboardPage() {
         {tiles.map((t) => (
           <div
             key={t.label}
-            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+            className="rounded-xl border border-slate-200 bg-surface p-4 shadow-sm"
           >
             <dt className="text-sm text-slate-600">{t.label}</dt>
             <dd className="mt-1 text-2xl font-bold tabular-nums">{t.value}</dd>
@@ -163,7 +163,7 @@ export default async function DashboardPage() {
 
       {!scores ? (
         // ยังไม่ได้นำเข้าไฟล์คะแนนของปีบัญชีนี้ บอกให้ชัดแทนการโชว์คะแนนปีอื่น
-        <section className="rounded-xl border border-dashed border-slate-300 bg-white px-5 py-8 text-center sm:px-6">
+        <section className="rounded-xl border border-dashed border-slate-300 bg-surface px-5 py-8 text-center sm:px-6">
           <h2 className="font-semibold">
             ยังไม่มีคะแนนภาพรวมของปีบัญชี {data.fiscalYear?.year ?? "-"}
           </h2>
@@ -178,7 +178,7 @@ export default async function DashboardPage() {
         {/* กราฟเปรียบเทียบคะแนนปีระหว่างส่วนงาน ข้อมูลชุดเดียวกับตารางข้างล่าง
             ซ่อนเมื่อเห็นได้ส่วนงานเดียว เพราะกราฟแท่งเดียวไม่มีอะไรให้เปรียบเทียบ */}
         {visibleScores.length > 1 && (
-          <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
             <div className={SECTION_HEAD}>
               <h2 className="font-semibold">เปรียบเทียบคะแนนปีของแต่ละส่วนงาน</h2>
               <p className="mt-0.5 text-sm text-slate-600">
@@ -195,7 +195,7 @@ export default async function DashboardPage() {
         {/* คะแนนภาพรวมของแต่ละส่วนงาน ตามไฟล์สรุปของส่วนกลาง
             แยกจากตัวเลขที่ระบบคำนวณเอง เพราะเป็นคนละชุดข้อมูล
             ถ้าเอามาปนกันโดยไม่บอก ผู้อ่านจะแยกไม่ออกว่าเลขไหนมาจากไหน */}
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
           <div className={SECTION_HEAD}>
             <h2 className="font-semibold">คะแนนภาพรวมของแต่ละส่วนงาน</h2>
             <p className="mt-0.5 text-sm text-slate-600">
@@ -225,7 +225,7 @@ export default async function DashboardPage() {
                         <Link
                           href={`/reports?dept=${departmentIdByCode.get(d.code)}`}
                           title={`ดูรายงานผลของ ${d.code}`}
-                          className="font-medium text-brand-700 underline decoration-brand-200 underline-offset-4 transition hover:text-brand-900 hover:decoration-brand-700"
+                          className="font-medium text-brand-ink underline decoration-brand-200 underline-offset-4 transition hover:text-brand-900 hover:decoration-brand-700"
                         >
                           {d.sourceName}
                         </Link>
@@ -261,7 +261,7 @@ export default async function DashboardPage() {
         {/* คะแนนชุดเดียวกับตารางข้างบน แต่จัดกลุ่มตามสายบังคับบัญชา
             ตารางข้างบนตอบว่า "ส่วนงานไหนได้เท่าไร" ตารางนี้ตอบว่า "สายไหนไปได้ดีแค่ไหน"
             คนละคำถาม จึงแยกเป็นคนละหัวข้อ ไม่ยุบรวมกัน */}
-        <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+        <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
           <div className={SECTION_HEAD}>
             <h2 className="font-semibold">คะแนนภาพรวมส่วนงานแยกตามสายบังคับบัญชา</h2>
             <p className="mt-0.5 text-sm text-slate-600">
@@ -277,7 +277,7 @@ export default async function DashboardPage() {
             {lineGroups.map((line) => (
               <div key={line.name}>
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <h3 className="font-semibold text-brand-800">
+                  <h3 className="font-semibold text-brand-ink">
                     {line.name}
                     <span className="ml-2 text-sm font-normal text-slate-500">
                       {line.departments.length} ส่วนงาน
@@ -289,7 +289,7 @@ export default async function DashboardPage() {
                     ) : (
                       <>
                         คะแนนปีเฉลี่ยทั้งสาย{" "}
-                        <span className="font-semibold tabular-nums text-brand-800">
+                        <span className="font-semibold tabular-nums text-brand-ink">
                           {line.averageYearScore.toFixed(3)}
                         </span>
                       </>
@@ -364,7 +364,7 @@ const SECTION_FOOT = "border-t border-slate-200 px-5 py-3 text-xs text-slate-500
 /** สลับสีพื้นแถว และไฮไลต์แถวของส่วนงานผู้ใช้ */
 function rowTone(isMine: boolean, index: number): string {
   if (isMine) return "bg-accent-50";
-  return index % 2 === 1 ? "bg-slate-50 hover:bg-brand-50" : "bg-white hover:bg-brand-50";
+  return index % 2 === 1 ? "bg-slate-50 hover:bg-brand-50" : "bg-surface hover:bg-brand-50";
 }
 
 /** คะแนนไตรมาสล่าสุดที่นำเข้า */

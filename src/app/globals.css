@@ -10,9 +10,13 @@
    accent = เหลืองทอง ใช้เน้นเฉพาะจุดสำคัญ ไม่ใช้เป็นพื้นกว้าง เพราะอ่านยาก
    พื้นหลัง = ขาว/เทาอ่อน เพื่อให้ตัวหนังสือไทยอ่านสบายตาเป็นเวลานาน
 
-   สีเตือน (amber) และสีผิดพลาด (red) ไม่ได้เปลี่ยนตามธีม
-   เพราะเป็นสีที่สื่อความหมายเฉพาะ ถ้าเปลี่ยนตามธีมผู้ใช้จะอ่านสถานะผิด
+   สีเตือน (amber) และสีผิดพลาด (red) คงโทนสีเดิมทั้งสองธีม
+   เพราะเป็นสีที่สื่อความหมายเฉพาะ ถ้าเปลี่ยนโทนผู้ใช้จะอ่านสถานะผิด
+   ธีมมืดแค่ปรับความเข้ม-อ่อนให้อ่านออกบนพื้นมืด (ดูหัวข้อ "ธีมมืด" ด้านล่าง)
    ============================================================================ */
+
+/* dark: ใช้ได้เมื่อ <html data-theme="dark"> (สคริปต์ใน layout.tsx เป็นคนตั้งค่า) */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @theme {
   --font-sans: "Noto Sans Thai", ui-sans-serif, system-ui, sans-serif;
@@ -45,6 +49,87 @@
   --color-accent-700: #93520b;
   --color-accent-800: #78410f;
   --color-accent-900: #633510;
+
+  /* สีที่แยกออกมาเพราะธีมมืดต้องเปลี่ยนไม่เหมือนสีพื้นฐานที่มันอ้างถึง
+     surface   = พื้นการ์ด/กล่อง (ใช้แทน bg-white เพราะ text-white บนปุ่มต้องขาวเสมอ)
+     brand-ink = ตัวหนังสือสีน้ำเงิน (แยกจาก brand-800 ที่เป็นพื้นปุ่มตอนชี้เมาส์)
+     tooltip   = พื้นป้ายข้อความลอยบนกราฟ ต้องเข้มเสมอเพราะตัวหนังสือเป็นสีขาว
+     scrim     = ม่านทึบหลังเมนูมือถือ */
+  --color-surface: #ffffff;
+  --color-page: #f5f8fc;
+  --color-ink: #0f172a;
+  --color-brand-ink: #142b52;
+  --color-tooltip: #1e293b;
+  --color-scrim: #0f172a;
+}
+
+/* ============================================================================
+   ธีมมืด
+   ============================================================================
+   แทนที่จะใส่ dark: ทุกคลาสทุกหน้า ใช้วิธีเปลี่ยนค่าตัวแปรสีชุดเดิมแทน
+   slate กลับด้าน (50 = เข้ม, 900 = อ่อน) เพราะในระบบ slate อ่อนใช้เป็นพื้น/เส้นขอบ
+   และ slate เข้มใช้เป็นตัวหนังสือ สลับแล้วทุกหน้าจึงอ่านได้ทันที
+   ส่วนสีสถานะ (red/amber/emerald/accent) พื้นอ่อนกลายเป็นพื้นเข้มจางๆ ของสีเดิม
+   และตัวหนังสือเข้มกลายเป็นสีสว่างของสีเดิม
+
+   ใส่ไว้ใน @media screen เพื่อให้การพิมพ์ / บันทึก PDF เป็นธีมสว่างเสมอ
+   ============================================================================ */
+@media screen {
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+
+    --color-surface: #131c2e;
+    --color-page: #0b1220;
+    --color-ink: #e2e8f0;
+    --color-brand-ink: #a9c6ee;
+    --color-heading: #9dbbe6;
+    --color-tooltip: #334155;
+    --color-scrim: #000000;
+
+    --color-slate-50: #1a2438;
+    --color-slate-100: #212c42;
+    --color-slate-200: #2b3851;
+    --color-slate-300: #3b4964;
+    --color-slate-400: #64748b;
+    --color-slate-500: #94a3b8;
+    --color-slate-600: #a9b6c8;
+    --color-slate-700: #cbd5e1;
+    --color-slate-800: #e2e8f0;
+    --color-slate-900: #f1f5f9;
+    --color-slate-950: #f8fafc;
+
+    /* 600-800 เป็นพื้นปุ่มที่มีตัวหนังสือขาว จึงยังเป็นน้ำเงินเข้มพอ แต่สว่างขึ้นให้เห็นบนพื้นมืด */
+    --color-brand-50: #16243d;
+    --color-brand-100: #1c2f50;
+    --color-brand-200: #2a4570;
+    --color-brand-300: #3d5f93;
+    --color-brand-600: #3f72b8;
+    --color-brand-700: #2f5f9f;
+    --color-brand-800: #3a6db3;
+    --color-brand-900: #c9dcf5;
+
+    --color-accent-50: #2a2112;
+    --color-accent-100: #3a2c13;
+    --color-accent-200: #4d3914;
+    --color-accent-800: #fcd68a;
+    --color-accent-900: #fde6b3;
+
+    --color-red-50: #3a1519;
+    --color-red-300: #7f2a31;
+    --color-red-600: #f87171;
+    --color-red-700: #fca5a5;
+    --color-red-800: #fecaca;
+
+    --color-amber-50: #2e2210;
+    --color-amber-100: #3d2d12;
+    --color-amber-200: #5c4318;
+    --color-amber-400: #b7791f;
+    --color-amber-800: #fcd34d;
+    --color-amber-900: #fde68a;
+
+    --color-emerald-50: #0f2b22;
+    --color-emerald-800: #6ee7b7;
+  }
 }
 
 html {
@@ -54,8 +139,8 @@ html {
 body {
   font-family: var(--font-sans);
   /* พื้นหลังน้ำเงินจางมาก ทำให้การ์ดสีขาวลอยเด่นขึ้นโดยไม่รบกวนสายตา */
-  background-color: #f5f8fc;
-  color: #0f172a;
+  background-color: var(--color-page);
+  color: var(--color-ink);
 }
 
 /* หัวข้อทุกระดับใช้สีเดียวกันทั้งระบบ กำหนดที่นี่ที่เดียว

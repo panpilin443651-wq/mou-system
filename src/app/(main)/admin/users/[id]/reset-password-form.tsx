@@ -38,7 +38,7 @@ export function ResetPasswordForm({
     <form
       key={state.success ? "done" : "editing"}
       action={formAction}
-      className="space-y-4 rounded-xl border border-slate-200 bg-white p-5"
+      className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5"
     >
       <div>
         <h2 className="font-semibold">ตั้งรหัสผ่านใหม่ให้ {userName}</h2>
@@ -87,7 +87,7 @@ export function ResetPasswordForm({
         </p>
       )}
       {state.success && (
-        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
           ตั้งรหัสผ่านใหม่แล้ว แจ้งรหัสให้เจ้าตัวและบอกให้เปลี่ยนเองที่หน้า &quot;บัญชีของฉัน&quot;
         </p>
       )}

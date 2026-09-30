@@ -88,9 +88,9 @@ function toRowState(rows: PlanRowData[]): RowState[] {
 }
 
 const cellInput =
-  "w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-right text-sm tabular-nums outline-none hover:border-slate-300 focus:border-brand-600 focus:bg-white focus:ring-1 focus:ring-brand-600";
+  "w-full rounded border border-transparent bg-transparent px-1.5 py-1.5 text-right text-sm tabular-nums outline-none hover:border-slate-300 focus:border-brand-600 focus:bg-surface focus:ring-1 focus:ring-brand-600";
 const textInput =
-  "w-full rounded border border-slate-200 bg-white px-2 py-1.5 text-sm outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
+  "w-full rounded border border-slate-200 bg-surface px-2 py-1.5 text-sm outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
 
 function SaveButton() {
   const { pending } = useFormStatus();
@@ -199,7 +199,7 @@ export function PlanTable({
       )}
 
       {/* ---- ส่วนหัวของแบบฟอร์ม ---- */}
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <section className="rounded-xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
         <h2 className="font-semibold">ข้อมูลหัวแบบฟอร์ม</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
@@ -235,7 +235,7 @@ export function PlanTable({
       </section>
 
       {/* ---- ตัวเลือกเดือนที่ใช้คิดยอดสะสม ---- */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm shadow-sm">
         <label htmlFor="upto" className="font-medium">
           คิดยอดสะสมถึงเดือน
         </label>
@@ -280,7 +280,7 @@ export function PlanTable({
       ))}
 
       {canEdit && (
-        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
+        <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
           <SaveButton />
           <span className="text-sm text-slate-600">
             ตัวเลขที่พิมพ์จะยังไม่ถูกเก็บจนกว่าจะกดบันทึก
@@ -372,10 +372,10 @@ function SectionTable({
       <td colSpan={5 + MONTH_COUNT} className="border border-slate-200 px-3 py-2.5">
         <span className="sticky left-3">ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย</span>
       </td>
-      <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-800">
+      <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
         {formatPct(summary.avgCumPct)}
       </td>
-      <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-800">
+      <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
         {formatPct(summary.avgYearPct)}
       </td>
       <td colSpan={canEdit ? 4 : 3} className="border border-slate-200" />
@@ -387,7 +387,7 @@ function SectionTable({
     : rows.length > 0;
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
       <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
         <h2 className="font-semibold">{PLAN_SECTION_TITLE[section]}</h2>
         {isStep && (
@@ -473,18 +473,18 @@ function SectionTable({
               ทุกค่าเกณฑ์ · แต่ละขั้นตอนมีน้ำหนักเท่ากัน
             </p>
             <dl className="mt-3 grid gap-3 sm:grid-cols-2">
-              <div className="rounded-lg bg-white p-3 shadow-sm">
+              <div className="rounded-lg bg-surface p-3 shadow-sm">
                 <dt className="text-sm text-slate-600">{PLAN_SECTION_CUM_LABEL[section]}</dt>
-                <dd className="mt-0.5 text-2xl font-bold tabular-nums text-brand-800">
+                <dd className="mt-0.5 text-2xl font-bold tabular-nums text-brand-ink">
                   {formatPct(summary.avgCumPct)}
                 </dd>
                 <p className="text-xs text-slate-500">
                   ผลสะสมเทียบแผนสะสม ตั้งแต่ ต.ค. ถึง {FISCAL_MONTHS[upto - 1]}
                 </p>
               </div>
-              <div className="rounded-lg bg-white p-3 shadow-sm">
+              <div className="rounded-lg bg-surface p-3 shadow-sm">
                 <dt className="text-sm text-slate-600">{PLAN_SECTION_YEAR_LABEL[section]}</dt>
-                <dd className="mt-0.5 text-2xl font-bold tabular-nums text-brand-800">
+                <dd className="mt-0.5 text-2xl font-bold tabular-nums text-brand-ink">
                   {formatPct(summary.avgYearPct)}
                 </dd>
                 <p className="text-xs text-slate-500">ผลรวมทั้งปีเทียบแผนทั้งปี (ต.ค. ถึง ก.ย.)</p>
@@ -500,7 +500,7 @@ function SectionTable({
             type="submit"
             name="intent"
             value={`add:${section}`}
-            className="w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-brand-800 transition hover:border-brand-600 hover:bg-brand-50"
+            className="w-full rounded-lg border border-dashed border-slate-300 px-4 py-3 text-sm font-medium text-brand-ink transition hover:border-brand-600 hover:bg-brand-50"
           >
             + เพิ่ม{PLAN_SECTION_ITEM_LABEL[section]}อีกหนึ่งบรรทัด
           </button>
@@ -543,7 +543,7 @@ function LevelGroup({
     <>
       <tr className="bg-brand-50">
         <td colSpan={cols} className="border border-slate-300 px-3 py-2.5">
-          <span className="sticky left-3 inline-flex items-center gap-1.5 font-semibold text-brand-800">
+          <span className="sticky left-3 inline-flex items-center gap-1.5 font-semibold text-brand-ink">
             <LockIcon />
             ค่าเกณฑ์ระดับ {criterion.level}
           </span>
@@ -574,7 +574,7 @@ function LevelGroup({
               type="submit"
               name="intent"
               value={`add:STEP:${criterion.level}`}
-              className="sticky left-3 rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-brand-800 transition hover:border-brand-600 hover:bg-brand-50"
+              className="sticky left-3 rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-brand-ink transition hover:border-brand-600 hover:bg-brand-50"
             >
               + เพิ่มขั้นตอนการดำเนินงานของระดับ {criterion.level}
             </button>
@@ -653,7 +653,7 @@ function TableFrame({
 /** แถวหัวคอลัมน์ของตารางแผน ใช้ทั้งหัวตารางเป้าหมาย และหัวตารางซ้ำของแต่ละค่าเกณฑ์ */
 function HeaderRow({ section, canEdit }: { section: PlanSection; canEdit: boolean }) {
   return (
-    <tr className="bg-slate-50 text-slate-700 shadow-[0_1px_0_0_#e2e8f0]">
+    <tr className="bg-slate-50 text-slate-700 shadow-[0_1px_0_0_var(--color-slate-200)]">
       <Th>{PLAN_SECTION_INDEX_LABEL[section]}</Th>
       <Th className="text-left">{PLAN_SECTION_ITEM_LABEL[section]}</Th>
       <Th>ค่าเป้าหมาย</Th>
@@ -772,13 +772,13 @@ function RowPair({
 
         <td
           rowSpan={2}
-          className={`${shared} border-l-2 border-l-slate-300 text-right font-medium tabular-nums text-brand-800`}
+          className={`${shared} border-l-2 border-l-slate-300 text-right font-medium tabular-nums text-brand-ink`}
         >
           {formatPct(cumPct)}
         </td>
         <td
           rowSpan={2}
-          className={`${shared} text-right font-medium tabular-nums text-brand-800`}
+          className={`${shared} text-right font-medium tabular-nums text-brand-ink`}
         >
           {formatPct(yearPct)}
         </td>
@@ -865,7 +865,7 @@ function EvidenceFiles({
             href={`/api/plan-attachments/${f.id}`}
             target="_blank"
             rel="noreferrer"
-            className="block truncate text-xs text-brand-800 underline-offset-2 hover:underline"
+            className="block truncate text-xs text-brand-ink underline-offset-2 hover:underline"
             title={f.originalName}
           >
             {f.originalName}

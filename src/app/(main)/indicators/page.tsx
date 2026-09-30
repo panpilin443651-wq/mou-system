@@ -83,7 +83,7 @@ export default async function IndicatorsPage({
       />
 
       {!fiscalYear ? (
-        <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <p className="rounded-xl border border-slate-200 bg-surface p-6 text-sm text-slate-600">
           ยังไม่ได้ตั้งปีบัญชีที่ใช้งานอยู่ ตั้งได้ที่เมนู ตั้งค่าระบบ
         </p>
       ) : current === null ? (
@@ -197,7 +197,7 @@ async function DepartmentScores({
     return (
       <div className="space-y-4">
         {showBack && <BackToDepartments href="/indicators" />}
-        <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <p className="rounded-xl border border-slate-200 bg-surface p-6 text-sm text-slate-600">
           ส่วนงานนี้ยังไม่มีตัวชี้วัดในปีบัญชีที่ใช้งานอยู่
         </p>
       </div>
@@ -210,7 +210,7 @@ async function DepartmentScores({
       <div className="space-y-4">
         <Link
           href={link({})}
-          className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+          className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
         >
           ← กลับไปหน้าคะแนน
         </Link>
@@ -251,13 +251,13 @@ async function DepartmentScores({
         {latest && (
           <p className="text-sm text-slate-600">
             คะแนนรวมงวด {latest.label}{" "}
-            <span className="font-semibold text-brand-800">{latest.value.toFixed(3)}</span> จาก 5
+            <span className="font-semibold text-brand-ink">{latest.value.toFixed(3)}</span> จาก 5
           </p>
         )}
       </div>
 
       {canEdit && (
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-white p-3">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-surface p-3">
           <span className="px-1 text-sm text-slate-600">กรอก / แก้คะแนน:</span>
           <QuarterTabs current={null} link={link} />
         </div>

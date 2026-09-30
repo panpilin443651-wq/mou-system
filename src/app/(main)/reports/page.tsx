@@ -182,12 +182,12 @@ async function ReportTable({
       <p className="text-sm text-slate-600">พบ {total.toLocaleString("th-TH")} ตัวชี้วัด</p>
 
       {indicators.length === 0 ? (
-        <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+        <p className="rounded-xl border border-slate-200 bg-surface p-6 text-sm text-slate-600">
           ส่วนงานนี้ยังไม่มีตัวชี้วัดในปีบัญชีที่ใช้งานอยู่
         </p>
       ) : (
         <>
-          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
             <table className="w-full min-w-[54rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
@@ -229,7 +229,7 @@ async function ReportTable({
                       <td className="px-3 py-2.5">
                         <Link
                           href={`/reports/${ind.id}/1`}
-                          className="-my-2.5 block py-3 text-brand-800 underline-offset-2 hover:underline"
+                          className="-my-2.5 block py-3 text-brand-ink underline-offset-2 hover:underline"
                         >
                           {ind.name}
                         </Link>
@@ -246,7 +246,7 @@ async function ReportTable({
                               ยังไม่วางแผน
                             </span>
                           ) : (
-                            <span className="rounded bg-brand-50 px-1.5 py-0.5 tabular-nums text-brand-800">
+                            <span className="rounded bg-brand-50 px-1.5 py-0.5 tabular-nums text-brand-ink">
                               {plan.count} รายการ · {formatPct(plan.avgYearPct)}
                             </span>
                           )}

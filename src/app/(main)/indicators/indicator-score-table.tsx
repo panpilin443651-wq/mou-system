@@ -31,7 +31,7 @@ function Num({ value, digits = 2 }: { value: number | null; digits?: number }) {
 function scoreTone(score: number | null): string {
   if (score === null) return "";
   if (score >= 4) return "bg-emerald-50 text-emerald-800";
-  if (score >= 3) return "bg-brand-50 text-brand-800";
+  if (score >= 3) return "bg-brand-50 text-brand-ink";
   if (score >= 1) return "bg-amber-50 text-amber-800";
   return "bg-red-50 text-red-700";
 }
@@ -56,7 +56,7 @@ export function IndicatorScoreTable({
 
   return (
     // ตารางกว้างเกินจอ จึงให้เลื่อนแนวนอนในกรอบตัวเอง ไม่ให้ทั้งหน้าเลื่อนซ้ายขวา
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
       <table className={`w-full ${minWidth} text-sm`}>
         <thead>
           <tr className="border-b border-slate-200 text-slate-600">
@@ -179,7 +179,7 @@ function ScoreRowCells({ row, quarters }: { row: MouScoreRow; quarters: number[]
       <td className="px-3 py-2.5">
         <Link
           href={`/indicators/${row.indicatorId}`}
-          className="-my-2.5 block py-2.5 text-brand-800 underline-offset-2 hover:underline"
+          className="-my-2.5 block py-2.5 text-brand-ink underline-offset-2 hover:underline"
         >
           {row.name}
         </Link>

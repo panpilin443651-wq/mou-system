@@ -10,7 +10,7 @@ import { copyIndicatorsAction, type FormState } from "@/actions/fiscal-years";
 type YearOption = { id: number; year: number; indicatorCount: number };
 
 const selectClass =
-  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-base outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
+  "w-full rounded-lg border border-slate-300 bg-surface px-3 py-2.5 text-base outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -18,7 +18,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="rounded-lg border border-brand-700 px-5 py-2.5 text-sm font-medium text-brand-800 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+      className="rounded-lg border border-brand-700 px-5 py-2.5 text-sm font-medium text-brand-ink transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending ? "กำลังคัดลอก..." : "คัดลอกตัวชี้วัด"}
     </button>
@@ -35,7 +35,7 @@ export function CopyIndicatorsForm({ years }: { years: YearOption[] }) {
   const defaultTarget = years.find((y) => y.indicatorCount === 0 && y.id !== defaultSource?.id);
 
   return (
-    <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+    <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
       <div>
         <h2 className="font-semibold">คัดลอกตัวชี้วัดข้ามปี</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -103,7 +103,7 @@ export function CopyIndicatorsForm({ years }: { years: YearOption[] }) {
           {state.message && (
             <p
               role="status"
-              className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800"
+              className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink"
             >
               {state.message}
             </p>

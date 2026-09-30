@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { db } from "@/lib/db";
 
 // หน้านี้เปิดได้โดยไม่ต้อง login จึงแสดงแค่สถานะการติดตั้ง
@@ -81,6 +82,7 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
+      <ThemeToggle className="fixed right-4 top-4 z-10 bg-surface" />
       <h1 className="text-2xl font-bold sm:text-3xl">ระบบรายงานผลการดำเนินงานตาม MOU</h1>
       <p className="mt-2 text-slate-600">การยางแห่งประเทศไทย</p>
 
@@ -94,7 +96,7 @@ export default async function HomePage() {
           </Link>
         </div>
       ) : (
-        <section className="mt-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <section className="mt-8 rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
           <h2 className="font-semibold">ยังติดตั้งไม่เสร็จ</h2>
 
           {!status.connected ? (

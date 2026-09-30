@@ -38,7 +38,7 @@ export default async function UsersPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <Link href="/admin" className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline">
+          <Link href="/admin" className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline">
             ← กลับไปหน้าตั้งค่าระบบ
           </Link>
           <h1 className="mt-2 text-xl font-bold sm:text-2xl">จัดการผู้ใช้</h1>
@@ -57,12 +57,12 @@ export default async function UsersPage({
       </div>
 
       {sp.created && (
-        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
           สร้างบัญชีผู้ใช้เรียบร้อยแล้ว อย่าลืมแจ้งอีเมลและรหัสผ่านให้เจ้าตัว
         </p>
       )}
       {sp.updated && (
-        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
           บันทึกการแก้ไขบัญชีเรียบร้อยแล้ว
         </p>
       )}
@@ -80,7 +80,7 @@ export default async function UsersPage({
       )}
 
       {/* ตารางกว้างเกินจอมือถือ จึงให้เลื่อนแนวนอนในกรอบตัวเอง */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
         <table className="w-full min-w-[48rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-600">
@@ -98,7 +98,7 @@ export default async function UsersPage({
                 <td className="px-4 py-2.5">
                   <Link
                     href={`/admin/users/${u.id}`}
-                    className="-my-2.5 block py-3 text-brand-800 underline-offset-2 hover:underline"
+                    className="-my-2.5 block py-3 text-brand-ink underline-offset-2 hover:underline"
                   >
                     {u.name}
                   </Link>
@@ -124,7 +124,7 @@ export default async function UsersPage({
                 </td>
                 <td className="whitespace-nowrap px-4 py-2.5">
                   {u.isActive ? (
-                    <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-800">
+                    <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-ink">
                       ใช้งาน
                     </span>
                   ) : (

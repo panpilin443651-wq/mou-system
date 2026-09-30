@@ -66,7 +66,7 @@ export function YearScoreChart({
               style={{ bottom: pct(average) }}
             />
             <span
-              className="absolute right-0 z-[1] translate-y-[-120%] rounded bg-slate-700 px-1.5 py-0.5 text-[11px] text-white"
+              className="absolute right-0 z-[1] translate-y-[-120%] rounded bg-tooltip px-1.5 py-0.5 text-[11px] text-white"
               style={{ bottom: pct(average) }}
             >
               เฉลี่ย {average.toFixed(3)}
@@ -99,7 +99,7 @@ export function YearScoreChart({
 
                     {/* ป้ายคะแนนตอนชี้เมาส์ ครึ่งขวาให้ป้ายยื่นไปทางซ้าย จะได้ไม่ล้นขอบกราฟ */}
                     <span
-                      className={`pointer-events-none absolute z-10 mb-6 hidden ${i < scored.length / 2 ? "left-1/2" : "right-1/2"} whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs text-white shadow group-hover:block`}
+                      className={`pointer-events-none absolute z-10 mb-6 hidden ${i < scored.length / 2 ? "left-1/2" : "right-1/2"} whitespace-nowrap rounded-md bg-tooltip px-2 py-1 text-xs text-white shadow group-hover:block`}
                       style={{ bottom: pct(d.yearScore) }}
                     >
                       {d.sourceName} · คะแนนปี{" "}

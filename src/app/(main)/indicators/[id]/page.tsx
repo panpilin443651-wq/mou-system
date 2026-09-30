@@ -66,7 +66,7 @@ export default async function IndicatorDetailPage({
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/indicators" className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline">
+        <Link href="/indicators" className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline">
           ← กลับไป{user.role === "DEPT_USER" ? indicatorsMenuLabel(user) : "รายการส่วนงานและหน่วยงาน"}
         </Link>
 
@@ -96,7 +96,7 @@ export default async function IndicatorDetailPage({
         </div>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           {facts.map((f) => (
             <div key={f.label}>
@@ -108,7 +108,7 @@ export default async function IndicatorDetailPage({
       </section>
 
       {indicator.description && (
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
           <h2 className="font-semibold">คำจำกัดความ / สูตรการคำนวณ</h2>
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
             {indicator.description}
@@ -116,7 +116,7 @@ export default async function IndicatorDetailPage({
         </section>
       )}
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
         <h2 className="border-b border-slate-200 px-4 py-3 font-semibold sm:px-5">
           ค่าเกณฑ์วัด 5 ระดับ
         </h2>
@@ -200,7 +200,7 @@ export default async function IndicatorDetailPage({
         </p>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">ผลการดำเนินงานรายไตรมาส</h2>
           <Link
@@ -242,7 +242,7 @@ export default async function IndicatorDetailPage({
         )}
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">แผนดำเนินงาน</h2>
           <Link

@@ -78,7 +78,7 @@ export function PasswordForm() {
         </p>
       )}
       {state.success && (
-        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
           เปลี่ยนรหัสผ่านเรียบร้อยแล้ว
         </p>
       )}

@@ -57,7 +57,7 @@ export function DepartmentFilters({
   }
 
   const controlClass =
-    "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
+    "w-full rounded-lg border border-slate-300 bg-surface px-3 py-2.5 text-sm outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
 
   if (!show) return null;
 

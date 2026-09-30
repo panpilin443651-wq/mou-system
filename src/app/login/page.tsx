@@ -5,6 +5,7 @@ import { isDemoLoginEnabled } from "@/auth";
 import { demoLoginAction } from "@/actions/auth";
 import { db } from "@/lib/db";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LoginForm } from "./login-form";
 
 // ต้องอ่านสวิตช์โหมดจำลองสิทธิ์และรายชื่อผู้ใช้ใหม่ทุกครั้ง ห้ามเก็บหน้าไว้ล่วงหน้า
@@ -37,10 +38,11 @@ async function DemoLogin() {
 
   return (
     <div className="flex min-h-screen justify-center px-4 py-8 sm:py-12">
+      <ThemeToggle className="fixed right-4 top-4 z-10 bg-surface" />
       <div className="w-full max-w-3xl">
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-lg border border-slate-200 bg-surface shadow-sm">
           <div className="border-b border-slate-200 bg-brand-50 px-5 py-3">
-            <h1 className="font-semibold text-brand-800">เข้าสู่ระบบ</h1>
+            <h1 className="font-semibold text-brand-ink">เข้าสู่ระบบ</h1>
           </div>
 
           <div className="px-5 py-6">
@@ -64,10 +66,10 @@ async function DemoLogin() {
                       <input type="hidden" name="userId" value={u.id} />
                       <button
                         type="submit"
-                        className="flex min-h-12 w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-slate-200 bg-white px-4 py-3 text-left transition hover:border-brand-600 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600"
+                        className="flex min-h-12 w-full flex-wrap items-center gap-x-3 gap-y-1 rounded-md border border-slate-200 bg-surface px-4 py-3 text-left transition hover:border-brand-600 hover:bg-brand-50 focus:outline-none focus:ring-2 focus:ring-brand-600"
                       >
                         <span className="font-semibold text-slate-900">{u.name}</span>
-                        <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-800">
+                        <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-ink">
                           {ROLE_BADGE[u.role]}
                         </span>
                         <span className="ml-auto text-sm text-slate-500">
@@ -103,20 +105,21 @@ export default async function LoginPage() {
 
       {/* แถบหัวเว็บ บอกว่าเป็นระบบของหน่วยงานไหนตั้งแต่ก่อนเข้าสู่ระบบ
           ใช้ตราแบบไม่มีตัวหนังสือ เพราะขนาดเล็กเกินกว่าจะอ่านชื่อในตราออก */}
-      <header className="border-b border-slate-200 bg-white">
+      <header className="border-b border-slate-200 bg-surface">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <Logo size={40} className="h-10 w-10 shrink-0" />
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-brand-700">การยางแห่งประเทศไทย</p>
+            <p className="truncate text-sm font-semibold text-brand-ink">การยางแห่งประเทศไทย</p>
             <p className="truncate text-xs text-slate-500">Rubber Authority of Thailand</p>
           </div>
+          <ThemeToggle className="ml-auto shrink-0" />
         </div>
       </header>
 
       <main className="flex justify-center px-4 py-10 sm:py-16">
         <div className="w-full max-w-md">
           {/* overflow-hidden จำเป็น เพื่อให้เส้นคั่นในการ์ดไม่ทะลุมุมโค้ง */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm">
             <div className="border-b border-slate-100 px-6 py-7 text-center sm:px-9">
               {/* ตราฉบับเต็มพร้อมชื่อหน่วยงานไทย-อังกฤษ */}
               <Logo variant="full" size={96} className="mx-auto mb-3 h-24 w-24" />
@@ -130,7 +133,7 @@ export default async function LoginPage() {
             <div className="px-6 py-7 sm:px-9">
               <LoginForm />
 
-              <p className="mt-5 rounded-lg bg-brand-50 px-4 py-3 text-xs leading-relaxed text-brand-800">
+              <p className="mt-5 rounded-lg bg-brand-50 px-4 py-3 text-xs leading-relaxed text-brand-ink">
                 ระบบนี้ใช้สำหรับเจ้าหน้าที่ที่ได้รับสิทธิ์เท่านั้น การเข้าใช้งานทุกครั้งจะถูกบันทึกไว้
               </p>
 

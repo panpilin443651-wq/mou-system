@@ -35,7 +35,7 @@ export default async function CommandLinesPage() {
       <div>
         <Link
           href="/admin"
-          className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+          className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
         >
           ← กลับไปหน้าตั้งค่าระบบ
         </Link>
@@ -46,7 +46,7 @@ export default async function CommandLinesPage() {
         </p>
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">รายชื่อสาย</h2>
           <p className="mt-0.5 text-sm text-slate-600">
@@ -78,7 +78,7 @@ export default async function CommandLinesPage() {
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
         <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">จัดส่วนงานเข้าสาย</h2>
           <p className="mt-0.5 text-sm text-slate-600">

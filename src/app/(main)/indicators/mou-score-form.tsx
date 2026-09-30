@@ -77,7 +77,7 @@ export function MouScoreForm({
       <input type="hidden" name="departmentId" value={departmentId} />
       <input type="hidden" name="quarter" value={quarter} />
 
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
         <table className="w-full min-w-[54rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-600">

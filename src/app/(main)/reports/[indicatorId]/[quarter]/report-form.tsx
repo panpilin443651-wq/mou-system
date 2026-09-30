@@ -117,7 +117,7 @@ export function ReportForm({
   return (
     <div className="space-y-5">
       <form id={REPORT_FORM_ID} action={formAction}>
-        <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
           <div>
             <label
               htmlFor="actualValue"
@@ -148,7 +148,7 @@ export function ReportForm({
           <div className="grid gap-3 rounded-lg bg-slate-50 p-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-slate-500">ความก้าวหน้า</p>
-              <p className="mt-0.5 text-lg font-bold tabular-nums text-brand-800">
+              <p className="mt-0.5 text-lg font-bold tabular-nums text-brand-ink">
                 {pct === null ? "–" : `${pct}%`}
               </p>
             </div>
@@ -183,7 +183,7 @@ export function ReportForm({
 
       {planSection}
 
-      <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+      <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
         <div>
           <h2 className="font-semibold">ปรับคะแนนด้วยมือ (ถ้าจำเป็น)</h2>
           <p className="mt-1 text-sm text-slate-600">
@@ -208,7 +208,7 @@ export function ReportForm({
               ref={overrideRef}
               value={override}
               onChange={(e) => setOverride(e.target.value)}
-              className={`${inputClass} bg-white`}
+              className={`${inputClass} bg-surface`}
             >
               <option value="">ใช้คะแนนที่ระบบคำนวณ</option>
               <option value="0">0 — ต่ำกว่าเกณฑ์ระดับ 1</option>
@@ -253,7 +253,7 @@ export function ReportForm({
       {state.success && (
         <p
           role="status"
-          className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800"
+          className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink"
         >
           บันทึกเรียบร้อยแล้ว
         </p>

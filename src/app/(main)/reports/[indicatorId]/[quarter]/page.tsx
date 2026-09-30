@@ -130,7 +130,7 @@ export default async function ReportPage({
       <div>
         <Link
           href={`/reports?dept=${indicator.departmentId}`}
-          className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+          className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
         >
           ← กลับไปรายการรายงานผลการดำเนินงาน
         </Link>
@@ -149,26 +149,26 @@ export default async function ReportPage({
         <div className="mt-2 flex flex-wrap gap-2">
           <Link
             href={`/indicators/${indicator.id}`}
-            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
           >
             ดูรายละเอียดตัวชี้วัด
           </Link>
           {/* แผนดำเนินงานอยู่ในหน้านี้แล้ว ปุ่มนี้พาเลื่อนลงไปที่หัวข้อแผน */}
           <Link
             href="#plan"
-            className="inline-flex min-h-11 items-center rounded-lg border border-brand-600 bg-white px-4 text-sm font-medium text-brand-800 transition hover:bg-brand-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-brand-600 bg-surface px-4 text-sm font-medium text-brand-ink transition hover:bg-brand-50"
           >
             แผนดำเนินงาน
           </Link>
           <Link
             href={`/reports/${indicator.id}/${quarter}/print`}
-            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
           >
             พิมพ์ / บันทึกเป็น PDF
           </Link>
           <a
             href={`/api/export/report/${indicator.id}/${quarter}`}
-            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
           >
             ดาวน์โหลดเป็น Word
           </a>
@@ -185,7 +185,7 @@ export default async function ReportPage({
             className={
               q === quarter
                 ? "inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-medium text-white"
-                : "inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
+                : "inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
             }
           >
             ไตรมาส {q}
@@ -229,7 +229,7 @@ export default async function ReportPage({
         )}
       </div>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+      <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
             <dt className="text-xs text-slate-500">ค่าเป้าหมาย (ระดับ 3)</dt>
@@ -368,7 +368,7 @@ export default async function ReportPage({
           />
         ) : (
           <div className="space-y-5">
-            <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+            <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
               <p className="text-sm text-slate-600">
                 {hasPermission
                   ? `ตอนนี้แก้ไขไม่ได้เพราะ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`

@@ -20,7 +20,7 @@ export default async function AccountPage() {
     <div className="mx-auto max-w-xl space-y-5">
       <h1 className="text-xl font-bold sm:text-2xl">บัญชีของฉัน</h1>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
         <dl className="space-y-3 text-sm">
           <div className="flex justify-between gap-4">
             <dt className="text-slate-600">ชื่อ</dt>
@@ -45,7 +45,7 @@ export default async function AccountPage() {
         </dl>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
         <h2 className="font-semibold">เปลี่ยนรหัสผ่าน</h2>
         <p className="mt-1 mb-4 text-sm text-slate-600">
           รหัสผ่านใหม่ต้องยาวอย่างน้อย 8 ตัวอักษร

@@ -25,7 +25,7 @@ export function DepartmentList({
 }) {
   if (rows.length === 0) {
     return (
-      <p className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-600">
+      <p className="rounded-xl border border-slate-200 bg-surface p-6 text-sm text-slate-600">
         {emptyText}
       </p>
     );
@@ -34,7 +34,7 @@ export function DepartmentList({
   const statLabels = rows[0].stats.map((s) => s.label);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
       <table className="w-full min-w-[40rem] text-sm">
         <thead>
           <tr className="border-b border-slate-200 text-left text-slate-600">
@@ -54,7 +54,7 @@ export function DepartmentList({
                 {/* ลิงก์กินพื้นที่เต็มช่องด้วย -my เพื่อให้กดถูกง่ายบนมือถือ */}
                 <Link
                   href={hrefFor(d.id)}
-                  className="-my-2.5 block py-2.5 text-brand-800 underline-offset-2 hover:underline"
+                  className="-my-2.5 block py-2.5 text-brand-ink underline-offset-2 hover:underline"
                 >
                   <span className="font-medium">{d.code}</span>{" "}
                   <span className="text-slate-700">{d.name}</span>
@@ -82,7 +82,7 @@ export function BackToDepartments({ href }: { href: string }) {
   return (
     <Link
       href={href}
-      className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+      className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
     >
       ← กลับไปรายชื่อส่วนงานและหน่วยงาน
     </Link>

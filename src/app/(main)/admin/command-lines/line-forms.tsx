@@ -28,7 +28,7 @@ function Message({ state }: { state: FormState }) {
   }
   if (state.message) {
     return (
-      <p role="status" className="mt-1 text-xs text-brand-800">
+      <p role="status" className="mt-1 text-xs text-brand-ink">
         {state.message}
       </p>
     );
@@ -195,7 +195,7 @@ export function AssignmentForm({
           </thead>
           <tbody>
             {departments.map((d, i) => (
-              <tr key={d.id} className={i % 2 === 1 ? "bg-slate-50" : "bg-white"}>
+              <tr key={d.id} className={i % 2 === 1 ? "bg-slate-50" : "bg-surface"}>
                 <td className="border border-slate-300 px-4 py-2">
                   <label htmlFor={`line_${d.id}`}>
                     <span className="font-medium">{d.code}</span>{" "}
@@ -208,7 +208,7 @@ export function AssignmentForm({
                     name={`line_${d.id}`}
                     value={selected[d.id] ?? ""}
                     onChange={(e) => setSelected((prev) => ({ ...prev, [d.id]: e.target.value }))}
-                    className={`${inputClass} ${selected[d.id] ? "bg-white" : "border-amber-400 bg-amber-50"}`}
+                    className={`${inputClass} ${selected[d.id] ? "bg-surface" : "border-amber-400 bg-amber-50"}`}
                   >
                     <option value="">— ยังไม่ระบุสาย —</option>
                     {lines.map((l) => (

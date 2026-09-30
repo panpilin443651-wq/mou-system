@@ -37,7 +37,7 @@ export default async function EditUserPage({
   return (
     <div className="space-y-5">
       <div>
-        <Link href="/admin/users" className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline">
+        <Link href="/admin/users" className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline">
           ← กลับไปหน้าจัดการผู้ใช้
         </Link>
         <h1 className="mt-2 text-xl font-bold sm:text-2xl">แก้ไขผู้ใช้</h1>

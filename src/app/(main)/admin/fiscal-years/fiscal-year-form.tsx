@@ -53,7 +53,7 @@ export function FiscalYearForm({ suggestedYear }: { suggestedYear: number }) {
   }
 
   return (
-    <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+    <form action={formAction} className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
       <div>
         <h2 className="font-semibold">เพิ่มปีบัญชีใหม่</h2>
         <p className="mt-1 text-sm text-slate-600">
@@ -117,7 +117,7 @@ export function FiscalYearForm({ suggestedYear }: { suggestedYear: number }) {
         </p>
       )}
       {state.message && (
-        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+        <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
           {state.message}
         </p>
       )}

@@ -93,7 +93,7 @@ export function UserForm({
 
   return (
     <form action={formAction} className="space-y-5">
-      <div className="space-y-5 rounded-xl border border-slate-200 bg-white p-5">
+      <div className="space-y-5 rounded-xl border border-slate-200 bg-surface p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="ชื่อ-นามสกุล"
@@ -148,7 +148,7 @@ export function UserForm({
               value={role}
               disabled={isSelf}
               onChange={(e) => setRole(e.target.value as UserFormValues["role"])}
-              className={`${inputClass} bg-white disabled:bg-slate-100 disabled:text-slate-500`}
+              className={`${inputClass} bg-surface disabled:bg-slate-100 disabled:text-slate-500`}
             >
               <option value="DEPT_USER">ผู้รับผิดชอบส่วนงาน — กรอกผลของส่วนงานตัวเอง</option>
               <option value="EXECUTIVE">ผู้บริหาร — ดูได้ทุกส่วนงาน แก้ไขไม่ได้</option>
@@ -170,7 +170,7 @@ export function UserForm({
               required
               defaultValue={initial.isActive ? "true" : "false"}
               disabled={isSelf}
-              className={`${inputClass} bg-white disabled:bg-slate-100 disabled:text-slate-500`}
+              className={`${inputClass} bg-surface disabled:bg-slate-100 disabled:text-slate-500`}
             >
               <option value="true">ใช้งาน</option>
               <option value="false">ปิดใช้งาน</option>
@@ -191,7 +191,7 @@ export function UserForm({
               name="departmentId"
               required
               defaultValue={initial.departmentId}
-              className={`${inputClass} bg-white`}
+              className={`${inputClass} bg-surface`}
             >
               <option value="">— เลือกส่วนงาน —</option>
               {departments.map((d) => (
@@ -208,7 +208,7 @@ export function UserForm({
       </div>
 
       {withPassword && (
-        <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5">
+        <div className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
           <div>
             <h2 className="font-semibold">รหัสผ่านเริ่มต้น</h2>
             <p className="mt-1 text-sm text-slate-600">

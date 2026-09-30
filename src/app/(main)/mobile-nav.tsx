@@ -37,9 +37,9 @@ export function MobileNav({ links }: { links: NavLink[] }) {
             type="button"
             aria-label="ปิดเมนู"
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-10 bg-slate-900/20"
+            className="fixed inset-0 z-10 bg-scrim/20"
           />
-          <nav className="absolute inset-x-0 top-full z-20 border-b border-slate-200 bg-white p-2 shadow-lg">
+          <nav className="absolute inset-x-0 top-full z-20 border-b border-slate-200 bg-surface p-2 shadow-lg">
             {links.map((link) => (
               <Link
                 key={link.href}

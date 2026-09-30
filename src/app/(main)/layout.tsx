@@ -4,6 +4,7 @@ import { ROLE_LABEL, homePath, indicatorsMenuLabel, visibleMenus } from "@/lib/p
 import { db } from "@/lib/db";
 import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "./mobile-nav";
 
 // โฟลเดอร์ (main) ที่มีวงเล็บ = จัดกลุ่มไฟล์โดยไม่กลายเป็นส่วนหนึ่งของ URL
@@ -40,7 +41,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           ไม่ใช้เป็นพื้นกว้าง เพราะตัวหนังสือบนพื้นเหลืองอ่านยาก */}
       <div className="h-1 bg-accent-400 print:hidden" aria-hidden="true" />
 
-      <header className="border-b border-slate-200 bg-white shadow-sm print:hidden">
+      <header className="border-b border-slate-200 bg-surface shadow-sm print:hidden">
         {/* relative จำเป็นสำหรับให้เมนูมือถือเลื่อนลงมาวางตำแหน่งถูกต้อง */}
         <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <MobileNav links={links} />
@@ -48,7 +49,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           <Link href={homePath(user)} className="flex min-w-0 flex-1 items-center gap-2.5">
             <Logo size={36} className="h-9 w-9 shrink-0" />
             <span className="min-w-0">
-              <span className="block truncate font-semibold text-brand-800">ระบบรายงานผล MOU</span>
+              <span className="block truncate font-semibold text-brand-ink">ระบบรายงานผล MOU</span>
               <span className="block truncate text-xs text-slate-500">
                 {department ? `${department.code} ${department.name}` : ROLE_LABEL[user.role]}
               </span>
@@ -67,6 +68,8 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               </Link>
             ))}
           </nav>
+
+          <ThemeToggle />
 
           <form action={logoutAction}>
             <button

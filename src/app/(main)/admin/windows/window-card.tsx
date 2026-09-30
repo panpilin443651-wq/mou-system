@@ -54,7 +54,7 @@ function Message({ state }: { state: FormState }) {
   }
   if (state.message) {
     return (
-      <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-800">
+      <p role="status" className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink">
         {state.message}
       </p>
     );
@@ -98,7 +98,7 @@ export function WindowCard({
   const [showException, setShowException] = useState(false);
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white shadow-sm">
+    <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3 sm:px-5">
         <h2 className="font-semibold">
           ไตรมาส {quarter}
@@ -107,7 +107,7 @@ export function WindowCard({
         <span
           className={`rounded px-2 py-0.5 text-xs font-medium ${
             statusTone === "open"
-              ? "bg-brand-50 text-brand-800"
+              ? "bg-brand-50 text-brand-ink"
               : "bg-amber-50 text-amber-800"
           }`}
         >
@@ -153,7 +153,7 @@ export function WindowCard({
             id={`force-${quarter}`}
             name="isForceClosed"
             defaultValue={isForceClosed ? "true" : "false"}
-            className={`${inputClass} bg-white`}
+            className={`${inputClass} bg-surface`}
           >
             <option value="false">ใช้ตามวันเวลาที่ตั้งไว้</option>
             <option value="true">ปิดทันที ไม่ต้องรอถึงเวลาปิด</option>
@@ -205,7 +205,7 @@ export function WindowCard({
                   name="departmentId"
                   required
                   defaultValue=""
-                  className={`${inputClass} bg-white`}
+                  className={`${inputClass} bg-surface`}
                 >
                   <option value="">— เลือกส่วนงาน —</option>
                   {departments.map((d) => (
@@ -254,7 +254,7 @@ export function WindowCard({
               <button
                 type="button"
                 onClick={() => setShowException(false)}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium transition hover:bg-slate-50"
+                className="rounded-lg border border-slate-300 bg-surface px-4 py-2.5 text-sm font-medium transition hover:bg-slate-50"
               >
                 ปิดฟอร์ม
               </button>
@@ -264,7 +264,7 @@ export function WindowCard({
           <button
             type="button"
             onClick={() => setShowException(true)}
-            className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-brand-800 transition hover:border-brand-600 hover:bg-brand-50"
+            className="mt-2 w-full rounded-lg border border-dashed border-slate-300 px-4 py-2.5 text-sm font-medium text-brand-ink transition hover:border-brand-600 hover:bg-brand-50"
           >
             + ขยายเวลาให้ส่วนงานที่ขอผ่อนผัน
           </button>

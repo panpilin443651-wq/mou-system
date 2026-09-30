@@ -38,7 +38,8 @@ export function Logo({
       // ไฟล์ .svg ต้องข้ามตัวย่อรูปของ Next.js ไม่งั้นจะขึ้น error 400
       // (เป็นภาพลายเส้น ย่อแล้วไม่ได้เล็กลงอยู่แล้ว ข้ามไปได้เลย)
       unoptimized
-      className={className}
+      // ตราเป็นสีเขียวเข้ม บนพื้นมืดจะจมหาย ธีมมืดจึงรองด้วยพื้นขาว
+      className={`${variant === "mark" ? "dark:rounded-full" : "dark:rounded-xl dark:p-1"} dark:bg-white ${className}`}
     />
   );
 }

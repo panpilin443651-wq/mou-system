@@ -45,14 +45,14 @@ export default async function PrintReportPage({
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <a
           href={`/reports/${ind.id}/${quarter}`}
-          className="inline-flex min-h-11 items-center text-sm text-brand-800 hover:underline"
+          className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
         >
           ← กลับไปหน้ากรอกผล
         </a>
         <div className="flex flex-wrap gap-2">
           <a
             href={`/api/export/report/${ind.id}/${quarter}`}
-            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-medium transition hover:bg-slate-50"
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
           >
             ดาวน์โหลดเป็น Word
           </a>
@@ -66,7 +66,7 @@ export default async function PrintReportPage({
       </p>
 
       {/* ---------- ตัวเอกสาร ---------- */}
-      <article className="rounded-xl border border-slate-200 bg-white p-8 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
+      <article className="rounded-xl border border-slate-200 bg-surface p-8 shadow-sm print:rounded-none print:border-0 print:p-0 print:shadow-none">
         <header className="text-center">
           <Logo variant="full" size={96} className="mx-auto mb-3 h-24 w-24" />
           <h1 className="text-lg font-bold">{doc.title}</h1>
