@@ -2,8 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createInterface } from "node:readline";
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 
 // ============================================================================
 // ตั้งรหัสผ่านเข้าใช้งานให้ผู้ใช้ในระบบ
@@ -17,9 +16,8 @@ import bcrypt from "bcryptjs";
 //   รหัสที่พิมพ์ต่อท้ายคำสั่งจะค้างอยู่ในประวัติคำสั่งของ terminal
 //   สคริปต์นี้จึงถามตอนรันและปิดการแสดงผลขณะพิมพ์ รหัสไม่ถูกบันทึกที่ไหนเลย
 //
-// ต่อฐานข้อมูลผ่าน HTTPS (Neon adapter) ไม่ใช่พอร์ต 5432
-//   เพราะเครือข่ายหลายที่บล็อกพอร์ต 5432 ไว้
-//   (เหตุผลเดียวกับ prisma/apply-migration-over-https.ts)
+// รหัสผ่านเก็บที่ Supabase Auth จึงตั้งผ่าน service_role key (SUPABASE_SERVICE_ROLE_KEY)
+// ส่วนรายชื่อผู้ใช้อ่านจากฐานข้อมูลผ่าน DATABASE_URL
 //
 // วิธีใช้
 //   npx tsx prisma/set-password.ts
@@ -75,17 +73,21 @@ function askSecret(question: string): Promise<string> {
 
 async function main() {
   loadEnv();
-  if (!process.env.DATABASE_URL) {
-    console.error("ไม่พบ DATABASE_URL ใน .env");
+  const { DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
+  if (!DATABASE_URL || !NEXT_PUBLIC_SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    console.error(
+      "ต้องตั้งค่า DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ใน .env"
+    );
     process.exit(1);
   }
 
-  const db = new PrismaClient({
-    adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL }),
+  const db = new PrismaClient({ datasourceUrl: DATABASE_URL });
+  const supabase = createClient(NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false },
   });
 
   const users = await db.user.findMany({
-    select: { id: true, email: true, name: true, role: true, isActive: true },
+    select: { id: true, authId: true, email: true, name: true, role: true, isActive: true },
     orderBy: [{ role: "asc" }, { email: "asc" }],
   });
 
@@ -130,11 +132,32 @@ async function main() {
     process.exit(1);
   }
 
-  // cost 12 เท่ากับที่ระบบใช้ตอนสมัครและตอนเปลี่ยนรหัสผ่านบนหน้าเว็บ
-  const passwordHash = await bcrypt.hash(password, 12);
+  // มีบัญชีใน Supabase แล้วก็เปลี่ยนรหัส ยังไม่มี (ผู้ใช้เก่า) ก็สร้างให้พร้อมรหัสนี้
+  let authId = target.authId;
+  if (authId) {
+    const { error } = await supabase.auth.admin.updateUserById(authId, { password });
+    if (error) {
+      console.error(`ตั้งรหัสใน Supabase ไม่สำเร็จ: ${error.message}`);
+      await db.$disconnect();
+      process.exit(1);
+    }
+  } else {
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: target.email,
+      password,
+      email_confirm: true,
+    });
+    if (error || !data.user) {
+      console.error(`สร้างบัญชีใน Supabase ไม่สำเร็จ: ${error?.message}`);
+      await db.$disconnect();
+      process.exit(1);
+    }
+    authId = data.user.id;
+  }
+
   await db.user.update({
     where: { id: target.id },
-    data: { passwordHash, isActive: true },
+    data: { authId, passwordHash: null, isActive: true },
   });
 
   console.log(`\nเรียบร้อย - ${target.email} ใช้รหัสใหม่ได้ทันที`);

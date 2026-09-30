@@ -9,9 +9,13 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// ฐานข้อมูล PostgreSQL ของ Supabase
+//   DATABASE_URL = ต่อผ่าน connection pooler (พอร์ต 6543 ต่อท้ายด้วย ?pgbouncer=true) ใช้ตอนเว็บทำงาน
+//   DIRECT_URL   = ต่อตรง (พอร์ต 5432) ใช้ตอน prisma migrate เท่านั้น เพราะ pooler รันคำสั่งแก้โครงตารางไม่ได้
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ============================================================================
@@ -101,12 +105,16 @@ model Department {
 }
 
 /// ผู้ใช้งานระบบ - ADMIN เป็นผู้สร้างบัญชีให้ (ไม่มีการสมัครเอง)
+/// รหัสผ่านและการ login อยู่ที่ Supabase Auth ตารางนี้เก็บสิทธิ์และสังกัด
 model User {
-  id           String @id @default(cuid())
-  email        String @unique
-  name         String
-  /// รหัสผ่านที่เข้ารหัสด้วย bcrypt แล้ว - ห้ามเก็บรหัสผ่านจริงเด็ดขาด
-  passwordHash String
+  id     String  @id @default(cuid())
+  /// id ของบัญชีใน Supabase Auth (auth.users.id) - null = ยังไม่ได้ย้ายบัญชีไป Supabase
+  authId String? @unique
+  email  String  @unique
+  name   String
+  /// รหัสผ่าน bcrypt จากระบบ login เดิม ไม่ได้ใช้แล้ว
+  /// เก็บไว้ให้ prisma/migrate-users-to-supabase.ts ย้ายรหัสเดิมไป Supabase ผู้ใช้จะได้ไม่ต้องตั้งรหัสใหม่
+  passwordHash String?
 
   role Role @default(DEPT_USER)
 
@@ -266,6 +274,13 @@ model PlanHeader {
   owner  String?
   /// "งบประมาณ" เก็บเป็นข้อความเพราะแบบฟอร์มเขียนรวมหน่วยไว้ เช่น "71,000 บาท"
   budget String?
+
+  /// ผู้รับผิดชอบส่วนงานกด "ยืนยันแผน" เมื่อไร - null = ยังไม่ยืนยัน (ยังแก้แผนได้ และยังรายงานผลไม่ได้)
+  /// ยืนยันแล้ว แผนรายเดือน เป้าหมาย ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงาน จะล็อก
+  /// ส่วนกลางปลดล็อกได้ (ตั้งกลับเป็น null)
+  confirmedAt   DateTime?
+  /// id ของผู้ใช้ที่กดยืนยัน (ไม่ผูก relation เพราะใช้แสดงผลอย่างเดียว)
+  confirmedById String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

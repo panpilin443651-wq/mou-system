@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 /**
  * ดึงข้อความอธิบายสาเหตุออกจาก error ให้ได้มากที่สุด
  *
- * ตัวเชื่อมต่อของ Neon บางกรณีไม่ได้โยน Error ออกมาตรงๆ
+ * ตัวเชื่อมต่อฐานข้อมูลบางกรณีไม่ได้โยน Error ออกมาตรงๆ
  * ถ้าเช็คแค่ `instanceof Error` จะได้คำว่า "ไม่ทราบสาเหตุ" ซึ่งไม่ช่วยอะไรเลย
  * ทั้งที่กล่องข้อความนี้มีไว้เพื่อบอกสาเหตุโดยเฉพาะ
  *
@@ -19,7 +19,7 @@ function describeError(error: unknown): string {
   const parts: string[] = [];
 
   // ไล่ตามสาเหตุที่ซ้อนกันไปทีละชั้น ทั้ง cause (ของ Error ปกติ)
-  // และ error (ของ ErrorEvent ที่ตัวเชื่อมต่อ Neon โยนออกมา)
+  // และ error (ของ ErrorEvent ที่ตัวเชื่อมต่อบางตัวโยนออกมา)
   for (let current: unknown = error, depth = 0; current != null && depth < 4; depth++) {
     if (typeof current !== "object") {
       parts.push(String(current));
@@ -67,7 +67,7 @@ async function checkDatabase() {
       ? `${detail}\n\n${describeTarget()}`
       : `ต่อฐานข้อมูลไม่สำเร็จ และตัวเชื่อมต่อไม่ได้บอกสาเหตุมา\n\n${describeTarget()}\n\n` +
         "มักเกิดจาก: ตั้งค่า DATABASE_URL ผิดหรือยังไม่ได้ตั้ง · " +
-        "ฐานข้อมูลบน Neon ถูกลบหรือหยุดทำงาน · เครือข่ายบล็อกการเชื่อมต่อ";
+        "โปรเจกต์ Supabase ถูกหยุดชั่วคราว (pause) หรือถูกลบ · รหัสผ่านฐานข้อมูลผิด · เครือข่ายบล็อกการเชื่อมต่อ";
     return { connected: false as const, message };
   }
 }
@@ -116,12 +116,17 @@ export default async function HomePage() {
                     <li>เปิด Vercel เลือกโปรเจกต์นี้ ไปที่ Settings &gt; Environment Variables</li>
                     <li>
                       เพิ่ม <code className="rounded bg-slate-100 px-1.5 py-0.5">DATABASE_URL</code>{" "}
-                      เป็น connection string จาก Neon (ตัวที่มีคำว่า{" "}
-                      <code className="rounded bg-slate-100 px-1.5 py-0.5">-pooler</code>)
+                      เป็น connection string จาก Supabase แบบ Transaction pooler (พอร์ต 6543
+                      ต่อท้ายด้วย{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">?pgbouncer=true</code>)
                     </li>
                     <li>
-                      เพิ่ม <code className="rounded bg-slate-100 px-1.5 py-0.5">AUTH_SECRET</code>{" "}
-                      ด้วย ไม่อย่างนั้นจะเข้าสู่ระบบไม่ได้
+                      เพิ่ม{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">NEXT_PUBLIC_SUPABASE_URL</code>,{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
+                      และ{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
+                      (Supabase &gt; Project Settings &gt; API) ไม่อย่างนั้นจะเข้าสู่ระบบไม่ได้
                     </li>
                     <li>กลับไปแท็บ Deployments แล้วกด Redeploy</li>
                   </ol>
@@ -130,9 +135,10 @@ export default async function HomePage() {
                 <>
                   <ol className="mt-3 list-inside list-decimal space-y-1.5 text-sm text-slate-700">
                     <li>
-                      ใส่ connection string จาก Neon ลงในไฟล์{" "}
-                      <code className="rounded bg-slate-100 px-1.5 py-0.5">.env</code> ที่ตัวแปร{" "}
-                      <code className="rounded bg-slate-100 px-1.5 py-0.5">DATABASE_URL</code>
+                      คัดลอก{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">.env.example</code> เป็น{" "}
+                      <code className="rounded bg-slate-100 px-1.5 py-0.5">.env</code> แล้วใส่ค่าจาก
+                      Supabase ให้ครบ (connection string ของฐานข้อมูล และ key ของ API)
                     </li>
                     <li>
                       สร้างตารางด้วย{" "}
@@ -146,14 +152,12 @@ export default async function HomePage() {
                     </li>
                   </ol>
 
-                  {/* พอร์ต 5432 ถูกบล็อกบ่อยมาก ถ้าไม่บอกทางออกไว้ตรงนี้
+                  {/* พอร์ต 5432 ถูกบล็อกบ่อยมาก ถ้าไม่บอกไว้ตรงนี้
                       ผู้ใช้จะเจอคำสั่งค้างแล้วไม่รู้ว่าเพราะอะไร */}
                   <p className="mt-3 text-sm text-slate-700">
-                    ถ้าคำสั่งข้อ 2 ค้างไม่ยอมจบ แปลว่าเครือข่ายที่ใช้อยู่บล็อกพอร์ต 5432
-                    ให้ใช้คำสั่งนี้แทน ซึ่งส่งผ่าน HTTPS จึงใช้ได้ทุกเครือข่าย{" "}
-                    <code className="rounded bg-slate-100 px-1.5 py-0.5">
-                      npx tsx prisma/apply-migration-over-https.ts --apply
-                    </code>
+                    ถ้าคำสั่งข้อ 2 ค้างไม่ยอมจบ แปลว่าเครือข่ายที่ใช้อยู่บล็อกพอร์ต 5432 ของ{" "}
+                    <code className="rounded bg-slate-100 px-1.5 py-0.5">DIRECT_URL</code>{" "}
+                    ให้ลองเปลี่ยนไปใช้เครือข่ายอื่น (เช่น แชร์เน็ตจากมือถือ) แล้วรันใหม่
                   </p>
 
                   <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">

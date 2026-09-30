@@ -1,5 +1,5 @@
 import { PrismaClient, ScoreDirection } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { createClient } from "@supabase/supabase-js";
 import { departments } from "./departments";
 import indicatorData from "./indicators.json";
 
@@ -184,20 +184,42 @@ async function main() {
   if (!adminEmail || !adminPassword) {
     console.log("\n  ข้ามการสร้างบัญชี ADMIN");
     console.log("  (ยังไม่ได้ตั้งค่า SEED_ADMIN_EMAIL และ SEED_ADMIN_PASSWORD ในไฟล์ .env)");
+  } else if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.log("\n  ข้ามการสร้างบัญชี ADMIN");
+    console.log(
+      "  (ยังไม่ได้ตั้งค่า NEXT_PUBLIC_SUPABASE_URL และ SUPABASE_SERVICE_ROLE_KEY ในไฟล์ .env)"
+    );
   } else {
-    const passwordHash = await bcrypt.hash(adminPassword, 12);
-    await prisma.user.upsert({
-      where: { email: adminEmail },
-      update: {},
-      create: {
-        email: adminEmail,
-        name: "ผู้ดูแลระบบ",
-        passwordHash,
-        role: "ADMIN",
-      },
-    });
-    console.log(`\n  สร้างบัญชีผู้ดูแลระบบแล้ว: ${adminEmail}`);
-    console.log("  >>> กรุณาเปลี่ยนรหัสผ่านทันทีหลัง login ครั้งแรก <<<");
+    const email = adminEmail.toLowerCase().trim();
+    const existing = await prisma.user.findUnique({ where: { email } });
+
+    if (existing?.authId) {
+      // รันซ้ำ - ไม่แตะรหัสผ่านของบัญชีที่มีอยู่แล้ว
+      console.log(`\n  มีบัญชีผู้ดูแลระบบอยู่แล้ว: ${email}`);
+    } else {
+      // รหัสผ่านเก็บที่ Supabase Auth ส่วนตาราง User เก็บสิทธิ์ (ผูกกันด้วย authId)
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.SUPABASE_SERVICE_ROLE_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      );
+      const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password: adminPassword,
+        email_confirm: true,
+      });
+      if (error || !data.user) {
+        throw new Error(`สร้างบัญชีผู้ดูแลระบบใน Supabase ไม่สำเร็จ: ${error?.message}`);
+      }
+
+      await prisma.user.upsert({
+        where: { email },
+        update: { authId: data.user.id },
+        create: { authId: data.user.id, email, name: "ผู้ดูแลระบบ", role: "ADMIN" },
+      });
+      console.log(`\n  สร้างบัญชีผู้ดูแลระบบแล้ว: ${email}`);
+      console.log("  >>> กรุณาเปลี่ยนรหัสผ่านทันทีหลัง login ครั้งแรก <<<");
+    }
   }
 
   console.log("\nใส่ข้อมูลตั้งต้นเรียบร้อย");

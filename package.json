@@ -13,6 +13,7 @@
     "db:studio": "prisma studio",
     "db:seed": "prisma db seed",
     "db:set-password": "tsx prisma/set-password.ts",
+    "db:migrate-users": "tsx prisma/migrate-users-to-supabase.ts",
     "db:reset": "prisma migrate reset"
   },
   "prisma": {
@@ -24,12 +25,13 @@
     "@neondatabase/serverless": "^1.1.0",
     "@prisma/adapter-neon": "^6.19.3",
     "@prisma/client": "^6.19.3",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.58.0",
     "@vercel/blob": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "docx": "^9.7.1",
     "exceljs": "^4.4.0",
     "next": "^15.5.25",
-    "next-auth": "^5.0.0-beta.32",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "zod": "^4.5.4"

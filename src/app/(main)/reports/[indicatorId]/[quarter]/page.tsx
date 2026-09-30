@@ -12,7 +12,6 @@ import {
   QUARTERS,
   QUARTER_MONTHS,
   currentFiscalMonthIndex,
-  isPlanComplete,
   toMonths,
 } from "@/lib/plan";
 import { savePlanAction } from "@/actions/plans";
@@ -82,10 +81,10 @@ export default async function ReportPage({
   const isAdmin = user.role === "ADMIN";
   const hasPermission = canSubmitReport(user, indicator.departmentId);
 
-  // ขั้นตอนที่ 1: กรอกแผนดำเนินงานและบันทึกแผนก่อน จึงรายงานผลรายไตรมาสได้
-  const planReady = isPlanComplete(
-    indicator.plans.map((p) => ({ title: p.title, planMonths: toMonths(p.planMonths) })),
-  );
+  // ขั้นตอนที่ 1: กรอกแผนดำเนินงานและกด "ยืนยันแผน" ก่อน จึงรายงานผลรายไตรมาสได้
+  // ยืนยันแล้วโครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้และปลดล็อกได้)
+  const confirmedAt = indicator.planHeader?.confirmedAt ?? null;
+  const planReady = confirmedAt !== null;
   const needsPlan = hasPermission && !isAdmin && !planReady;
 
   const canEdit = hasPermission && window.canWrite && !needsPlan;
@@ -136,6 +135,9 @@ export default async function ReportPage({
           indicator.planLevelReports.map((r) => [r.level, r.text])
         )}
         locks={monthLocks(statuses)}
+        confirmedLabel={confirmedAt ? formatThaiDateTime(confirmedAt) : null}
+        structureLocked={confirmedAt !== null && !isAdmin}
+        canUnlock={isAdmin && canEditPlan && confirmedAt !== null}
         monthsElapsed={currentFiscalMonthIndex(indicator.fiscalYear.year)}
         fiscalYear={indicator.fiscalYear.year}
         indicatorId={indicator.id}
@@ -272,14 +274,14 @@ export default async function ReportPage({
             }`}
           >
             <p className="font-medium">
-              ขั้นตอนที่ 1 · กรอกแผนดำเนินงานและกดบันทึกแผน
+              ขั้นตอนที่ 1 · กรอกแผนดำเนินงานและกดยืนยันแผน
             </p>
             <p className="mt-0.5">
               {planReady ? (
-                <span className="text-emerald-800">✓ บันทึกแผนแล้ว</span>
+                <span className="text-emerald-800">✓ ยืนยันแผนแล้ว (แผนถูกล็อก)</span>
               ) : (
                 <>
-                  ยังไม่ได้บันทึกแผน ·{" "}
+                  ยังไม่ได้ยืนยันแผน ·{" "}
                   <a href="#plan" className="font-medium underline underline-offset-2">
                     ไปกรอกแผน
                   </a>
@@ -297,7 +299,7 @@ export default async function ReportPage({
             <p className="font-medium">ขั้นตอนที่ 2 · รายงานผลไตรมาส {quarter}</p>
             <p className="mt-0.5">
               {!planReady
-                ? "ทำได้หลังบันทึกแผนแล้ว"
+                ? "ทำได้หลังยืนยันแผนแล้ว"
                 : isSubmitted
                   ? "✓ ส่งผลแล้ว"
                   : window.canWrite
@@ -457,7 +459,7 @@ export default async function ReportPage({
             <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
               <p className="text-sm text-slate-600">
                 {needsPlan
-                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนดำเนินงานด้านล่างและกดบันทึกแผนก่อน"
+                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนดำเนินงานด้านล่างและกดยืนยันแผนก่อน"
                   : hasPermission
                   ? `ตอนนี้แก้ไขไม่ได้ — ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
                   : `คุณเปิดดูรายงานนี้ได้อย่างเดียว การกรอกผลทำได้โดยผู้รับผิดชอบส่วนงาน ${indicator.department.code} และส่วนกลาง`}

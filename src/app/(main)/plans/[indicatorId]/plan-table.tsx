@@ -93,7 +93,7 @@ const cellInput =
 const textInput =
   "w-full rounded border border-slate-200 bg-surface px-2 py-1.5 text-sm outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600";
 
-function SaveButton() {
+function SaveButton({ label = "บันทึกแผน" }: { label?: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -103,7 +103,51 @@ function SaveButton() {
       disabled={pending}
       className="min-h-11 rounded-lg bg-brand-700 px-5 text-sm font-medium text-white transition hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      {pending ? "กำลังบันทึก..." : "บันทึกแผน"}
+      {pending ? "กำลังบันทึก..." : label}
+    </button>
+  );
+}
+
+/** ยืนยันแผน - บันทึกทั้งตารางก่อน แล้วล็อกโครงแผน */
+function ConfirmButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      name="intent"
+      value="confirm"
+      disabled={pending}
+      onClick={(e) => {
+        // ยืนยันแล้วแก้โครงแผนเองไม่ได้อีก ต้องให้ส่วนกลางปลดล็อก จึงถามย้ำก่อน
+        if (
+          !window.confirm(
+            "ยืนยันแผนดำเนินงาน?
+
+หลังยืนยันจะแก้แผนรายเดือน เป้าหมายตัวชี้วัด ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก (ต้องให้ส่วนกลางปลดล็อก)",
+          )
+        ) {
+          e.preventDefault();
+        }
+      }}
+      className="min-h-11 rounded-lg border border-brand-600 bg-surface px-5 text-sm font-medium text-brand-ink transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      ยืนยันแผน
+    </button>
+  );
+}
+
+/** ปลดล็อกแผน (เฉพาะส่วนกลาง) */
+function UnlockButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type="submit"
+      name="intent"
+      value="unlock"
+      disabled={pending}
+      className="min-h-11 rounded-lg border border-slate-300 px-5 text-sm font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      ปลดล็อกแผน
     </button>
   );
 }
@@ -119,6 +163,9 @@ export function PlanTable({
   criteria,
   levelReports,
   locks,
+  confirmedLabel,
+  structureLocked,
+  canUnlock,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   canEdit: boolean;
@@ -133,7 +180,16 @@ export function PlanTable({
   levelReports: Record<number, string>;
   /** เดือนที่ล็อกไว้ (ไตรมาสที่ผ่านไปแล้ว) ช่อง 0 = ต.ค. */
   locks: MonthLocks;
+  /** ยืนยันแผนเมื่อไร (ข้อความแสดงผล) - null = ยังไม่ยืนยัน */
+  confirmedLabel: string | null;
+  /** ยืนยันแผนแล้ว และผู้ใช้คนนี้แก้โครงแผนไม่ได้ (ผู้รับผิดชอบส่วนงาน) */
+  structureLocked: boolean;
+  /** แสดงปุ่มปลดล็อกแผน (ส่วนกลาง) */
+  canUnlock: boolean;
 }) {
+  // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
+  // ยืนยันแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
+  const editStructure = canEdit && !structureLocked;
   const [state, formAction] = useActionState(action, {
     error: null,
   } as FormState);
@@ -200,6 +256,23 @@ export function PlanTable({
         >
           {state.message}
         </p>
+      )}
+
+      {/* ---- สถานะการยืนยันแผน ---- */}
+      {confirmedLabel ? (
+        <p className="rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-700 shadow-sm">
+          <span className="font-medium text-emerald-800">✓ ยืนยันแผนแล้ว</span> เมื่อ {confirmedLabel} ·{" "}
+          {structureLocked
+            ? "แผนรายเดือน เป้าหมายตัวชี้วัด ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานถูกล็อก ติดต่อส่วนกลางหากต้องแก้แผน"
+            : "ผู้รับผิดชอบส่วนงานแก้โครงแผนไม่ได้แล้ว ส่วนกลางยังแก้ได้ หรือกดปลดล็อกแผนให้ส่วนงานแก้เอง"}
+        </p>
+      ) : (
+        canEdit && (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            กรอกแผนให้ครบแล้วกด <strong>ยืนยันแผน</strong> ด้านล่าง จึงจะรายงานผลรายไตรมาสได้ ·
+            หลังยืนยันจะแก้แผนรายเดือน เป้าหมาย ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก
+          </p>
+        )
       )}
 
       {/* ---- ส่วนหัวของแบบฟอร์ม ---- */}
@@ -269,7 +342,7 @@ export function PlanTable({
         </a>
       </div>
 
-      {canEdit && (locks.plan.some(Boolean) || locks.actual.some(Boolean)) && (
+      {canEdit && (structureLocked || locks.plan.some(Boolean) || locks.actual.some(Boolean)) && (
         <p className="flex items-start gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-600 shadow-sm">
           <span className="mt-0.5 inline-block h-4 w-6 shrink-0 rounded border border-slate-200 bg-slate-100" aria-hidden="true" />
           <span>
@@ -284,6 +357,7 @@ export function PlanTable({
           key={section}
           section={section}
           canEdit={canEdit}
+          editStructure={editStructure}
           rows={data.filter((r) => r.section === section)}
           upto={upto}
           onCell={setCell}
@@ -296,7 +370,9 @@ export function PlanTable({
 
       {canEdit && (
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
-          <SaveButton />
+          <SaveButton label={confirmedLabel ? "บันทึก" : "บันทึกแผน"} />
+          {!confirmedLabel && <ConfirmButton />}
+          {canUnlock && <UnlockButton />}
           <span className="text-sm text-slate-600">
             ตัวเลขที่พิมพ์จะยังไม่ถูกเก็บจนกว่าจะกดบันทึก
           </span>
@@ -316,6 +392,7 @@ function columnCount(canEdit: boolean) {
 function SectionTable({
   section,
   canEdit,
+  editStructure,
   rows,
   upto,
   onCell,
@@ -326,6 +403,8 @@ function SectionTable({
 }: {
   section: PlanSection;
   canEdit: boolean;
+  /** แก้โครงแผนได้ (ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน เพิ่ม/ลบบรรทัด) */
+  editStructure: boolean;
   rows: RowState[];
   upto: number;
   onCell: (
@@ -364,7 +443,7 @@ function SectionTable({
     upto,
   );
   const summaryById = new Map(ordered.map((r, i) => [r.id, summary.rows[i]]));
-  const cols = columnCount(canEdit);
+  const cols = columnCount(editStructure);
 
   const renderRows = (list: RowState[], prefix: string) =>
     list.map((row, index) => {
@@ -375,6 +454,7 @@ function SectionTable({
           row={row}
           label={`${prefix}${index + 1}`}
           canEdit={canEdit}
+          editStructure={editStructure}
           cumPct={rowSummary.cumPct}
           yearPct={rowSummary.yearPct}
           onCell={onCell}
@@ -396,7 +476,7 @@ function SectionTable({
       <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
         {formatPct(summary.avgYearPct)}
       </td>
-      <td colSpan={canEdit ? 4 : 3} className="border border-slate-200" />
+      <td colSpan={editStructure ? 4 : 3} className="border border-slate-200" />
     </tr>
   );
 
@@ -426,9 +506,9 @@ function SectionTable({
       ) : !isStep ? (
         // ตารางเป้าหมายมักสั้น จำกัดความสูงไว้ให้แถบเลื่อนแนวนอนอยู่ในจอเสมอ
         // และหัวตารางลอยค้างด้านบนกรอบ
-        <TableFrame canEdit={canEdit} className="max-h-[70vh] overflow-auto">
+        <TableFrame canEdit={editStructure} className="max-h-[70vh] overflow-auto">
           <thead className="sticky top-0 z-10">
-            <HeaderRow section={section} canEdit={canEdit} />
+            <HeaderRow section={section} canEdit={editStructure} />
           </thead>
           <tbody>
             {renderRows(rows, "")}
@@ -443,13 +523,14 @@ function SectionTable({
           {criteria.map((c) => {
             const steps = rows.filter((r) => r.criteriaLevel === c.level);
             return (
-              <TableFrame key={c.level} canEdit={canEdit} className="overflow-x-auto">
+              <TableFrame key={c.level} canEdit={editStructure} className="overflow-x-auto">
                 <tbody>
                   <LevelGroup
                     section={section}
                     criterion={c}
                     cols={cols}
                     canEdit={canEdit}
+                    editStructure={editStructure}
                     stepCount={steps.length}
                     report={levelReports[c.level] ?? ""}
                   >
@@ -461,7 +542,7 @@ function SectionTable({
           })}
 
           {orphans.length > 0 && (
-            <TableFrame canEdit={canEdit} className="overflow-x-auto">
+            <TableFrame canEdit={editStructure} className="overflow-x-auto">
               <tbody>
                 <tr className="bg-amber-50">
                   <td
@@ -473,7 +554,7 @@ function SectionTable({
                     </span>
                   </td>
                 </tr>
-                <HeaderRow section={section} canEdit={canEdit} />
+                <HeaderRow section={section} canEdit={editStructure} />
                 {renderRows(orphans, "")}
               </tbody>
             </TableFrame>
@@ -513,7 +594,7 @@ function SectionTable({
       )}
 
       <div className="space-y-3 border-t border-slate-200 p-4 sm:p-5">
-        {canEdit && !isStep && (
+        {editStructure && !isStep && (
           <button
             type="submit"
             name="intent"
@@ -541,6 +622,7 @@ function LevelGroup({
   criterion,
   cols,
   canEdit,
+  editStructure,
   stepCount,
   report,
   children,
@@ -549,6 +631,7 @@ function LevelGroup({
   criterion: PlanCriterion;
   cols: number;
   canEdit: boolean;
+  editStructure: boolean;
   stepCount: number;
   report: string;
   children: React.ReactNode;
@@ -568,7 +651,7 @@ function LevelGroup({
         </td>
       </tr>
 
-      <HeaderRow section={section} canEdit={canEdit} />
+      <HeaderRow section={section} canEdit={editStructure} />
 
       {children}
 
@@ -585,7 +668,7 @@ function LevelGroup({
         </tr>
       )}
 
-      {canEdit && (
+      {editStructure && (
         <tr>
           <td colSpan={cols} className="border border-slate-200 px-3 py-2">
             <button
@@ -713,6 +796,7 @@ function RowPair({
   row,
   label,
   canEdit,
+  editStructure,
   cumPct,
   yearPct,
   onCell,
@@ -723,6 +807,7 @@ function RowPair({
   /** เลขลำดับที่แสดง เช่น "2" หรือ "3.1" (ขั้นที่ 1 ของระดับ 3) */
   label: string;
   canEdit: boolean;
+  editStructure: boolean;
   cumPct: number;
   yearPct: number;
   onCell: (
@@ -753,7 +838,7 @@ function RowPair({
           <textarea
             name={`title_${row.id}`}
             defaultValue={row.title}
-            readOnly={!canEdit}
+            readOnly={!editStructure}
             rows={2}
             placeholder="พิมพ์ชื่อรายการ"
             className={`${textInput} resize-y read-only:bg-slate-50`}
@@ -765,7 +850,7 @@ function RowPair({
             defaultValue={
               row.targetValue === null ? "" : String(row.targetValue)
             }
-            readOnly={!canEdit}
+            readOnly={!editStructure}
             inputMode="decimal"
             className={`${textInput} text-right tabular-nums read-only:bg-slate-50`}
           />
@@ -774,7 +859,7 @@ function RowPair({
           <input
             name={`unit_${row.id}`}
             defaultValue={row.unit ?? ""}
-            readOnly={!canEdit}
+            readOnly={!editStructure}
             placeholder="ไร่ / ครั้ง"
             className={`${textInput} read-only:bg-slate-50`}
           />
@@ -788,8 +873,8 @@ function RowPair({
             key={i}
             name={`p${i}_${row.id}`}
             value={value}
-            readOnly={!canEdit || locks.plan[i]}
-            locked={canEdit && locks.plan[i]}
+            readOnly={!editStructure || locks.plan[i]}
+            locked={canEdit && (!editStructure || locks.plan[i])}
             monthIndex={i}
             label={`แผนเดือน${FISCAL_MONTHS[i]}`}
             onChange={(v) => onCell(row.id, "plan", i, v)}
@@ -835,7 +920,7 @@ function RowPair({
           />
         </td>
 
-        {canEdit && (
+        {editStructure && (
           <td rowSpan={2} className={`${shared} text-center`}>
             {hasLockedData ? (
               <span

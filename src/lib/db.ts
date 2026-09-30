@@ -1,20 +1,18 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
 
 // ----------------------------------------------------------------------------
 // ตัวเชื่อมต่อฐานข้อมูล (ใช้ร่วมกันทั้งระบบ)
 //
-// ต่อผ่าน Neon adapter ซึ่งวิ่งบน HTTPS พอร์ต 443
-// แทนการต่อ PostgreSQL ตรงๆ ทางพอร์ต 5432
+// ต่อ PostgreSQL ของ Supabase ผ่าน connection pooler (Supavisor พอร์ต 6543)
+// ไม่ต่อตรงพอร์ต 5432 เพราะฟังก์ชันบน Vercel เกิดใหม่ตลอด
+// ถ้าต่อตรง การเชื่อมต่อจะค้างสะสมจนฐานข้อมูลปฏิเสธ
 //
-// ทำไมถึงต้องเป็นแบบนี้?
-//   1. เครือข่ายหลายที่บล็อกพอร์ต 5432
-//      พอบล็อกแล้วจะขึ้นว่า "Can't reach database server" ทั้งที่โค้ดไม่ได้ผิด
-//   2. เป็นวิธีที่ Vercel แนะนำ เพราะฟังก์ชันบน Vercel เกิดใหม่ตลอด
-//      การต่อแบบเดิมจะเปิดการเชื่อมต่อค้างไว้จนฐานข้อมูลปฏิเสธ
+// DATABASE_URL ต้องต่อท้ายด้วย ?pgbouncer=true เสมอ
+// ไม่งั้น Prisma จะใช้ prepared statement ซึ่ง pooler แบบ transaction ไม่รองรับ
+// แล้วจะเจอ error "prepared statement already exists" แบบสุ่มๆ
 //
-// หมายเหตุ: คำสั่ง prisma migrate / db push ยังใช้พอร์ต 5432 อยู่
-// ถ้าต้องแก้โครงฐานข้อมูล ต้องอยู่บนเน็ตที่ไม่บล็อกพอร์ตนั้น
+// หมายเหตุ: prisma migrate ใช้ DIRECT_URL (พอร์ต 5432) ถ้าเน็ตบล็อกพอร์ตนั้น
+// ให้ใช้ Session pooler ของ Supabase (พอร์ต 5432 ผ่าน pooler) หรือรันบนเน็ตอื่น
 //
 // ----------------------------------------------------------------------------
 // ทำไมต้องสร้างตัวเชื่อมต่อแบบ "รอจนกว่าจะใช้จริง"?
@@ -53,7 +51,7 @@ function getClient(): PrismaClient {
   }
 
   client = new PrismaClient({
-    adapter: new PrismaNeon({ connectionString }),
+    datasourceUrl: connectionString,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 

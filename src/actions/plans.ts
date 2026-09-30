@@ -13,7 +13,12 @@ import {
   planNumber,
   firstError,
 } from "@/lib/validation";
-import { MONTH_COUNT, PLAN_SECTION_ITEM_LABEL, toMonths } from "@/lib/plan";
+import {
+  MONTH_COUNT,
+  PLAN_SECTION_ITEM_LABEL,
+  isPlanComplete,
+  toMonths,
+} from "@/lib/plan";
 import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
 import { writeAudit } from "@/lib/audit";
 
@@ -29,6 +34,12 @@ import { writeAudit } from "@/lib/audit";
 //   add:TARGET         บันทึกทั้งตาราง แล้วเพิ่มบรรทัดว่างต่อท้ายตารางเป้าหมาย
 //   add:STEP:<ระดับ>   บันทึกทั้งตาราง แล้วเพิ่มขั้นตอนต่อท้ายค่าเกณฑ์ระดับนั้น
 //   delete:<rowId>     บันทึกทั้งตาราง แล้วลบบรรทัดนั้น
+//   confirm            บันทึกทั้งตาราง แล้ว "ยืนยันแผน" (ล็อกโครงแผน เปิดให้รายงานผลได้)
+//   unlock             บันทึกทั้งตาราง แล้วปลดล็อกแผน (เฉพาะส่วนกลาง)
+//
+// ยืนยันแผนแล้ว ผู้รับผิดชอบส่วนงานแก้ "โครงแผน" ไม่ได้อีก: แผนรายเดือน เป้าหมายตัวชี้วัด
+// ค่าเป้าหมาย หน่วยนับ ขั้นตอนการดำเนินงาน และเพิ่ม/ลบบรรทัดไม่ได้
+// ยังกรอกผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานผลรายระดับได้ตามปกติ
 //
 // ตารางขั้นตอนการดำเนินงานแบ่งตามค่าเกณฑ์ระดับ 1-5 ของตัวชี้วัด
 // ระดับเป็นของตายตัวจาก MOU แก้จากหน้านี้ไม่ได้ เพิ่มได้แค่ขั้นตอนใต้แต่ละระดับ
@@ -96,6 +107,20 @@ export async function savePlanAction(
   }
 
   const intent = String(formData.get("intent") ?? "save");
+  const isAdmin = user.role === "ADMIN";
+
+  const planHeader = await db.planHeader.findUnique({
+    where: { indicatorId },
+    select: { confirmedAt: true },
+  });
+  // ยืนยันแผนแล้ว โครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้ได้เสมอ)
+  const structureLocked = planHeader?.confirmedAt != null && !isAdmin;
+  if (structureLocked && (intent.startsWith("add:") || intent.startsWith("delete:"))) {
+    return { error: "ยืนยันแผนแล้ว เพิ่มหรือลบบรรทัดไม่ได้ ติดต่อส่วนกลางหากต้องแก้แผน" };
+  }
+  if (intent === "unlock" && !isAdmin) {
+    return { error: "เฉพาะส่วนกลางเท่านั้นที่ปลดล็อกแผนได้" };
+  }
 
   // ---- ส่วนหัวของแบบฟอร์ม ----
   const header = planHeaderSchema.safeParse({
@@ -113,6 +138,9 @@ export async function savePlanAction(
       section: true,
       sortOrder: true,
       criteriaLevel: true,
+      title: true,
+      targetValue: true,
+      unit: true,
       planMonths: true,
       actualMonths: true,
     },
@@ -170,7 +198,13 @@ export async function savePlanAction(
         where: { id: row.id },
         data: {
           ...parsed.data,
-          planMonths: keepLocked(planMonths, toMonths(row.planMonths), locks.plan),
+          // โครงแผนที่ล็อกแล้วใช้ค่าเดิมในฐานข้อมูลเสมอ ไม่เชื่อค่าที่ฟอร์มส่งมา
+          ...(structureLocked
+            ? { title: row.title, targetValue: row.targetValue, unit: row.unit }
+            : {}),
+          planMonths: structureLocked
+            ? toMonths(row.planMonths)
+            : keepLocked(planMonths, toMonths(row.planMonths), locks.plan),
           actualMonths: keepLocked(actualMonths, toMonths(row.actualMonths), locks.actual),
         },
       }),
@@ -286,9 +320,50 @@ export async function savePlanAction(
     message = "ลบบรรทัดแล้ว";
   }
 
+  // ---- ยืนยันแผน ----
+  // ตรวจจากข้อมูลที่เพิ่งบันทึก (อ่านใหม่จากฐานข้อมูล) ไม่ใช่จากฟอร์ม
+  if (intent === "confirm") {
+    const saved = await db.actionPlan.findMany({
+      where: { indicatorId },
+      select: { title: true, planMonths: true },
+    });
+    const complete = isPlanComplete(
+      saved.map((r) => ({ title: r.title, planMonths: toMonths(r.planMonths) })),
+    );
+    if (!complete) {
+      return {
+        error:
+          "ยังยืนยันแผนไม่ได้ ต้องมีอย่างน้อย 1 รายการที่ตั้งชื่อและใส่ตัวเลขแผนอย่างน้อย 1 เดือน (บันทึกสิ่งที่กรอกไว้แล้ว)",
+      };
+    }
+    // ยืนยันแล้วลบบรรทัดไม่ได้ บรรทัดที่ไม่มีชื่อจะค้างอยู่ในแผนตลอดปี จึงให้จัดการก่อน
+    if (saved.some((r) => r.title.trim() === "")) {
+      return {
+        error:
+          "ยังยืนยันแผนไม่ได้ มีบรรทัดที่ยังไม่ได้ตั้งชื่อรายการ ใส่ชื่อหรือลบบรรทัดนั้นก่อน (บันทึกสิ่งที่กรอกไว้แล้ว)",
+      };
+    }
+
+    await db.planHeader.update({
+      where: { indicatorId },
+      data: { confirmedAt: new Date(), confirmedById: user.id },
+    });
+    message = "ยืนยันแผนเรียบร้อยแล้ว แผนถูกล็อก และรายงานผลรายไตรมาสได้แล้ว";
+  }
+
+  // ---- ปลดล็อกแผน (ส่วนกลาง) ----
+  if (intent === "unlock") {
+    await db.planHeader.update({
+      where: { indicatorId },
+      data: { confirmedAt: null, confirmedById: null },
+    });
+    message = "ปลดล็อกแผนแล้ว ผู้รับผิดชอบส่วนงานแก้แผนได้ และต้องกดยืนยันแผนใหม่ก่อนรายงานผล";
+  }
+
   await writeAudit({
     userId: user.id,
-    action: "PLAN_SAVE",
+    action:
+      intent === "confirm" ? "PLAN_CONFIRM" : intent === "unlock" ? "PLAN_UNLOCK" : "PLAN_SAVE",
     entity: "ActionPlan",
     entityId: indicatorId,
     detail: { indicatorCode: indicator.code, intent, rows: updates.length },

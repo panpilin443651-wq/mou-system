@@ -163,6 +163,7 @@ async function ReportTable({
       include: {
         reports: { select: { quarter: true, status: true, scoreLevel: true } },
         plans: { select: { planMonths: true, actualMonths: true } },
+        planHeader: { select: { confirmedAt: true } },
       },
       orderBy: { code: "asc" },
       skip: (page - 1) * PAGE_SIZE,
@@ -253,6 +254,10 @@ async function ReportTable({
                             <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
                               ยังไม่วางแผน
                             </span>
+                          ) : !ind.planHeader?.confirmedAt ? (
+                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
+                              ยังไม่ยืนยันแผน
+                            </span>
                           ) : (
                             <span className="rounded bg-brand-50 px-1.5 py-0.5 tabular-nums text-brand-ink">
                               {plan.count} รายการ · {formatPct(plan.avgYearPct)}
@@ -303,7 +308,7 @@ async function ReportTable({
           </div>
 
           <p className="text-xs text-slate-500">
-            ขั้นตอนแรกต้องกรอกแผนดำเนินงานและบันทึกแผน จึงรายงานผลรายไตรมาสได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
+            ขั้นตอนแรกต้องกรอกแผนดำเนินงานและกดยืนยันแผน จึงรายงานผลรายไตรมาสได้ (ยืนยันแล้วแผนถูกล็อก) · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
             ช่องแผนดำเนินงานบอกจำนวนรายการในแผน และผลเทียบแผนทั้งปี · ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>

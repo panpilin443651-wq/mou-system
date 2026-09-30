@@ -2,18 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import bcrypt from "bcryptjs";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { canManageSystem } from "@/lib/permissions";
 import { userSchema, initialPasswordSchema, firstError } from "@/lib/validation";
 import { writeAudit, diffFields } from "@/lib/audit";
+import { createSupabaseAdminClient } from "@/lib/supabase/server";
 
 // ============================================================================
 // Server Action สำหรับจัดการบัญชีผู้ใช้ (เฉพาะ ADMIN)
 // ============================================================================
 // ผู้ใช้สมัครเองไม่ได้ ส่วนกลางเป็นคนสร้างบัญชีให้ 30 ส่วนงาน
+//
+// รหัสผ่านเก็บที่ Supabase Auth ส่วนสิทธิ์และสังกัดเก็บในตาราง User (ผูกกันด้วย authId)
+// งานที่แตะบัญชีของคนอื่นใน Supabase ต้องใช้ service_role key (createSupabaseAdminClient)
 //
 // ทุกฟังก์ชันตรวจสิทธิ์เองที่บรรทัดแรกเสมอ ไม่พึ่งการซ่อนเมนู
 // เพราะ Server Action ถูกเรียกตรงจากภายนอกได้โดยไม่ผ่านหน้าเว็บของเรา
@@ -75,21 +78,45 @@ export async function createUserAction(
     return { error: "ไม่พบส่วนงานที่เลือก" };
   }
 
+  if (await db.user.findUnique({ where: { email: input.email }, select: { id: true } })) {
+    return { error: `อีเมล "${input.email}" ถูกใช้ไปแล้ว` };
+  }
+
+  // สร้างบัญชีใน Supabase ก่อน (เก็บรหัสผ่าน) แล้วค่อยสร้างในตาราง User (เก็บสิทธิ์)
+  // email_confirm: true = ไม่ต้องให้ผู้ใช้กดยืนยันอีเมล เพราะส่วนกลางเป็นคนสร้างให้เอง
+  const admin = createSupabaseAdminClient();
+  const { data: authData, error: authError } = await admin.auth.admin.createUser({
+    email: input.email,
+    password,
+    email_confirm: true,
+  });
+  if (authError || !authData.user) {
+    if (authError?.code === "email_exists") {
+      return {
+        error: `อีเมล "${input.email}" มีบัญชีใน Supabase อยู่แล้ว (แต่ยังไม่มีในระบบนี้) ลบบัญชีนั้นที่ Supabase Dashboard ก่อน หรือใช้อีเมลอื่น`,
+      };
+    }
+    console.error("สร้างบัญชี Supabase ไม่สำเร็จ:", authError);
+    return { error: "สร้างบัญชีไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" };
+  }
+
   let newId: string;
   try {
     const created = await db.user.create({
       data: {
+        authId: authData.user.id,
         email: input.email,
         name: input.name,
         role: input.role,
         // ADMIN และ EXECUTIVE ดูได้ทุกส่วนงานอยู่แล้ว จึงไม่ผูกสังกัด
         departmentId: input.role === "DEPT_USER" ? input.departmentId : null,
         isActive: input.isActive,
-        passwordHash: await bcrypt.hash(password, 12),
       },
     });
     newId = created.id;
   } catch (error) {
+    // สร้างในตาราง User ไม่ได้ ลบบัญชีใน Supabase ทิ้ง ไม่ให้เหลือบัญชีที่ไม่มีเจ้าของ
+    await admin.auth.admin.deleteUser(authData.user.id).catch(() => {});
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return { error: `อีเมล "${input.email}" ถูกใช้ไปแล้ว` };
     }
@@ -145,6 +172,28 @@ export async function updateUserAction(
 
   const departmentId = input.role === "DEPT_USER" ? input.departmentId : null;
 
+  // เปลี่ยนอีเมล ต้องเปลี่ยนที่ Supabase ด้วย เพราะผู้ใช้ login ด้วยอีเมลที่อยู่ใน Supabase
+  if (input.email !== existing.email) {
+    const taken = await db.user.findUnique({ where: { email: input.email }, select: { id: true } });
+    if (taken) return { error: `อีเมล "${input.email}" ถูกใช้ไปแล้ว` };
+
+    if (existing.authId) {
+      const { error } = await createSupabaseAdminClient().auth.admin.updateUserById(
+        existing.authId,
+        { email: input.email, email_confirm: true },
+      );
+      if (error) {
+        console.error("เปลี่ยนอีเมลใน Supabase ไม่สำเร็จ:", error);
+        return {
+          error:
+            error.code === "email_exists"
+              ? `อีเมล "${input.email}" มีบัญชีใน Supabase อยู่แล้ว`
+              : "เปลี่ยนอีเมลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
+        };
+      }
+    }
+  }
+
   try {
     await db.user.update({
       where: { id: userId },
@@ -197,7 +246,7 @@ export async function updateUserAction(
  * ตั้งรหัสผ่านใหม่ให้ผู้ใช้ (กรณีลืมรหัสผ่าน)
  *
  * ส่วนกลางตั้งรหัสชั่วคราวให้ แล้วแจ้งเจ้าตัวไปเปลี่ยนเองที่หน้า /account
- * ระบบไม่มีทางกู้รหัสผ่านเดิมได้ เพราะเก็บไว้แบบเข้ารหัสทางเดียว
+ * ระบบไม่มีทางกู้รหัสผ่านเดิมได้ เพราะ Supabase เก็บไว้แบบเข้ารหัสทางเดียว
  */
 export async function resetUserPasswordAction(
   userId: string,
@@ -211,7 +260,7 @@ export async function resetUserPasswordAction(
 
   const existing = await db.user.findUnique({
     where: { id: userId },
-    select: { id: true, email: true },
+    select: { id: true, email: true, authId: true },
   });
   if (!existing) return { error: "ไม่พบบัญชีผู้ใช้นี้" };
 
@@ -221,9 +270,33 @@ export async function resetUserPasswordAction(
   if (!parsed.success) return { error: firstError(parsed.error) };
   if (password !== confirmPassword) return { error: "รหัสผ่านทั้งสองช่องไม่ตรงกัน" };
 
+  const admin = createSupabaseAdminClient();
+  let authId = existing.authId;
+
+  if (authId) {
+    const { error } = await admin.auth.admin.updateUserById(authId, { password });
+    if (error) {
+      console.error("ตั้งรหัสผ่านใน Supabase ไม่สำเร็จ:", error);
+      return { error: "ตั้งรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" };
+    }
+  } else {
+    // ผู้ใช้เก่าที่ยังไม่มีบัญชีใน Supabase - สร้างให้พร้อมรหัสผ่านใหม่เลย
+    const { data, error } = await admin.auth.admin.createUser({
+      email: existing.email,
+      password,
+      email_confirm: true,
+    });
+    if (error || !data.user) {
+      console.error("สร้างบัญชี Supabase ไม่สำเร็จ:", error);
+      return { error: "ตั้งรหัสผ่านไม่สำเร็จ กรุณาลองใหม่อีกครั้ง" };
+    }
+    authId = data.user.id;
+  }
+
+  // ล้างรหัสผ่านของระบบเดิมทิ้ง ไม่ให้สคริปต์ย้ายบัญชีเอารหัสเก่ามาทับรหัสใหม่
   await db.user.update({
     where: { id: userId },
-    data: { passwordHash: await bcrypt.hash(password, 12) },
+    data: { authId, passwordHash: null },
   });
 
   await writeAudit({

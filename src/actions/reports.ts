@@ -8,7 +8,6 @@ import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
 import { getWindowStatus } from "@/lib/submission-window";
-import { isPlanComplete, toMonths } from "@/lib/plan";
 
 // ============================================================================
 // Server Action สำหรับรายงานผลรายไตรมาส (ข้อ 4, 5)
@@ -67,18 +66,15 @@ export async function saveReportAction(
     return { error: `บันทึกไม่ได้ — ${window.message}` };
   }
 
-  // ขั้นตอนแรกต้องกรอกแผนดำเนินงานและบันทึกแผนก่อน จึงรายงานผลรายไตรมาสได้
+  // ขั้นตอนแรกต้องกรอกแผนดำเนินงานและกด "ยืนยันแผน" ก่อน จึงรายงานผลรายไตรมาสได้
   // ส่วนกลางข้ามได้ เพราะต้องแก้ข้อมูลให้ส่วนงานได้ทุกกรณี
   if (user.role !== "ADMIN") {
-    const plans = await db.actionPlan.findMany({
+    const planHeader = await db.planHeader.findUnique({
       where: { indicatorId },
-      select: { title: true, planMonths: true },
+      select: { confirmedAt: true },
     });
-    const ready = isPlanComplete(
-      plans.map((p) => ({ title: p.title, planMonths: toMonths(p.planMonths) })),
-    );
-    if (!ready) {
-      return { error: "กรุณากรอกแผนดำเนินงานและกดบันทึกแผนก่อน จึงจะรายงานผลรายไตรมาสได้" };
+    if (!planHeader?.confirmedAt) {
+      return { error: "กรุณากรอกแผนดำเนินงานและกดยืนยันแผนก่อน จึงจะรายงานผลรายไตรมาสได้" };
     }
   }
 

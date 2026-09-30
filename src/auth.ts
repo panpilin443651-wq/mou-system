@@ -1,23 +1,19 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
-import type { Role } from "@prisma/client";
+import type { User as AuthUser } from "@supabase/supabase-js";
 import { db } from "@/lib/db";
 
 // ============================================================================
-// ระบบ Login - ใช้บัญชีในระบบเอง (อีเมล + รหัสผ่าน)
+// ระบบ Login - ใช้ Supabase Auth (อีเมล + รหัสผ่าน)
 // ============================================================================
-// ผู้ใช้สมัครเองไม่ได้ ADMIN เป็นผู้สร้างบัญชีให้เท่านั้น
+// ผู้ใช้สมัครเองไม่ได้ ADMIN เป็นผู้สร้างบัญชีให้เท่านั้น (actions/users.ts)
 //
-// ข้อมูล session เก็บเป็น JWT ในคุกกี้ที่เข้ารหัสแล้ว ไม่ได้เก็บในฐานข้อมูล
-// จึงต้องฝัง role และ departmentId ลงใน token เพื่อให้ตรวจสิทธิ์ได้เร็ว
+// แบ่งหน้าที่กันแบบนี้:
+//   Supabase Auth  เก็บรหัสผ่าน ตรวจรหัสผ่าน ออก session (เก็บในคุกกี้)
+//   ตาราง User     เก็บสิทธิ์ (role) สังกัด (departmentId) และสถานะเปิด/ปิดใช้งาน
+// ผูกกันด้วย User.authId = auth.users.id ของ Supabase
+//
+// สิทธิ์อ่านจากฐานข้อมูลทุกครั้งที่เปิดหน้า (ไม่ได้ฝังไว้ใน token เหมือนระบบเดิม)
+// ส่วนกลางปิดบัญชีหรือเปลี่ยนสิทธิ์เมื่อไร ก็มีผลทันทีโดยไม่ต้องรอให้ผู้ใช้ logout
 // ============================================================================
-
-const credentialsSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
-});
 
 /**
  * เปิดโหมดจำลองสิทธิ์หรือไม่ - เลือกผู้ใช้จากรายชื่อแล้วเข้าได้เลยโดยไม่ต้องใช้รหัสผ่าน
@@ -30,96 +26,31 @@ export function isDemoLoginEnabled(): boolean {
   return process.env.DEMO_LOGIN === "true";
 }
 
-type LoginUser = {
-  id: string;
-  email: string;
-  name: string;
-  role: Role;
-  departmentId: string | null;
-};
+/**
+ * หาผู้ใช้ในระบบที่ตรงกับบัญชี Supabase
+ *
+ * หาจาก authId ก่อน ถ้าไม่เจอให้หาจากอีเมลของผู้ใช้ที่ยังไม่ได้ผูกบัญชี แล้วผูกให้เลย
+ * (กรณีส่วนกลางสร้างบัญชีใน Supabase Dashboard เอง หรือบัญชีเก่าก่อนย้ายมา Supabase)
+ * คืน null ถ้าไม่มีผู้ใช้ในระบบที่ตรงกัน
+ */
+export async function findAppUser(authUser: AuthUser) {
+  const linked = await db.user.findUnique({ where: { authId: authUser.id } });
+  if (linked) return linked;
 
-/** บันทึกเวลาเข้าใช้ล่าสุด แล้วคืนข้อมูลที่จะฝังลง token */
-async function completeLogin(user: LoginUser) {
-  await db.user.update({
-    where: { id: user.id },
-    data: { lastLoginAt: new Date() },
+  // ผูกด้วยอีเมลเฉพาะบัญชีที่ยืนยันอีเมลแล้ว
+  // anon key เปิดให้ใครก็สมัครบัญชี Supabase ได้ ถ้าไม่ตรวจตรงนี้ คนอื่นจะสมัครด้วยอีเมล
+  // ของผู้ใช้ที่ยังไม่ได้ผูกบัญชี แล้วได้สิทธิ์ของคนนั้นไปทันที
+  // (บัญชีที่ส่วนกลางสร้างให้ตั้ง email_confirm: true ไว้แล้ว จึงผ่านเงื่อนไขนี้)
+  if (!authUser.email_confirmed_at) return null;
+
+  const email = authUser.email?.toLowerCase().trim();
+  if (!email) return null;
+
+  const byEmail = await db.user.findUnique({ where: { email } });
+  if (!byEmail || byEmail.authId !== null) return null;
+
+  return db.user.update({
+    where: { id: byEmail.id },
+    data: { authId: authUser.id },
   });
-
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role,
-    departmentId: user.departmentId,
-  };
 }
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/login",
-  },
-  providers: [
-    Credentials({
-      credentials: {
-        email: { label: "อีเมล", type: "email" },
-        password: { label: "รหัสผ่าน", type: "password" },
-      },
-      async authorize(raw) {
-        const parsed = credentialsSchema.safeParse(raw);
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-        const user = await db.user.findUnique({
-          where: { email: email.toLowerCase().trim() },
-        });
-
-        // บัญชีถูกปิดใช้งาน ก็ถือว่า login ไม่ผ่าน
-        if (!user || !user.isActive) return null;
-
-        const ok = await bcrypt.compare(password, user.passwordHash);
-        if (!ok) return null;
-
-        return completeLogin(user);
-      },
-    }),
-    // โหมดจำลองสิทธิ์ - ตรวจสวิตช์ซ้ำที่นี่ด้วย ไม่พึ่งแค่การซ่อนรายชื่อบนหน้า login
-    // ไม่อย่างนั้นใครรู้ชื่อ provider ก็ยิงตรงมาเข้าได้แม้ปิดโหมดแล้ว
-    Credentials({
-      id: "demo",
-      credentials: {
-        userId: { label: "ผู้ใช้", type: "text" },
-      },
-      async authorize(raw) {
-        if (!isDemoLoginEnabled()) return null;
-
-        const userId = typeof raw?.userId === "string" ? raw.userId : "";
-        if (!userId) return null;
-
-        const user = await db.user.findUnique({ where: { id: userId } });
-        if (!user || !user.isActive) return null;
-
-        return completeLogin(user);
-      },
-    }),
-  ],
-  callbacks: {
-    // ตอน login สำเร็จ ให้ยัด role และสังกัดลง token
-    async jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-        token.departmentId = user.departmentId;
-      }
-      return token;
-    },
-    // ย้ายค่าจาก token ออกมาไว้ใน session ให้หน้าเว็บอ่านได้
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub ?? "";
-        session.user.role = token.role;
-        session.user.departmentId = token.departmentId;
-      }
-      return session;
-    },
-  },
-});
