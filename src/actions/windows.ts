@@ -5,7 +5,11 @@ import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { canManageSystem } from "@/lib/permissions";
-import { bangkokDateTimeToUtc, formatThaiDateTime } from "@/lib/datetime";
+import {
+  bangkokDateTimeToUtc,
+  fiscalQuarterRange,
+  formatThaiDateTime,
+} from "@/lib/datetime";
 import { writeAudit, diffFields } from "@/lib/audit";
 
 // ============================================================================
@@ -33,10 +37,12 @@ export async function updateWindowAction(
   });
   if (!existing) return { error: "ไม่พบช่วงเวลาที่จะแก้ไข" };
 
-  const openAt = bangkokDateTimeToUtc(String(formData.get("openAt") ?? ""));
-  const closeAt = bangkokDateTimeToUtc(String(formData.get("closeAt") ?? ""));
-  if (!openAt || !closeAt) return { error: "กรุณากรอกวันเวลาให้ครบทั้งเปิดและปิด" };
-  if (closeAt <= openAt) return { error: "เวลาปิดต้องอยู่หลังเวลาเปิด" };
+  // ช่วงรายงานผลคือ 3 เดือนของไตรมาสเสมอ ไม่รับวันเวลาจากฟอร์ม
+  // เก็บลงตารางให้ตรงกัน แม้ lib/submission-window.ts จะคิดจาก fiscalQuarterRange เองอยู่แล้ว
+  const { start: openAt, end: closeAt } = fiscalQuarterRange(
+    existing.fiscalYear.year,
+    existing.quarter,
+  );
 
   const isForceClosed = formData.get("isForceClosed") === "true";
 
@@ -72,7 +78,9 @@ export async function updateWindowAction(
   revalidatePath("/reports");
   return {
     error: null,
-    message: `บันทึกช่วงเวลาไตรมาส ${existing.quarter} แล้ว (ปิด ${formatThaiDateTime(closeAt)})`,
+    message: isForceClosed
+      ? `ปิดฉุกเฉินไตรมาส ${existing.quarter} แล้ว`
+      : `ไตรมาส ${existing.quarter} เปิดรายงานตามช่วงของไตรมาส (ถึง ${formatThaiDateTime(closeAt)})`,
   };
 }
 
@@ -92,8 +100,12 @@ export async function addExceptionAction(
     return { error: "คุณไม่มีสิทธิ์ขยายเวลาให้ส่วนงาน" };
   }
 
-  const window = await db.submissionWindow.findUnique({ where: { id: windowId } });
+  const window = await db.submissionWindow.findUnique({
+    where: { id: windowId },
+    include: { fiscalYear: { select: { year: true } } },
+  });
   if (!window) return { error: "ไม่พบช่วงเวลาที่จะขยาย" };
+  const quarterEnd = fiscalQuarterRange(window.fiscalYear.year, window.quarter).end;
 
   const departmentId = String(formData.get("departmentId") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
@@ -102,9 +114,9 @@ export async function addExceptionAction(
   if (!departmentId) return { error: "กรุณาเลือกส่วนงาน" };
   if (!closeAt) return { error: "กรุณากรอกวันเวลาปิดใหม่" };
   if (reason.length < 4) return { error: "กรุณาระบุเหตุผลที่ขยายเวลา" };
-  if (closeAt <= window.closeAt) {
+  if (closeAt <= quarterEnd) {
     return {
-      error: `เวลาปิดใหม่ต้องช้ากว่าเวลาปิดเดิม (${formatThaiDateTime(window.closeAt)})`,
+      error: `เวลาปิดใหม่ต้องช้ากว่าวันสิ้นสุดไตรมาส (${formatThaiDateTime(quarterEnd)})`,
     };
   }
 

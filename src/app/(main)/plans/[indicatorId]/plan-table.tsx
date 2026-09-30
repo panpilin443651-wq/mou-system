@@ -4,6 +4,7 @@ import { useActionState, useEffect, useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { PlanSection } from "@prisma/client";
 import type { FormState } from "@/actions/plans";
+import type { MonthLocks } from "@/lib/submission-window";
 import { deletePlanAttachmentAction } from "@/actions/plan-attachments";
 import { fileKindLabel, formatBytes } from "@/lib/attachments";
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
@@ -117,6 +118,7 @@ export function PlanTable({
   indicatorId,
   criteria,
   levelReports,
+  locks,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   canEdit: boolean;
@@ -129,6 +131,8 @@ export function PlanTable({
   criteria: PlanCriterion[];
   /** รายงานผลการดำเนินงานของแต่ละระดับ key = ระดับ */
   levelReports: Record<number, string>;
+  /** เดือนที่ล็อกไว้ (ไตรมาสที่ผ่านไปแล้ว) ช่อง 0 = ต.ค. */
+  locks: MonthLocks;
 }) {
   const [state, formAction] = useActionState(action, {
     error: null,
@@ -265,6 +269,16 @@ export function PlanTable({
         </a>
       </div>
 
+      {canEdit && (locks.plan.some(Boolean) || locks.actual.some(Boolean)) && (
+        <p className="flex items-start gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <span className="mt-0.5 inline-block h-4 w-6 shrink-0 rounded border border-slate-200 bg-slate-100" aria-hidden="true" />
+          <span>
+            ช่องสีเทาแก้ไขไม่ได้ · ช่อง &quot;ผล&quot; กรอกได้เฉพาะเดือนในไตรมาสที่เปิดรายงานอยู่ ·
+            ช่อง &quot;แผน&quot; ของไตรมาสที่ผ่านไปแล้วล็อกไว้ แก้ย้อนหลังไม่ได้
+          </span>
+        </p>
+      )}
+
       {PLAN_SECTIONS.map((section) => (
         <SectionTable
           key={section}
@@ -276,6 +290,7 @@ export function PlanTable({
           filesByRow={filesByRow}
           criteria={criteria}
           levelReports={levelReports}
+          locks={locks}
         />
       ))}
 
@@ -307,6 +322,7 @@ function SectionTable({
   filesByRow,
   criteria,
   levelReports,
+  locks,
 }: {
   section: PlanSection;
   canEdit: boolean;
@@ -321,6 +337,7 @@ function SectionTable({
   filesByRow: Map<string, PlanFile[]>;
   criteria: PlanCriterion[];
   levelReports: Record<number, string>;
+  locks: MonthLocks;
 }) {
   const isStep = section === "STEP";
   const levels = criteria.map((c) => c.level);
@@ -362,6 +379,7 @@ function SectionTable({
           yearPct={rowSummary.yearPct}
           onCell={onCell}
           files={filesByRow.get(row.id) ?? []}
+          locks={locks}
         />
       );
     });
@@ -699,6 +717,7 @@ function RowPair({
   yearPct,
   onCell,
   files,
+  locks,
 }: {
   row: RowState;
   /** เลขลำดับที่แสดง เช่น "2" หรือ "3.1" (ขั้นที่ 1 ของระดับ 3) */
@@ -713,10 +732,16 @@ function RowPair({
     value: string,
   ) => void;
   files: PlanFile[];
+  locks: MonthLocks;
 }) {
   // 1 รายการกินสองบรรทัด (แผน/ผล) ช่องที่ใช้ร่วมกันจึงใช้ rowSpan
   // ให้หน้าตาตรงกับแบบฟอร์มกระดาษ
   const shared = "border border-slate-200 px-2 py-1.5 align-top";
+
+  // บรรทัดที่มีตัวเลขในเดือนที่ล็อกลบไม่ได้ (เซิร์ฟเวอร์ก็ปฏิเสธเหมือนกัน)
+  const hasLockedData =
+    row.planMonths.some((v, i) => locks.plan[i] && v !== null) ||
+    row.actualMonths.some((v, i) => locks.actual[i] && v !== null);
 
   return (
     <>
@@ -763,7 +788,8 @@ function RowPair({
             key={i}
             name={`p${i}_${row.id}`}
             value={value}
-            readOnly={!canEdit}
+            readOnly={!canEdit || locks.plan[i]}
+            locked={canEdit && locks.plan[i]}
             monthIndex={i}
             label={`แผนเดือน${FISCAL_MONTHS[i]}`}
             onChange={(v) => onCell(row.id, "plan", i, v)}
@@ -811,15 +837,24 @@ function RowPair({
 
         {canEdit && (
           <td rowSpan={2} className={`${shared} text-center`}>
-            <button
-              type="submit"
-              name="intent"
-              value={`delete:${row.id}`}
-              className="min-h-11 rounded-lg px-2 text-sm text-red-700 transition hover:bg-red-50"
-              aria-label={`ลบบรรทัดที่ ${label}`}
-            >
-              ลบ
-            </button>
+            {hasLockedData ? (
+              <span
+                className="text-xs text-slate-400"
+                title="มีข้อมูลในไตรมาสที่ปิดไปแล้ว จึงลบไม่ได้"
+              >
+                ลบไม่ได้
+              </span>
+            ) : (
+              <button
+                type="submit"
+                name="intent"
+                value={`delete:${row.id}`}
+                className="min-h-11 rounded-lg px-2 text-sm text-red-700 transition hover:bg-red-50"
+                aria-label={`ลบบรรทัดที่ ${label}`}
+              >
+                ลบ
+              </button>
+            )}
           </td>
         )}
       </tr>
@@ -833,7 +868,8 @@ function RowPair({
             key={i}
             name={`a${i}_${row.id}`}
             value={value}
-            readOnly={!canEdit}
+            readOnly={!canEdit || locks.actual[i]}
+            locked={canEdit && locks.actual[i]}
             monthIndex={i}
             label={`ผลเดือน${FISCAL_MONTHS[i]}`}
             onChange={(v) => onCell(row.id, "actual", i, v)}
@@ -891,6 +927,7 @@ function MonthCell({
   name,
   value,
   readOnly,
+  locked = false,
   monthIndex,
   label,
   onChange,
@@ -898,6 +935,8 @@ function MonthCell({
   name: string;
   value: string;
   readOnly: boolean;
+  /** ล็อกเพราะไตรมาสปิดแล้ว (ต่างจาก readOnly เพราะไม่มีสิทธิ์ ซึ่งไม่ต้องแต้มสี) */
+  locked?: boolean;
   monthIndex: number;
   label: string;
   onChange: (value: string) => void;
@@ -907,15 +946,18 @@ function MonthCell({
     monthIndex % 3 === 0 ? "border-l-2 border-l-slate-300" : "";
 
   return (
-    <td className={`border border-slate-200 p-0 ${quarterEdge}`}>
+    <td
+      className={`border border-slate-200 p-0 ${quarterEdge} ${locked ? "bg-slate-100" : ""}`}
+      title={locked ? "แก้ไขได้เฉพาะเดือนในไตรมาสที่เปิดรายงานอยู่" : undefined}
+    >
       <input
         name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         readOnly={readOnly}
         inputMode="decimal"
-        aria-label={`${label} (ไตรมาส ${monthQuarter(monthIndex)})`}
-        className={cellInput}
+        aria-label={`${label} (ไตรมาส ${monthQuarter(monthIndex)}${locked ? " ล็อกแล้ว" : ""})`}
+        className={locked ? `${cellInput} cursor-not-allowed text-slate-500 hover:border-transparent` : cellInput}
       />
     </td>
   );

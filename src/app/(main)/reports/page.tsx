@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/session";
 import { departmentScope } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { QUARTERS } from "@/lib/plan";
+import { defaultQuarter } from "@/lib/submission-window";
 import { scoreClass, weightedScore } from "@/lib/scoring";
 import { formatPct, summarizeSection, toMonths } from "@/lib/plan";
 import { compareCode } from "@/lib/mou-scores";
@@ -73,6 +74,7 @@ export default async function ReportsPage({
           page={page}
           showBack={departments.length > 1}
           searchQuery={sp.q}
+          currentQuarter={fiscalYear ? defaultQuarter(fiscalYear.year) : 1}
         />
       )}
     </div>
@@ -142,12 +144,15 @@ async function ReportTable({
   page,
   showBack,
   searchQuery,
+  currentQuarter,
 }: {
   baseWhere: Prisma.IndicatorWhereInput;
   departmentId: string;
   page: number;
   showBack: boolean;
   searchQuery: string | undefined;
+  /** ไตรมาสปัจจุบันของปีบัญชี - ไตรมาสเดียวที่ผู้รับผิดชอบส่วนงานรายงานผลได้ */
+  currentQuarter: number;
 }) {
   const where: Prisma.IndicatorWhereInput = { ...baseWhere, departmentId };
 
@@ -197,6 +202,9 @@ async function ReportTable({
                   {QUARTERS.map((q) => (
                     <th key={q} className="whitespace-nowrap px-2 py-2.5 text-center font-medium">
                       ไตรมาส {q}
+                      {q === currentQuarter && (
+                        <span className="block text-xs font-normal text-brand-ink">ไตรมาสปัจจุบัน</span>
+                      )}
                     </th>
                   ))}
                   <th className="whitespace-nowrap px-4 py-2.5 text-right font-medium">คะแนนถ่วงน้ำหนัก</th>
@@ -228,7 +236,7 @@ async function ReportTable({
                       <td className="whitespace-nowrap px-4 py-2.5 tabular-nums">{ind.code}</td>
                       <td className="px-3 py-2.5">
                         <Link
-                          href={`/reports/${ind.id}/1`}
+                          href={`/reports/${ind.id}/${currentQuarter}`}
                           className="-my-2.5 block py-3 text-brand-ink underline-offset-2 hover:underline"
                         >
                           {ind.name}
@@ -237,7 +245,7 @@ async function ReportTable({
 
                       <td className="whitespace-nowrap px-2 py-2.5 text-center">
                         <Link
-                          href={`/reports/${ind.id}/1#plan`}
+                          href={`/reports/${ind.id}/${currentQuarter}#plan`}
                           className="-my-2.5 inline-flex min-h-11 items-center justify-center rounded px-2 text-xs font-medium transition hover:ring-1 hover:ring-brand-600"
                           title="วางแผนและติดตามแผนดำเนินงาน"
                         >
@@ -295,6 +303,7 @@ async function ReportTable({
           </div>
 
           <p className="text-xs text-slate-500">
+            ขั้นตอนแรกต้องกรอกแผนดำเนินงานและบันทึกแผน จึงรายงานผลรายไตรมาสได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
             ช่องแผนดำเนินงานบอกจำนวนรายการในแผน และผลเทียบแผนทั้งปี · ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>

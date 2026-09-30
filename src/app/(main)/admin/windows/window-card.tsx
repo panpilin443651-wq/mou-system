@@ -67,8 +67,8 @@ export function WindowCard({
   months,
   statusLabel,
   statusTone,
-  openAtInput,
-  closeAtInput,
+  periodLabel,
+  closeAtLabel,
   isForceClosed,
   exceptions,
   departments,
@@ -80,8 +80,10 @@ export function WindowCard({
   months: string;
   statusLabel: string;
   statusTone: "open" | "closed";
-  openAtInput: string;
-  closeAtInput: string;
+  /** ช่วง 3 เดือนของไตรมาส เช่น "1 ต.ค. 2568 – 31 ธ.ค. 2568" */
+  periodLabel: string;
+  /** เวลาสิ้นสุดไตรมาส ใช้บอกว่าขยายเวลาต้องช้ากว่าเมื่อไร */
+  closeAtLabel: string;
   isForceClosed: boolean;
   exceptions: Exception[];
   departments: { id: string; code: string; name: string }[];
@@ -116,33 +118,12 @@ export function WindowCard({
       </div>
 
       <form action={updateFormAction} className="space-y-4 p-4 sm:p-5">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor={`open-${quarter}`} className="mb-1.5 block text-sm font-medium">
-              เปิดรับข้อมูล <span className="text-red-600">*</span>
-            </label>
-            <input
-              id={`open-${quarter}`}
-              name="openAt"
-              type="datetime-local"
-              required
-              defaultValue={openAtInput}
-              className={inputClass}
-            />
-          </div>
-          <div>
-            <label htmlFor={`close-${quarter}`} className="mb-1.5 block text-sm font-medium">
-              ปิดรับข้อมูล <span className="text-red-600">*</span>
-            </label>
-            <input
-              id={`close-${quarter}`}
-              name="closeAt"
-              type="datetime-local"
-              required
-              defaultValue={closeAtInput}
-              className={inputClass}
-            />
-          </div>
+        <div>
+          <p className="text-sm font-medium">ช่วงรายงานผล</p>
+          <p className="mt-0.5 text-sm">{periodLabel}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            ตาม 3 เดือนของไตรมาส ระบบคิดจากวันที่ให้เอง แก้ที่หน้านี้ไม่ได้
+          </p>
         </div>
 
         <div>
@@ -155,16 +136,16 @@ export function WindowCard({
             defaultValue={isForceClosed ? "true" : "false"}
             className={`${inputClass} bg-surface`}
           >
-            <option value="false">ใช้ตามวันเวลาที่ตั้งไว้</option>
-            <option value="true">ปิดทันที ไม่ต้องรอถึงเวลาปิด</option>
+            <option value="false">เปิดตามช่วงของไตรมาส</option>
+            <option value="true">ปิดทันที ไม่ต้องรอสิ้นไตรมาส</option>
           </select>
           <p className="mt-1 text-xs text-slate-500">
-            ใช้เมื่อต้องหยุดรับข้อมูลกะทันหัน โดยไม่ต้องแก้วันเวลาที่ตั้งไว้
+            ใช้เมื่อต้องหยุดรับข้อมูลกะทันหัน
           </p>
         </div>
 
         <Message state={updateState} />
-        <SaveButton label="บันทึกช่วงเวลา" />
+        <SaveButton label="บันทึก" />
       </form>
 
       <div className="border-t border-slate-200 p-4 sm:p-5">
@@ -229,6 +210,9 @@ export function WindowCard({
                   required
                   className={inputClass}
                 />
+                <p className="mt-1 text-xs text-slate-500">
+                  ต้องช้ากว่าวันสิ้นสุดไตรมาส ({closeAtLabel})
+                </p>
               </div>
             </div>
 

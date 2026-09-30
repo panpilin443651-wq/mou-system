@@ -79,14 +79,14 @@ async function main() {
   //    ไตรมาสของปีงบประมาณไทย:
   //      Q1 = ต.ค.-ธ.ค. | Q2 = ม.ค.-มี.ค. | Q3 = เม.ย.-มิ.ย. | Q4 = ก.ค.-ก.ย.
   //
-  //    หลักการตั้งค่า: เปิดให้กรอกหลังจบไตรมาส แล้วให้เวลา 1 เดือน
-  //    >>> ปรับวันที่ให้ตรงกับปฏิทินจริงขององค์กรได้ที่นี่ <<<
+  //    ช่วงรายงานผล = 3 เดือนของไตรมาสนั้น (ระบบคิดจากวันที่เองใน lib/submission-window.ts
+  //    ค่าในตารางนี้เก็บไว้ให้ตรงกัน และใช้ผูกการปิดฉุกเฉิน / ขยายเวลาเฉพาะส่วนงาน)
   // --------------------------------------------------------------------------
   const windows = [
-    { quarter: 1, openAt: bangkokTime(2026, 1, 1), closeAt: bangkokTime(2026, 1, 31, 23, 59) },
-    { quarter: 2, openAt: bangkokTime(2026, 4, 1), closeAt: bangkokTime(2026, 4, 30, 23, 59) },
-    { quarter: 3, openAt: bangkokTime(2026, 7, 1), closeAt: bangkokTime(2026, 7, 31, 23, 59) },
-    { quarter: 4, openAt: bangkokTime(2026, 10, 1), closeAt: bangkokTime(2026, 10, 31, 23, 59) },
+    { quarter: 1, openAt: bangkokTime(2025, 10, 1), closeAt: bangkokTime(2025, 12, 31, 23, 59) },
+    { quarter: 2, openAt: bangkokTime(2026, 1, 1), closeAt: bangkokTime(2026, 3, 31, 23, 59) },
+    { quarter: 3, openAt: bangkokTime(2026, 4, 1), closeAt: bangkokTime(2026, 6, 30, 23, 59) },
+    { quarter: 4, openAt: bangkokTime(2026, 7, 1), closeAt: bangkokTime(2026, 9, 30, 23, 59) },
   ];
 
   for (const w of windows) {

@@ -111,27 +111,50 @@ export function defaultFiscalYearRange(buddhistYear: number) {
 }
 
 /**
- * ช่วงเวลาเปิด-ปิดรับรายงานเริ่มต้นของแต่ละไตรมาส
- * หลักการ: เปิดให้กรอกหลังจบไตรมาส แล้วให้เวลา 1 เดือน
- * ADMIN ปรับให้ตรงปฏิทินจริงได้ภายหลัง
+ * ช่วง 3 เดือนของไตรมาสในปีบัญชี ตามเวลาไทย
+ * เช่น ปีบัญชี 2569 ไตรมาส 1 = 1 ต.ค. 2568 00:00 ถึง 31 ธ.ค. 2568 23:59:59
+ *
+ * ผู้รับผิดชอบส่วนงานรายงานผลของไตรมาสได้เฉพาะช่วงนี้เท่านั้น
+ * (ดู lib/submission-window.ts)
+ *
+ * @param buddhistYear ปี พ.ศ. ของปีบัญชี
+ * @param quarter      1-4
+ */
+export function fiscalQuarterRange(buddhistYear: number, quarter: number) {
+  const g = buddhistYear - 543 - 1; // ปี ค.ศ. ที่ปีบัญชีเริ่ม (เดือน ต.ค.)
+  // Date.UTC ทดเดือนที่เกิน 11 ขึ้นปีถัดไปให้เอง (เดือน 12 = ม.ค. ปีหน้า)
+  const monthStart = (offset: number) =>
+    new Date(Date.UTC(g, 9 + offset, 1, -BANGKOK_OFFSET_HOURS));
+
+  const start = monthStart((quarter - 1) * 3);
+  const nextStart = monthStart(quarter * 3);
+  return {
+    start,
+    /** วินาทีสุดท้ายของไตรมาส (23:59:59 ของวันสุดท้าย) */
+    end: new Date(nextStart.getTime() - 1000),
+  };
+}
+
+/**
+ * ตอนนี้อยู่ไตรมาสไหนของปีบัญชี `buddhistYear`
+ * คืน 0 ถ้าปีบัญชียังไม่เริ่ม และ 5 ถ้าปีบัญชีจบไปแล้ว
+ */
+export function currentFiscalQuarter(buddhistYear: number, now = new Date()): number {
+  if (now < fiscalQuarterRange(buddhistYear, 1).start) return 0;
+  for (const q of [1, 2, 3, 4]) {
+    if (now <= fiscalQuarterRange(buddhistYear, q).end) return q;
+  }
+  return 5;
+}
+
+/**
+ * ช่วงเวลาที่เก็บในตาราง SubmissionWindow ตอนสร้างปีบัญชีใหม่
+ * ตรงกับ 3 เดือนของแต่ละไตรมาส (ระบบใช้ช่วงจาก fiscalQuarterRange เป็นหลักอยู่แล้ว
+ * ค่าในตารางเก็บไว้ให้ข้อมูลตรงกันเท่านั้น)
  */
 export function defaultSubmissionWindows(buddhistYear: number) {
-  const g = buddhistYear - 543; // ปี ค.ศ. ที่ปีบัญชีสิ้นสุด
-  const utc = (year: number, month: number, day: number, endOfDay = false) =>
-    new Date(
-      Date.UTC(
-        year,
-        month - 1,
-        day,
-        (endOfDay ? 23 : 0) - BANGKOK_OFFSET_HOURS,
-        endOfDay ? 59 : 0
-      )
-    );
-
-  return [
-    { quarter: 1, openAt: utc(g, 1, 1), closeAt: utc(g, 1, 31, true) },
-    { quarter: 2, openAt: utc(g, 4, 1), closeAt: utc(g, 4, 30, true) },
-    { quarter: 3, openAt: utc(g, 7, 1), closeAt: utc(g, 7, 31, true) },
-    { quarter: 4, openAt: utc(g, 10, 1), closeAt: utc(g, 10, 31, true) },
-  ];
+  return [1, 2, 3, 4].map((quarter) => {
+    const { start, end } = fiscalQuarterRange(buddhistYear, quarter);
+    return { quarter, openAt: start, closeAt: end };
+  });
 }

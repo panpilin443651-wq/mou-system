@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
-import { formatThaiDate } from "@/lib/datetime";
+import { fiscalQuarterRange, formatThaiDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "ตั้งค่าระบบ | ระบบรายงานผล MOU" };
@@ -49,7 +49,11 @@ export default async function AdminPage() {
     : [];
   const windowCount = windows.length;
   const openQuarters = windows
-    .filter((w) => !w.isForceClosed && now >= w.openAt && now <= w.closeAt)
+    .filter((w) => {
+      // ช่วงรายงานคือ 3 เดือนของไตรมาส (ดู lib/submission-window.ts) ไม่ใช่ openAt/closeAt ในตาราง
+      const range = fiscalQuarterRange(activeYear!.year, w.quarter);
+      return !w.isForceClosed && now >= range.start && now <= range.end;
+    })
     .map((w) => w.quarter);
 
   const uncoveredCount = departmentCount - coveredDepts.length;
@@ -84,7 +88,7 @@ export default async function AdminPage() {
       href: "/admin/windows",
       title: "ช่วงเวลาเปิด-ปิดระบบ",
       description:
-        "กำหนดวันเวลาที่เปิดให้ส่วนงานกรอกผลและแนบไฟล์ของแต่ละไตรมาส ปิดฉุกเฉิน และขยายเวลาเฉพาะส่วนงานที่ขอผ่อนผัน",
+        "ส่วนงานรายงานผลได้เฉพาะไตรมาสปัจจุบัน (3 เดือนของไตรมาส) · สั่งปิดฉุกเฉิน และขยายเวลาเฉพาะส่วนงานที่ขอผ่อนผัน",
       stat: activeYear
         ? openQuarters.length > 0
           ? `ตอนนี้เปิดรับไตรมาส ${openQuarters.join(", ")} ของปี ${activeYear.year}`

@@ -1,36 +1,46 @@
 import { db } from "@/lib/db";
 import type { Actor } from "@/lib/permissions";
-import { formatThaiDateTime } from "@/lib/datetime";
+import {
+  currentFiscalQuarter,
+  fiscalQuarterRange,
+  formatThaiDateTime,
+} from "@/lib/datetime";
+import { MONTH_COUNT, monthQuarter } from "@/lib/plan";
 
 // ============================================================================
-// การตรวจช่วงเวลาเปิด-ปิดรับรายงาน (ข้อ 9)
+// การตรวจช่วงเวลารับรายงาน (ข้อ 9)
 // ============================================================================
 // รวมไว้ที่เดียว เพราะต้องถูกเรียกจากทุกจุดที่เขียนข้อมูลของไตรมาสนั้น
 //   - บันทึกร่าง / ส่งผล / ดึงกลับมาแก้
 //   - ตอนออกบัตรผ่านอัปโหลดไฟล์ และตอนบันทึกข้อมูลไฟล์ / ลบไฟล์
+//   - ช่องแผน/ผลรายเดือนในตารางแผนดำเนินงาน (monthLocks)
 //
 // ถ้าเขียนเงื่อนไขซ้ำกระจายไปแต่ละที่ จะมีสักที่ที่ลืมตรวจ แล้วกลายเป็นช่องโหว่
 //
 // กฎที่ใช้:
-//   - ส่วนกลาง (ADMIN) ทำได้เสมอ เพราะเป็นคนคุมการเปิด-ปิดเอง
-//     และต้องแก้ข้อมูลให้ส่วนงานได้แม้เลยกำหนดแล้ว
-//   - ผู้รับผิดชอบส่วนงานทำได้เฉพาะช่วงที่เปิด
+//   - ผู้รับผิดชอบส่วนงานรายงานผลได้เฉพาะไตรมาสปัจจุบัน ภายใน 3 เดือนของไตรมาสนั้น
+//     (ไตรมาส 1 = ต.ค.-ธ.ค. ...) คิดจากวันที่ตามเวลาไทย ไม่ต้องตั้งค่า
+//     ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ไตรมาสที่ยังมาไม่ถึงก็รายงานล่วงหน้าไม่ได้
+//   - ส่วนกลางสั่ง "ปิดฉุกเฉิน" ไตรมาสได้ (SubmissionWindow.isForceClosed)
+//   - ส่วนกลางขยายเวลาให้เฉพาะส่วนงานได้ (WindowException) ขยายได้อย่างเดียว
+//   - ส่วนกลาง (ADMIN) ทำได้เสมอ เพราะต้องแก้ข้อมูลให้ส่วนงานได้แม้เลยกำหนดแล้ว
 //   - ผู้บริหารแก้ไขอะไรไม่ได้อยู่แล้วตั้งแต่ชั้นสิทธิ์
-//   - ถ้ายังไม่ได้ตั้งช่วงเวลาไว้ ถือว่า "ปิด" ไว้ก่อน (ปลอดภัยกว่าเปิดค้าง)
+//
+// openAt / closeAt ในตาราง SubmissionWindow ไม่ได้ใช้ตัดสินแล้ว (ตั้งแต่ 30 ก.ย. 2569)
+// ช่วงเวลามาจาก fiscalQuarterRange เสมอ จึงไม่มีทางตั้งช่วงผิดจนส่วนงานรายงานไม่ได้
 // ============================================================================
 
 export type WindowState =
-  | "OPEN" // อยู่ในช่วงที่เปิดรับ
-  | "BEFORE_OPEN" // ยังไม่ถึงเวลาเปิด
-  | "AFTER_CLOSE" // เลยเวลาปิดแล้ว
-  | "FORCE_CLOSED" // ส่วนกลางสั่งปิดฉุกเฉิน
-  | "NO_WINDOW"; // ยังไม่ได้ตั้งช่วงเวลาของไตรมาสนี้
+  | "OPEN" // อยู่ในไตรมาสนี้ (หรืออยู่ในช่วงที่ขยายเวลาให้)
+  | "BEFORE_OPEN" // ไตรมาสนี้ยังมาไม่ถึง
+  | "AFTER_CLOSE" // ไตรมาสนี้ผ่านไปแล้ว
+  | "FORCE_CLOSED"; // ส่วนกลางสั่งปิดฉุกเฉิน
 
 export type WindowStatus = {
   state: WindowState;
-  openAt: Date | null;
+  openAt: Date;
   /** เวลาปิดที่ใช้จริง (รวมการขยายเวลาเฉพาะส่วนงานแล้ว) */
-  closeAt: Date | null;
+  closeAt: Date;
   /** เวลาปิดเดิมก่อนขยาย - null ถ้าไม่มีการขยาย */
   originalCloseAt: Date | null;
   extensionReason: string | null;
@@ -42,25 +52,65 @@ export type WindowStatus = {
   message: string;
 };
 
-function describe(state: WindowState, openAt: Date | null, closeAt: Date | null): string {
+function describe(state: WindowState, quarter: number, openAt: Date, closeAt: Date): string {
   switch (state) {
     case "OPEN":
-      return closeAt
-        ? `เปิดรับข้อมูลถึง ${formatThaiDateTime(closeAt)}`
-        : "เปิดรับข้อมูล";
+      return `รายงานผลไตรมาส ${quarter} ได้ถึง ${formatThaiDateTime(closeAt)}`;
     case "BEFORE_OPEN":
-      return openAt
-        ? `ยังไม่ถึงเวลาเปิดรับข้อมูล จะเปิด ${formatThaiDateTime(openAt)}`
-        : "ยังไม่ถึงเวลาเปิดรับข้อมูล";
+      return `ยังไม่ถึงไตรมาส ${quarter} จะรายงานได้ตั้งแต่ ${formatThaiDateTime(openAt)}`;
     case "AFTER_CLOSE":
-      return closeAt
-        ? `ปิดรับข้อมูลแล้วเมื่อ ${formatThaiDateTime(closeAt)}`
-        : "ปิดรับข้อมูลแล้ว";
+      return `ไตรมาส ${quarter} สิ้นสุดแล้วเมื่อ ${formatThaiDateTime(closeAt)} แก้ไขย้อนหลังไม่ได้`;
     case "FORCE_CLOSED":
-      return "ส่วนกลางปิดรับข้อมูลของไตรมาสนี้ไว้";
-    case "NO_WINDOW":
-      return "ยังไม่ได้ตั้งช่วงเวลาเปิด-ปิดของไตรมาสนี้ ติดต่อส่วนกลางเพื่อเปิดรับข้อมูล";
+      return `ส่วนกลางปิดรับข้อมูลของไตรมาส ${quarter} ไว้`;
   }
+}
+
+type WindowRow = {
+  isForceClosed: boolean;
+  exceptions: { closeAt: Date; reason: string }[];
+} | null;
+
+/** ตัดสินสถานะของไตรมาสหนึ่ง จากปีบัญชี + แถว SubmissionWindow (ถ้ามี) */
+function computeStatus({
+  year,
+  quarter,
+  window,
+  actor,
+  now,
+}: {
+  year: number;
+  quarter: number;
+  window: WindowRow;
+  actor: Actor;
+  now: Date;
+}): WindowStatus {
+  const { start, end } = fiscalQuarterRange(year, quarter);
+  const isAdmin = actor.role === "ADMIN";
+
+  // การขยายเวลาเฉพาะส่วนงาน ใช้ได้เฉพาะเมื่อทำให้ปิดช้าลงเท่านั้น
+  // ไม่ให้ใช้ย่นเวลาปิดให้เร็วขึ้น เพราะจะกลายเป็นการลงโทษเฉพาะหน่วย
+  const exception = window?.exceptions[0] ?? null;
+  const extended = exception && exception.closeAt > end ? exception.closeAt : null;
+  const effectiveClose = extended ?? end;
+
+  let state: WindowState;
+  if (window?.isForceClosed) state = "FORCE_CLOSED";
+  else if (now < start) state = "BEFORE_OPEN";
+  else if (now > effectiveClose) state = "AFTER_CLOSE";
+  else state = "OPEN";
+
+  const open = state === "OPEN";
+
+  return {
+    state,
+    openAt: start,
+    closeAt: effectiveClose,
+    originalCloseAt: extended ? end : null,
+    extensionReason: extended ? exception!.reason : null,
+    canWrite: open || isAdmin,
+    isAdminOverride: !open && isAdmin,
+    message: describe(state, quarter, start, effectiveClose),
+  };
 }
 
 /**
@@ -82,51 +132,48 @@ export async function getWindowStatus({
   actor: Actor;
   now?: Date;
 }): Promise<WindowStatus> {
-  const window = await db.submissionWindow.findUnique({
-    where: { fiscalYearId_quarter: { fiscalYearId, quarter } },
-    include: { exceptions: { where: { departmentId } } },
+  const statuses = await getQuarterStatuses({ fiscalYearId, departmentId, actor, now });
+  return statuses[quarter - 1];
+}
+
+/** สถานะของทั้ง 4 ไตรมาสในคำถามเดียว (ช่อง 0 = ไตรมาส 1) */
+export async function getQuarterStatuses({
+  fiscalYearId,
+  departmentId,
+  actor,
+  now = new Date(),
+}: {
+  fiscalYearId: number;
+  departmentId: string;
+  actor: Actor;
+  now?: Date;
+}): Promise<WindowStatus[]> {
+  const fiscalYear = await db.fiscalYear.findUniqueOrThrow({
+    where: { id: fiscalYearId },
+    select: {
+      year: true,
+      windows: {
+        select: {
+          quarter: true,
+          isForceClosed: true,
+          exceptions: {
+            where: { departmentId },
+            select: { closeAt: true, reason: true },
+          },
+        },
+      },
+    },
   });
 
-  const isAdmin = actor.role === "ADMIN";
-
-  if (!window) {
-    return {
-      state: "NO_WINDOW",
-      openAt: null,
-      closeAt: null,
-      originalCloseAt: null,
-      extensionReason: null,
-      canWrite: isAdmin,
-      isAdminOverride: isAdmin,
-      message: describe("NO_WINDOW", null, null),
-    };
-  }
-
-  // การขยายเวลาเฉพาะส่วนงาน ใช้ได้เฉพาะเมื่อทำให้ปิดช้าลงเท่านั้น
-  // ไม่ให้ใช้ย่นเวลาปิดให้เร็วขึ้น เพราะจะกลายเป็นการลงโทษเฉพาะหน่วย
-  const exception = window.exceptions[0] ?? null;
-  const extended =
-    exception && exception.closeAt > window.closeAt ? exception.closeAt : null;
-  const effectiveClose = extended ?? window.closeAt;
-
-  let state: WindowState;
-  if (window.isForceClosed) state = "FORCE_CLOSED";
-  else if (now < window.openAt) state = "BEFORE_OPEN";
-  else if (now > effectiveClose) state = "AFTER_CLOSE";
-  else state = "OPEN";
-
-  const open = state === "OPEN";
-
-  return {
-    state,
-    openAt: window.openAt,
-    closeAt: effectiveClose,
-    originalCloseAt: extended ? window.closeAt : null,
-    extensionReason: extended ? exception!.reason : null,
-    canWrite: open || isAdmin,
-    isAdminOverride: !open && isAdmin,
-    message: describe(state, window.openAt, effectiveClose),
-  };
+  return [1, 2, 3, 4].map((quarter) =>
+    computeStatus({
+      year: fiscalYear.year,
+      quarter,
+      window: fiscalYear.windows.find((w) => w.quarter === quarter) ?? null,
+      actor,
+      now,
+    }),
+  );
 }
 
 /**
@@ -157,4 +204,41 @@ export async function getWindowStatusForIndicator({
     actor,
     now,
   });
+}
+
+/** ไตรมาสปัจจุบันของปีบัญชี บีบให้อยู่ในช่วง 1-4 ใช้เป็นไตรมาสที่เปิดให้ดูเป็นค่าเริ่มต้น */
+export function defaultQuarter(year: number, now = new Date()): number {
+  return Math.min(4, Math.max(1, currentFiscalQuarter(year, now)));
+}
+
+// ----------------------------------------------------------------------------
+// ช่องรายเดือนในตารางแผนดำเนินงาน
+// ----------------------------------------------------------------------------
+
+export type MonthLocks = {
+  /** ช่อง "แผน" ของเดือนนี้แก้ไม่ได้ (ช่อง 0 = ต.ค.) */
+  plan: boolean[];
+  /** ช่อง "ผล" ของเดือนนี้แก้ไม่ได้ */
+  actual: boolean[];
+};
+
+/**
+ * เดือนไหนในตารางแผนที่แก้ได้ ตามสถานะของไตรมาสที่เดือนนั้นอยู่
+ *
+ * - ช่อง "ผล" แก้ได้เฉพาะเดือนในไตรมาสที่รายงานได้อยู่ตอนนี้
+ *   (ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ไตรมาสข้างหน้ายังไม่มีผลให้รายงาน)
+ * - ช่อง "แผน" แก้ได้ทั้งไตรมาสที่รายงานได้อยู่และไตรมาสข้างหน้า
+ *   แต่ไตรมาสที่ผ่านไปแล้วล็อก เพราะเปลี่ยนแผนย้อนหลังจะทำให้ % ผลเทียบแผนเปลี่ยนไปด้วย
+ *
+ * ส่วนกลางแก้ได้ทุกเดือน (canWrite เป็น true ทุกไตรมาสอยู่แล้ว)
+ */
+export function monthLocks(statuses: WindowStatus[]): MonthLocks {
+  const plan: boolean[] = [];
+  const actual: boolean[] = [];
+  for (let i = 0; i < MONTH_COUNT; i++) {
+    const s = statuses[monthQuarter(i) - 1];
+    actual.push(!s.canWrite);
+    plan.push(!s.canWrite && s.state !== "BEFORE_OPEN");
+  }
+  return { plan, actual };
 }

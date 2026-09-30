@@ -13,7 +13,8 @@ import {
   planNumber,
   firstError,
 } from "@/lib/validation";
-import { MONTH_COUNT, PLAN_SECTION_ITEM_LABEL } from "@/lib/plan";
+import { MONTH_COUNT, PLAN_SECTION_ITEM_LABEL, toMonths } from "@/lib/plan";
+import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
 import { writeAudit } from "@/lib/audit";
 
 // ============================================================================
@@ -56,6 +57,15 @@ function readMonths(formData: FormData, prefix: string, rowId: string) {
   return months;
 }
 
+/** เดือนที่ล็อกใช้ค่าเดิมในฐานข้อมูล เดือนที่แก้ได้ใช้ค่าจากฟอร์ม */
+function keepLocked(
+  submitted: (number | null)[],
+  saved: (number | null)[],
+  locked: boolean[],
+) {
+  return submitted.map((v, i) => (locked[i] ? saved[i] : v));
+}
+
 /**
  * บันทึกทั้งแบบฟอร์ม
  *
@@ -74,6 +84,7 @@ export async function savePlanAction(
     select: {
       id: true,
       departmentId: true,
+      fiscalYearId: true,
       code: true,
       criteria: { select: { level: true }, orderBy: { level: "asc" } },
     },
@@ -97,9 +108,27 @@ export async function savePlanAction(
   const rows = await db.actionPlan.findMany({
     where: { indicatorId },
     orderBy: [{ section: "asc" }, { sortOrder: "asc" }],
-    select: { id: true, section: true, sortOrder: true, criteriaLevel: true },
+    select: {
+      id: true,
+      section: true,
+      sortOrder: true,
+      criteriaLevel: true,
+      planMonths: true,
+      actualMonths: true,
+    },
   });
   const levels = indicator.criteria.map((c) => c.level);
+
+  // เดือนของไตรมาสที่ผ่านไปแล้ว (และช่องผลของไตรมาสข้างหน้า) ล็อกไว้
+  // ค่าที่ฟอร์มส่งมาสำหรับเดือนที่ล็อกถูกทิ้ง แล้วใช้ค่าเดิมในฐานข้อมูลแทนเสมอ
+  // กันคนที่แก้ readOnly ในเบราว์เซอร์ออกแล้วส่งค่ามาเอง
+  const locks = monthLocks(
+    await getQuarterStatuses({
+      fiscalYearId: indicator.fiscalYearId,
+      departmentId: indicator.departmentId,
+      actor: user,
+    }),
+  );
 
   /** แถวที่อยู่กลุ่มเดียวกัน (ตารางเดียวกันและระดับเดียวกัน) ใช้ไล่เลขลำดับ */
   const sameGroup =
@@ -139,7 +168,11 @@ export async function savePlanAction(
     updates.push(
       db.actionPlan.update({
         where: { id: row.id },
-        data: { ...parsed.data, planMonths, actualMonths },
+        data: {
+          ...parsed.data,
+          planMonths: keepLocked(planMonths, toMonths(row.planMonths), locks.plan),
+          actualMonths: keepLocked(actualMonths, toMonths(row.actualMonths), locks.actual),
+        },
       }),
     );
   }
@@ -213,6 +246,18 @@ export async function savePlanAction(
     const rowId = intent.slice(7);
     const target = rows.find((r) => r.id === rowId);
     if (!target) return { error: "ไม่พบบรรทัดที่จะลบ" };
+
+    // ลบบรรทัดที่มีตัวเลขอยู่ในเดือนที่ล็อกไม่ได้ ไม่งั้นจะเท่ากับแก้ผลย้อนหลังด้วยการลบทิ้ง
+    const hasLockedData = (months: unknown, locked: boolean[]) =>
+      toMonths(months).some((v, i) => locked[i] && v !== null);
+    if (
+      hasLockedData(target.planMonths, locks.plan) ||
+      hasLockedData(target.actualMonths, locks.actual)
+    ) {
+      return {
+        error: "ลบบรรทัดนี้ไม่ได้ เพราะมีข้อมูลในไตรมาสที่ปิดไปแล้ว",
+      };
+    }
 
     // ไฟล์หลักฐานของบรรทัดนี้ ข้อมูลในฐานข้อมูลลบตามไปเอง (cascade)
     // แต่ตัวไฟล์บน Blob ไม่ลบตาม จึงต้องลบเอง ไม่งั้นจะค้างอยู่โดยไม่มีใครเข้าถึงได้

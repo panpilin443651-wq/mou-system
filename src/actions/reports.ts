@@ -8,6 +8,7 @@ import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
 import { getWindowStatus } from "@/lib/submission-window";
+import { isPlanComplete, toMonths } from "@/lib/plan";
 
 // ============================================================================
 // Server Action สำหรับรายงานผลรายไตรมาส (ข้อ 4, 5)
@@ -21,6 +22,18 @@ import { getWindowStatus } from "@/lib/submission-window";
 // ============================================================================
 
 export type FormState = { error: string | null; success?: boolean };
+
+/**
+ * รายงานของไตรมาสล่าสุดก่อนหน้า `quarter` ที่มีการกรอกไว้
+ * ใช้ยกข้อมูลไปเป็นค่าตั้งต้นของไตรมาสใหม่ ผู้กรอกจะได้แก้ต่อจากของเดิม ไม่ต้องพิมพ์ใหม่ทั้งหมด
+ */
+async function previousReport(indicatorId: string, quarter: number) {
+  return db.quarterlyReport.findFirst({
+    where: { indicatorId, quarter: { lt: quarter } },
+    orderBy: { quarter: "desc" },
+    include: { criteriaProgress: { select: { level: true, text: true } } },
+  });
+}
 
 export async function saveReportAction(
   indicatorId: string,
@@ -52,6 +65,21 @@ export async function saveReportAction(
   });
   if (!window.canWrite) {
     return { error: `บันทึกไม่ได้ — ${window.message}` };
+  }
+
+  // ขั้นตอนแรกต้องกรอกแผนดำเนินงานและบันทึกแผนก่อน จึงรายงานผลรายไตรมาสได้
+  // ส่วนกลางข้ามได้ เพราะต้องแก้ข้อมูลให้ส่วนงานได้ทุกกรณี
+  if (user.role !== "ADMIN") {
+    const plans = await db.actionPlan.findMany({
+      where: { indicatorId },
+      select: { title: true, planMonths: true },
+    });
+    const ready = isPlanComplete(
+      plans.map((p) => ({ title: p.title, planMonths: toMonths(p.planMonths) })),
+    );
+    if (!ready) {
+      return { error: "กรุณากรอกแผนดำเนินงานและกดบันทึกแผนก่อน จึงจะรายงานผลรายไตรมาสได้" };
+    }
   }
 
   const parsed = reportSchema.safeParse({
@@ -94,11 +122,34 @@ export async function saveReportAction(
 
   // ช่องปัญหาอุปสรรค ปัจจัย และผลรายค่าเกณฑ์ ถูกเอาออกจากฟอร์มแล้ว (17 ก.ย. 2569)
   // ไม่เขียนทับคอลัมน์และตาราง CriteriaProgress เดิม ข้อมูลที่เคยกรอกจึงไม่หาย
-  await db.quarterlyReport.upsert({
-    where: { indicatorId_quarter: { indicatorId, quarter } },
-    update: data,
-    create: { indicatorId, quarter, ...data },
-  });
+  if (existing) {
+    await db.quarterlyReport.update({ where: { id: existing.id }, data });
+  } else {
+    // รายงานไตรมาสใหม่ ยกข้อมูลทั้งหมดของไตรมาสก่อนหน้ามาด้วย
+    // (ช่องที่อยู่ในฟอร์มยกไปตั้งแต่ตอนเปิดหน้าแล้ว ตรงนี้ยกช่องที่ไม่อยู่ในฟอร์ม)
+    const previous = await previousReport(indicatorId, quarter);
+    await db.quarterlyReport.create({
+      data: {
+        indicatorId,
+        quarter,
+        ...data,
+        ...(previous
+          ? {
+              narrative: previous.narrative,
+              responsible: previous.responsible,
+              objective: previous.objective,
+              keyProjects: previous.keyProjects,
+              problems: previous.problems,
+              supportFactors: previous.supportFactors,
+              obstacleFactors: previous.obstacleFactors,
+              criteriaProgress: {
+                create: previous.criteriaProgress.map((c) => ({ level: c.level, text: c.text })),
+              },
+            }
+          : {}),
+      },
+    });
+  }
 
   await writeAudit({
     userId: user.id,

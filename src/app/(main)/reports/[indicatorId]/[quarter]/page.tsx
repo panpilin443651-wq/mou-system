@@ -12,6 +12,7 @@ import {
   QUARTERS,
   QUARTER_MONTHS,
   currentFiscalMonthIndex,
+  isPlanComplete,
   toMonths,
 } from "@/lib/plan";
 import { savePlanAction } from "@/actions/plans";
@@ -23,7 +24,10 @@ import {
   targetLabel,
 } from "@/lib/scoring";
 import { formatThaiDateTime } from "@/lib/datetime";
-import { getWindowStatus } from "@/lib/submission-window";
+import {
+  getQuarterStatuses,
+  monthLocks,
+} from "@/lib/submission-window";
 import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 
@@ -67,21 +71,41 @@ export default async function ReportPage({
   // ตรวจสิทธิ์การมองเห็นที่เซิร์ฟเวอร์ก่อนเสมอ
   if (!canViewDepartment(user, indicator.departmentId)) notFound();
 
-  // สิทธิ์ + ช่วงเวลา ต้องผ่านทั้งคู่จึงจะแก้ไขได้
-  // (ส่วนกลางผ่านช่วงเวลาเสมอ เพราะเป็นคนคุมการเปิด-ปิดเอง)
-  const window = await getWindowStatus({
+  // สิทธิ์ + ช่วงเวลา + กรอกแผนแล้ว ต้องผ่านครบจึงจะรายงานผลได้
+  // (ส่วนกลางผ่านช่วงเวลาและขั้นตอนแผนเสมอ เพราะต้องแก้ข้อมูลให้ส่วนงานได้ทุกกรณี)
+  const statuses = await getQuarterStatuses({
     fiscalYearId: indicator.fiscalYearId,
-    quarter,
     departmentId: indicator.departmentId,
     actor: user,
   });
+  const window = statuses[quarter - 1];
+  const isAdmin = user.role === "ADMIN";
   const hasPermission = canSubmitReport(user, indicator.departmentId);
-  const canEdit = hasPermission && window.canWrite;
+
+  // ขั้นตอนที่ 1: กรอกแผนดำเนินงานและบันทึกแผนก่อน จึงรายงานผลรายไตรมาสได้
+  const planReady = isPlanComplete(
+    indicator.plans.map((p) => ({ title: p.title, planMonths: toMonths(p.planMonths) })),
+  );
+  const needsPlan = hasPermission && !isAdmin && !planReady;
+
+  const canEdit = hasPermission && window.canWrite && !needsPlan;
   const report = indicator.reports[0] ?? null;
   const isSubmitted = report?.status === "SUBMITTED";
 
+  // ไตรมาสที่ยังไม่มีรายงาน ยกข้อมูลของไตรมาสล่าสุดก่อนหน้ามาเป็นค่าตั้งต้น
+  // ผู้กรอกจะได้แก้ต่อจากของเดิม (ช่องที่ไม่อยู่ในฟอร์มยกไปตอนบันทึกใน saveReportAction)
+  const carried =
+    report === null && quarter > 1
+      ? await db.quarterlyReport.findFirst({
+          where: { indicatorId: indicator.id, quarter: { lt: quarter } },
+          orderBy: { quarter: "desc" },
+        })
+      : null;
+  const source = report ?? carried;
+
   // แผนดำเนินงานของตัวชี้วัดเดียวกัน แสดงในหน้านี้เลย ไม่ต้องสลับไปอีกหน้า
-  // สิทธิ์แก้แผนแยกจากสิทธิ์กรอกผล และไม่ผูกกับช่วงเวลาเปิด-ปิดรับผลรายไตรมาส
+  // สิทธิ์แก้แผนแยกจากสิทธิ์กรอกผล แต่ช่องแผน/ผลรายเดือนล็อกตามไตรมาส (monthLocks)
+  // ส่วนหัวแบบฟอร์ม ชื่อรายการ และรายงานผลรายระดับยังแก้ได้ตลอดปี
   const canEditPlan = canManagePlan(user, indicator.departmentId);
   const planSection = (
     // key จำเป็น: ส่วนนี้ถูกส่งเข้า ReportForm เป็น prop ถ้าไม่มี key React จะเตือนเรื่อง key ในโหมด dev
@@ -111,6 +135,7 @@ export default async function ReportPage({
         levelReports={Object.fromEntries(
           indicator.planLevelReports.map((r) => [r.level, r.text])
         )}
+        locks={monthLocks(statuses)}
         monthsElapsed={currentFiscalMonthIndex(indicator.fiscalYear.year)}
         fiscalYear={indicator.fiscalYear.year}
         indicatorId={indicator.id}
@@ -192,11 +217,18 @@ export default async function ReportPage({
             <span className="ml-1 text-xs opacity-75">
               ({QUARTER_MONTHS[q]})
             </span>
+            {statuses[q - 1].state === "OPEN" ? (
+              <span className="ml-1.5 text-xs font-semibold">· รายงานได้</span>
+            ) : (
+              <span className="ml-1.5 text-xs opacity-75">
+                · {statuses[q - 1].state === "BEFORE_OPEN" ? "ยังไม่ถึง" : "ปิดแล้ว"}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
 
-      {/* สถานะช่วงเวลาเปิด-ปิดของไตรมาสนี้ (ข้อ 9) */}
+      {/* สถานะช่วงเวลาของไตรมาสนี้ (ข้อ 9) - รายงานได้เฉพาะในไตรมาสปัจจุบัน */}
       <div
         className={
           window.state === "OPEN"
@@ -205,7 +237,7 @@ export default async function ReportPage({
         }
       >
         <p className="font-medium">
-          {window.state === "OPEN" ? "เปิดรับข้อมูล" : "ปิดรับข้อมูล"} ·{" "}
+          {window.state === "OPEN" ? "เปิดรายงานผล" : "ปิดรายงานผล"} ·{" "}
           {window.message}
         </p>
         {window.originalCloseAt && (
@@ -223,11 +255,65 @@ export default async function ReportPage({
         )}
         {!window.canWrite && hasPermission && (
           <p className="mt-0.5">
-            ช่วงนี้จึงกรอกผล แนบไฟล์ หรือลบไฟล์ไม่ได้
+            รายงานผลได้เฉพาะไตรมาสปัจจุบันภายใน 3 เดือนของไตรมาสนั้น
             ติดต่อส่วนกลางหากต้องการขยายเวลา
           </p>
         )}
       </div>
+
+      {/* ขั้นตอนของผู้รับผิดชอบส่วนงาน: 1 กรอกแผน → 2 รายงานผลไตรมาสปัจจุบัน */}
+      {hasPermission && !isAdmin && (
+        <ol className="grid gap-2 sm:grid-cols-2">
+          <li
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              planReady
+                ? "border-slate-200 bg-surface"
+                : "border-amber-200 bg-amber-50 text-amber-900"
+            }`}
+          >
+            <p className="font-medium">
+              ขั้นตอนที่ 1 · กรอกแผนดำเนินงานและกดบันทึกแผน
+            </p>
+            <p className="mt-0.5">
+              {planReady ? (
+                <span className="text-emerald-800">✓ บันทึกแผนแล้ว</span>
+              ) : (
+                <>
+                  ยังไม่ได้บันทึกแผน ·{" "}
+                  <a href="#plan" className="font-medium underline underline-offset-2">
+                    ไปกรอกแผน
+                  </a>
+                </>
+              )}
+            </p>
+          </li>
+          <li
+            className={`rounded-xl border px-4 py-3 text-sm ${
+              planReady && window.canWrite
+                ? "border-brand-200 bg-brand-50 text-brand-900"
+                : "border-slate-200 bg-surface text-slate-600"
+            }`}
+          >
+            <p className="font-medium">ขั้นตอนที่ 2 · รายงานผลไตรมาส {quarter}</p>
+            <p className="mt-0.5">
+              {!planReady
+                ? "ทำได้หลังบันทึกแผนแล้ว"
+                : isSubmitted
+                  ? "✓ ส่งผลแล้ว"
+                  : window.canWrite
+                    ? "กรอกผลด้านล่างแล้วกดส่งผลการดำเนินงาน"
+                    : "ไตรมาสนี้ไม่เปิดให้รายงาน"}
+            </p>
+          </li>
+        </ol>
+      )}
+
+      {carried && canEdit && (
+        <p className="rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-600">
+          ยกข้อมูลที่รายงานไว้ในไตรมาส {carried.quarter} มาให้แล้ว ·
+          ตรวจสอบและแก้ให้เป็นผลของไตรมาส {quarter} แล้วกดบันทึก
+        </p>
+      )}
 
       <section className="rounded-xl border border-slate-200 bg-surface p-5 shadow-sm">
         <dl className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -357,21 +443,23 @@ export default async function ReportPage({
             planSection={planSection}
             initial={{
               actualValue:
-                report?.actualValue === null || report === null
+                source?.actualValue === null || source === null
                   ? ""
-                  : String(report.actualValue),
-              scoreOverride: report?.scoreOverridden
-                ? String(report.scoreLevel ?? "")
+                  : String(source.actualValue),
+              scoreOverride: source?.scoreOverridden
+                ? String(source.scoreLevel ?? "")
                 : "",
-              scoreNote: report?.scoreNote ?? "",
+              scoreNote: source?.scoreNote ?? "",
             }}
           />
         ) : (
           <div className="space-y-5">
             <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
               <p className="text-sm text-slate-600">
-                {hasPermission
-                  ? `ตอนนี้แก้ไขไม่ได้เพราะ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
+                {needsPlan
+                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนดำเนินงานด้านล่างและกดบันทึกแผนก่อน"
+                  : hasPermission
+                  ? `ตอนนี้แก้ไขไม่ได้ — ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
                   : `คุณเปิดดูรายงานนี้ได้อย่างเดียว การกรอกผลทำได้โดยผู้รับผิดชอบส่วนงาน ${indicator.department.code} และส่วนกลาง`}
               </p>
               {report === null ? (

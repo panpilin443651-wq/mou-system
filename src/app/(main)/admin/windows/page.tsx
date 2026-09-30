@@ -3,6 +3,8 @@ import { requireAdmin } from "@/lib/session";
 import { db } from "@/lib/db";
 import { QUARTER_MONTHS } from "@/lib/plan";
 import {
+  fiscalQuarterRange,
+  formatThaiDate,
   formatThaiDateTime,
   utcToBangkokDateTimeInput,
 } from "@/lib/datetime";
@@ -66,8 +68,9 @@ export default async function WindowsPage({
         </Link>
         <h1 className="mt-2 text-xl font-bold sm:text-2xl">ช่วงเวลาเปิด-ปิดระบบ</h1>
         <p className="mt-1 text-sm text-slate-600">
-          กำหนดว่าแต่ละไตรมาสเปิดให้ส่วนงานกรอกผลและแนบไฟล์ได้ช่วงไหน
-          เมื่อเลยเวลาปิดแล้ว ส่วนงานจะบันทึกอะไรไม่ได้เลย แม้จะพยายามข้ามหน้าเว็บก็ตาม
+          ผู้รับผิดชอบส่วนงานรายงานผลได้เฉพาะไตรมาสปัจจุบัน ภายใน 3 เดือนของไตรมาสนั้น
+          ระบบคิดจากวันที่ให้เอง ไม่ต้องตั้งค่า เมื่อพ้นไตรมาสแล้วแก้ย้อนหลังไม่ได้ แม้จะพยายามข้ามหน้าเว็บก็ตาม
+          หน้านี้ใช้สั่งปิดฉุกเฉิน หรือขยายเวลาให้เฉพาะส่วนงานเป็นกรณีพิเศษ
         </p>
         <p className="mt-1 text-sm text-slate-600">
           เวลาที่กรอกทั้งหมดเป็น <strong>เวลาประเทศไทย</strong> ·
@@ -104,21 +107,23 @@ export default async function WindowsPage({
         </p>
       ) : windows.length === 0 ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-sm text-amber-900">
-          ปีบัญชี {selectedYear.year} ยังไม่มีช่วงเวลาเปิด-ปิด ส่วนงานจะกรอกผลไม่ได้เลย
+          ปีบัญชี {selectedYear.year} ยังไม่มีข้อมูลไตรมาสในตารางนี้ จึงสั่งปิดฉุกเฉินหรือขยายเวลาไม่ได้
+          (ส่วนงานยังรายงานผลตามไตรมาสได้ตามปกติ)
         </p>
       ) : (
         windows.map((w) => {
-          // สถานะตอนนี้ ใช้เวลาปิดเดิม (ไม่รวมการขยายเฉพาะหน่วย)
+          // สถานะตอนนี้ ใช้ช่วง 3 เดือนของไตรมาส (ไม่รวมการขยายเฉพาะหน่วย)
           // เพราะเป็นภาพรวมของทั้งไตรมาส ไม่ใช่ของส่วนงานใดส่วนงานหนึ่ง
+          const range = fiscalQuarterRange(selectedYear.year, w.quarter);
           const isOpen =
-            !w.isForceClosed && now >= w.openAt && now <= w.closeAt;
+            !w.isForceClosed && now >= range.start && now <= range.end;
           const statusLabel = w.isForceClosed
             ? "ปิดฉุกเฉินอยู่"
-            : now < w.openAt
-              ? "ยังไม่ถึงเวลาเปิด"
-              : now > w.closeAt
-                ? "ปิดรับแล้ว"
-                : "เปิดรับอยู่";
+            : now < range.start
+              ? "ยังไม่ถึงไตรมาส"
+              : now > range.end
+                ? "สิ้นสุดไตรมาสแล้ว"
+                : "เปิดรายงานอยู่ (ไตรมาสปัจจุบัน)";
 
           const exceptions: Exception[] = w.exceptions.map((e) => ({
             id: e.id,
@@ -145,8 +150,8 @@ export default async function WindowsPage({
               months={QUARTER_MONTHS[w.quarter]}
               statusLabel={statusLabel}
               statusTone={isOpen ? "open" : "closed"}
-              openAtInput={utcToBangkokDateTimeInput(w.openAt)}
-              closeAtInput={utcToBangkokDateTimeInput(w.closeAt)}
+              periodLabel={`${formatThaiDate(range.start)} – ${formatThaiDate(range.end)}`}
+              closeAtLabel={formatThaiDateTime(range.end)}
               isForceClosed={w.isForceClosed}
               exceptions={exceptions}
               departments={departments}
