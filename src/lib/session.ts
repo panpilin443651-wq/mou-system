@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import type { Actor } from "@/lib/permissions";
+import { homePath, type Actor } from "@/lib/permissions";
 
 // ============================================================================
 // ตัวช่วยดึงข้อมูลผู้ใช้ที่ login อยู่ สำหรับเรียกใช้ในหน้าเว็บฝั่งเซิร์ฟเวอร์
@@ -43,6 +43,6 @@ export async function requireUser(): Promise<CurrentUser> {
  */
 export async function requireAdmin(): Promise<CurrentUser> {
   const user = await requireUser();
-  if (user.role !== "ADMIN") redirect("/dashboard");
+  if (user.role !== "ADMIN") redirect(homePath(user));
   return user;
 }

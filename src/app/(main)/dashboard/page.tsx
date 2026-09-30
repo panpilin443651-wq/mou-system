@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { ROLE_LABEL } from "@/lib/permissions";
+import { ROLE_LABEL, canViewDashboard, homePath } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getDashboardData } from "@/lib/dashboard";
 import {
@@ -19,6 +20,8 @@ export const metadata = { title: "ภาพรวม | ระบบรายง�
 
 export default async function DashboardPage() {
   const user = await requireUser();
+  // ผู้รับผิดชอบส่วนงานไม่เห็นหน้าภาพรวม
+  if (!canViewDashboard(user)) redirect(homePath(user));
   // เอาแถบเลือกไตรมาสออกแล้ว ตัวเลขสรุปจึงใช้ไตรมาสล่าสุดที่ส่งแล้วเสมอ
   const quarter = "latest";
 

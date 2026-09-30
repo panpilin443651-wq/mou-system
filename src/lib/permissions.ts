@@ -9,7 +9,8 @@ import type { Role } from "@prisma/client";
 //
 // กฎที่ยืนยันแล้ว:
 //   ADMIN      = ส่วนกลาง ทำได้ทุกอย่าง สร้าง/แก้ตัวชี้วัดให้ทุกส่วนงาน
-//   DEPT_USER  = เห็นเฉพาะส่วนงานตัวเอง แก้ตัวชี้วัดไม่ได้ แต่กรอกผลได้
+//   DEPT_USER  = เห็นเฉพาะคะแนนและรายงานผลการดำเนินงานของส่วนงานตัวเอง
+//                (ไม่เห็นหน้าภาพรวม) แก้ตัวชี้วัดไม่ได้ แต่กรอกผลได้
 //   EXECUTIVE  = ดูได้ทุกส่วนงาน แต่แก้ไขอะไรไม่ได้เลย
 // ============================================================================
 
@@ -103,6 +104,30 @@ export function departmentScope(actor: Actor): { departmentId?: string } {
   return { departmentId: actor.departmentId ?? "__ไม่มีสังกัด__" };
 }
 
+/**
+ * เข้าหน้าภาพรวม (และดาวน์โหลด Excel สรุปภาพรวม) ได้หรือไม่
+ *
+ * ผู้รับผิดชอบส่วนงานไม่เห็นหน้าภาพรวม เห็นแค่คะแนนและรายงานผลของส่วนงานตัวเอง
+ * หน้าที่ตอบ false ต้อง redirect ไปหน้า homePath แทน
+ */
+export function canViewDashboard(actor: Actor): boolean {
+  return actor.role === "ADMIN" || actor.role === "EXECUTIVE";
+}
+
+/** หน้าแรกหลัง login ของ role นี้ */
+export function homePath(actor: Actor): string {
+  return canViewDashboard(actor) ? "/dashboard" : "/reports";
+}
+
+/**
+ * ชื่อเมนูและหัวข้อหน้า /indicators ตาม role
+ *
+ * ผู้รับผิดชอบส่วนงานเห็นหน้านี้เพื่อดูคะแนนของหน่วยตัวเอง จึงใช้ชื่อที่บอกตรงๆ ว่าเป็นคะแนน
+ */
+export function indicatorsMenuLabel(actor: Actor): string {
+  return actor.role === "DEPT_USER" ? "คะแนนของส่วนงาน/หน่วยงาน" : "ส่วนงานและหน่วยงาน";
+}
+
 // ---------------------------------------------------------------------------
 // ตัวช่วยสำหรับหน้าเว็บ
 // ---------------------------------------------------------------------------
@@ -114,11 +139,18 @@ export const ROLE_LABEL: Record<Role, string> = {
   EXECUTIVE: "ผู้บริหาร",
 };
 
+/** ชื่อ role แบบสั้น ใช้บนป้ายเล็กๆ เช่นรายชื่อผู้ใช้ในโหมดจำลองสิทธิ์ */
+export const ROLE_BADGE: Record<Role, string> = {
+  ADMIN: "ผู้ดูแลระบบ",
+  DEPT_USER: "ผู้บันทึกข้อมูล",
+  EXECUTIVE: "ผู้บริหาร",
+};
+
 /** เมนูที่ role นี้เห็น - ใช้ซ่อนเมนูให้หน้าจอสะอาด ไม่ใช่มาตรการความปลอดภัย */
 export function visibleMenus(actor: Actor) {
   const isAdmin = actor.role === "ADMIN";
   return {
-    dashboard: true,
+    dashboard: canViewDashboard(actor),
     indicators: true,
     // ผู้บริหารต้องเห็นเมนูรายงานผลด้วย เพราะเป็นคนอ่านผลเป็นหลัก
     // หน้าเหล่านั้นจะแสดงแบบอ่านอย่างเดียวให้เอง ไม่มีปุ่มกรอกหรือแก้

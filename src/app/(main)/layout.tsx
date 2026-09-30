@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/session";
-import { ROLE_LABEL, visibleMenus } from "@/lib/permissions";
+import { ROLE_LABEL, homePath, indicatorsMenuLabel, visibleMenus } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
@@ -23,7 +23,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   const links = [
     { href: "/dashboard", label: "ภาพรวม", show: menus.dashboard },
-    { href: "/indicators", label: "ส่วนงานและหน่วยงาน", show: menus.indicators },
+    { href: "/indicators", label: indicatorsMenuLabel(user), show: menus.indicators },
     // รายงานผลกับแผนดำเนินงานรวมเป็นเมนูเดียว (หน้า /plans พาไปที่หน้านี้)
     {
       href: "/reports",
@@ -45,7 +45,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <MobileNav links={links} />
 
-          <Link href="/dashboard" className="flex min-w-0 flex-1 items-center gap-2.5">
+          <Link href={homePath(user)} className="flex min-w-0 flex-1 items-center gap-2.5">
             <Logo size={36} className="h-9 w-9 shrink-0" />
             <span className="min-w-0">
               <span className="block truncate font-semibold text-brand-800">ระบบรายงานผล MOU</span>

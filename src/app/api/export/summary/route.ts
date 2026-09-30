@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { getCurrentUser } from "@/lib/session";
+import { canViewDashboard } from "@/lib/permissions";
 import {
   getDashboardData,
   parseQuarterFilter,
@@ -32,6 +33,8 @@ function styleHeader(row: ExcelJS.Row) {
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (!user) return new Response("กรุณาเข้าสู่ระบบ", { status: 401 });
+  // ไฟล์นี้คือข้อมูลหน้าภาพรวม ผู้รับผิดชอบส่วนงานเข้าหน้านั้นไม่ได้ จึงดาวน์โหลดไม่ได้ด้วย
+  if (!canViewDashboard(user)) return new Response("ไม่มีสิทธิ์", { status: 403 });
 
   const url = new URL(request.url);
   const quarter = parseQuarterFilter(url.searchParams.get("q") ?? undefined);

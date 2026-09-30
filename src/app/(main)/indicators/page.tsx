@@ -1,7 +1,12 @@
 import Link from "next/link";
 import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/session";
-import { canManageIndicators, canManageMouScores, departmentScope } from "@/lib/permissions";
+import {
+  canManageIndicators,
+  canManageMouScores,
+  departmentScope,
+  indicatorsMenuLabel,
+} from "@/lib/permissions";
 import { db } from "@/lib/db";
 import {
   visibleDepartments,
@@ -21,7 +26,15 @@ import { IndicatorScoreTable } from "./indicator-score-table";
 import { MouScoreForm } from "./mou-score-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน | ระบบรายงานผล MOU" };
+// ชื่อแท็บต้องตรงกับชื่อเมนูของแต่ละ role จึงต้องสร้างตามผู้ใช้ที่ login อยู่
+export async function generateMetadata() {
+  const user = await requireUser();
+  const title =
+    user.role === "DEPT_USER"
+      ? indicatorsMenuLabel(user)
+      : "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน";
+  return { title: `${title} | ระบบรายงานผล MOU` };
+}
 
 export default async function IndicatorsPage({
   searchParams,
@@ -42,7 +55,11 @@ export default async function IndicatorsPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold sm:text-2xl">ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน</h1>
+          <h1 className="text-xl font-bold sm:text-2xl">
+            {user.role === "DEPT_USER"
+              ? indicatorsMenuLabel(user)
+              : "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน"}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
             {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"}
             {current ? ` · ${current.code} ${current.name}` : ` · ${matched.length} ส่วนงาน`}
