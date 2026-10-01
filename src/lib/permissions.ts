@@ -9,8 +9,10 @@ import type { Role } from "@prisma/client";
 //
 // กฎที่ยืนยันแล้ว:
 //   ADMIN      = ส่วนกลาง ทำได้ทุกอย่าง สร้าง/แก้ตัวชี้วัดให้ทุกส่วนงาน
-//   DEPT_USER  = เห็นเฉพาะคะแนนและรายงานผลการดำเนินงานของส่วนงานตัวเอง
-//                (ไม่เห็นหน้าภาพรวม) แก้ตัวชี้วัดไม่ได้ แต่กรอกผลได้
+//   DEPT_USER  = ผู้รายงาน เห็นเฉพาะคะแนนและรายงานผลการดำเนินงานของส่วนงานตัวเอง
+//                (ไม่เห็นหน้าภาพรวม) แก้ตัวชี้วัดไม่ได้ กรอกแผน/ผลและบันทึกร่างได้ แต่กดส่งไม่ได้
+//   DEPT_HEAD  = หัวหน้าส่วนงาน/หัวหน้าหน่วยงานที่ไม่สังกัดส่วนงาน เห็นและแก้ได้เหมือน DEPT_USER
+//                และเป็นผู้กดส่งแผน/ส่งผล รับแจ้งเตือนเมื่อส่วนกลางตีกลับ
 //   EXECUTIVE  = ดูได้ทุกส่วนงาน แต่แก้ไขอะไรไม่ได้เลย
 // ============================================================================
 
@@ -19,6 +21,11 @@ export type Actor = {
   role: Role;
   departmentId: string | null;
 };
+
+/** ผู้ใช้ของส่วนงาน (ผู้รายงาน หรือ หัวหน้าส่วนงาน) - เห็นและแก้ได้เฉพาะส่วนงานตัวเอง */
+export function isDepartmentRole(role: Role): boolean {
+  return role === "DEPT_USER" || role === "DEPT_HEAD";
+}
 
 // ---------------------------------------------------------------------------
 // สิทธิ์ต่อตัวชี้วัด
@@ -46,8 +53,24 @@ export function canManageMouScores(actor: Actor): boolean {
 /** กรอกผลและแนบไฟล์ของส่วนงานนี้ได้หรือไม่ */
 export function canSubmitReport(actor: Actor, departmentId: string): boolean {
   if (actor.role === "ADMIN") return true;
-  if (actor.role === "DEPT_USER") return actor.departmentId === departmentId;
+  if (isDepartmentRole(actor.role)) return actor.departmentId === departmentId;
   return false; // EXECUTIVE ดูได้อย่างเดียว
+}
+
+/**
+ * กด "ส่งแผน" และ "ส่งผล" ของส่วนงานนี้ได้หรือไม่
+ *
+ * ผู้รายงานกรอกและบันทึกร่างได้ แต่การส่งต้องเป็นหัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง)
+ * แยกจาก canSubmitReport ซึ่งตอบแค่ว่า "กรอกได้ไหม"
+ */
+export function canSendForDepartment(actor: Actor, departmentId: string): boolean {
+  if (actor.role === "ADMIN") return true;
+  return actor.role === "DEPT_HEAD" && actor.departmentId === departmentId;
+}
+
+/** ตีกลับแผน/ผลที่ส่งมาแล้วให้ส่วนงานแก้ - เฉพาะส่วนกลาง */
+export function canReturnSubmission(actor: Actor): boolean {
+  return actor.role === "ADMIN";
 }
 
 // ---------------------------------------------------------------------------
@@ -63,7 +86,7 @@ export function canSubmitReport(actor: Actor, departmentId: string): boolean {
  */
 export function canManagePlan(actor: Actor, departmentId: string): boolean {
   if (actor.role === "ADMIN") return true;
-  if (actor.role === "DEPT_USER") return actor.departmentId === departmentId;
+  if (isDepartmentRole(actor.role)) return actor.departmentId === departmentId;
   return false;
 }
 
@@ -125,7 +148,7 @@ export function homePath(actor: Actor): string {
  * ผู้รับผิดชอบส่วนงานเห็นหน้านี้เพื่อดูคะแนนของหน่วยตัวเอง จึงใช้ชื่อที่บอกตรงๆ ว่าเป็นคะแนน
  */
 export function indicatorsMenuLabel(actor: Actor): string {
-  return actor.role === "DEPT_USER" ? "คะแนนของส่วนงาน/หน่วยงาน" : "ส่วนงานและหน่วยงาน";
+  return isDepartmentRole(actor.role) ? "คะแนนของส่วนงาน/หน่วยงาน" : "ส่วนงานและหน่วยงาน";
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +158,8 @@ export function indicatorsMenuLabel(actor: Actor): string {
 /** ชื่อ role ภาษาไทย ใช้แสดงบนหน้าจอ */
 export const ROLE_LABEL: Record<Role, string> = {
   ADMIN: "ผู้ดูแลระบบ (ส่วนกลาง)",
-  DEPT_USER: "ผู้รับผิดชอบส่วนงาน",
+  DEPT_USER: "ผู้รับผิดชอบส่วนงาน (ผู้รายงาน)",
+  DEPT_HEAD: "หัวหน้าส่วนงาน/หัวหน้าหน่วยงานที่ไม่สังกัดส่วนงาน",
   EXECUTIVE: "ผู้บริหาร",
 };
 
@@ -143,6 +167,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 export const ROLE_BADGE: Record<Role, string> = {
   ADMIN: "ผู้ดูแลระบบ",
   DEPT_USER: "ผู้บันทึกข้อมูล",
+  DEPT_HEAD: "หัวหน้าส่วนงาน",
   EXECUTIVE: "ผู้บริหาร",
 };
 

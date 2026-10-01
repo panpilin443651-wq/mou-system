@@ -93,9 +93,9 @@ export async function POST(request: Request): Promise<NextResponse> {
           if (!canManagePlan(user, plan.indicator.departmentId)) {
             throw new Error("คุณไม่มีสิทธิ์แนบไฟล์ในแผนของส่วนงานนี้");
           }
-          // หลักฐานเป็นส่วนของการรายงานผล ต้องยืนยันแผนก่อน (ส่วนกลางข้ามได้)
+          // หลักฐานเป็นส่วนของการรายงานผล ต้องส่งแผนก่อน (ส่วนกลางข้ามได้)
           if (user.role !== "ADMIN" && !plan.indicator.planHeader?.confirmedAt) {
-            throw new Error("ต้องยืนยันแผนดำเนินงานก่อน จึงแนบหลักฐานได้");
+            throw new Error("ต้องส่งแผนการดำเนินงานก่อน จึงแนบหลักฐานได้");
           }
           if (plan._count.attachments >= MAX_PLAN_FILES_PER_ROW) {
             throw new Error(`แนบหลักฐานได้ไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ต่อขั้นตอน`);

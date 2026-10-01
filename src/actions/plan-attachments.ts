@@ -67,7 +67,7 @@ export async function recordPlanAttachmentAction(
 
   if (user.role !== "ADMIN" && !plan.indicator.planHeader?.confirmedAt) {
     await del(blobUrl).catch(() => {});
-    return { error: "ต้องยืนยันแผนดำเนินงานก่อน จึงแนบหลักฐานได้" };
+    return { error: "ต้องส่งแผนการดำเนินงานก่อน จึงแนบหลักฐานได้" };
   }
 
   // ตรวจซ้ำตอนบันทึก เพราะอัปโหลดสองไฟล์พร้อมกันจะผ่านด่านออกบัตรผ่านไปได้ทั้งคู่

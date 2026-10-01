@@ -3,7 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { canSubmitReport } from "@/lib/permissions";
+import {
+  canReturnSubmission,
+  canSendForDepartment,
+  canSubmitReport,
+} from "@/lib/permissions";
+import { notifyDepartmentHeads } from "@/lib/notifications";
 import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
@@ -66,7 +71,7 @@ export async function saveReportAction(
     return { error: `บันทึกไม่ได้ — ${window.message}` };
   }
 
-  // ขั้นตอนแรกต้องกรอกแผนดำเนินงานและกด "ยืนยันแผน" ก่อน จึงรายงานผลรายไตรมาสได้
+  // ขั้นตอนแรกต้องกรอกแผนดำเนินงานและกด "ส่งแผน" ก่อน จึงรายงานผลรายไตรมาสได้
   // ส่วนกลางข้ามได้ เพราะต้องแก้ข้อมูลให้ส่วนงานได้ทุกกรณี
   if (user.role !== "ADMIN") {
     const planHeader = await db.planHeader.findUnique({
@@ -74,7 +79,7 @@ export async function saveReportAction(
       select: { confirmedAt: true },
     });
     if (!planHeader?.confirmedAt) {
-      return { error: "กรุณากรอกแผนดำเนินงานและกดยืนยันแผนก่อน จึงจะรายงานผลรายไตรมาสได้" };
+      return { error: "กรุณากรอกแผนดำเนินงานและกดส่งแผนก่อน จึงจะรายงานผลรายไตรมาสได้" };
     }
   }
 
@@ -104,6 +109,21 @@ export async function saveReportAction(
   });
 
   const submitting = input.intent === "submit";
+  // ผู้รายงานบันทึกร่างทับผลที่หัวหน้าส่งแล้วไม่ได้ ไม่งั้นจะเท่ากับยกเลิกการส่งโดยไม่ตั้งใจ
+  if (
+    existing?.status === "SUBMITTED" &&
+    !canSendForDepartment(user, indicator.departmentId)
+  ) {
+    return {
+      error: "ผลไตรมาสนี้ส่งแล้ว ถ้าต้องแก้ให้หัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดดึงกลับมาแก้ไขก่อน",
+    };
+  }
+  // ส่งผล = หัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง) เท่านั้น ผู้รายงานบันทึกร่างได้อย่างเดียว
+  if (submitting && !canSendForDepartment(user, indicator.departmentId)) {
+    return {
+      error: "ผู้กดส่งผลการดำเนินงานต้องเป็นหัวหน้าส่วนงาน/หัวหน้าหน่วยงาน · บันทึกร่างไว้แล้วแจ้งหัวหน้าให้กดส่ง",
+    };
+  }
 
   const data = {
     actualValue: input.actualValue,
@@ -114,6 +134,8 @@ export async function saveReportAction(
     status: submitting ? ("SUBMITTED" as const) : ("DRAFT" as const),
     submittedAt: submitting ? new Date() : null,
     submittedById: submitting ? user.id : null,
+    // ส่งใหม่หลังถูกตีกลับ ล้างเหตุผลที่ตีกลับทิ้ง (บันทึกร่างยังเก็บไว้ให้เห็นว่าต้องแก้อะไร)
+    ...(submitting ? { returnedAt: null, returnNote: null } : {}),
   };
 
   // ช่องปัญหาอุปสรรค ปัจจัย และผลรายค่าเกณฑ์ ถูกเอาออกจากฟอร์มแล้ว (17 ก.ย. 2569)
@@ -196,8 +218,9 @@ export async function reopenReportAction(
   });
   if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
 
-  if (!canSubmitReport(user, indicator.departmentId)) {
-    return { error: "คุณไม่มีสิทธิ์แก้ไขผลการดำเนินงานของส่วนงานนี้" };
+  // ดึงกลับมาแก้ = ยกเลิกการส่ง จึงเป็นสิทธิ์ของผู้กดส่ง (หัวหน้าส่วนงาน/ส่วนกลาง)
+  if (!canSendForDepartment(user, indicator.departmentId)) {
+    return { error: "ผู้ดึงผลที่ส่งแล้วกลับมาแก้ต้องเป็นหัวหน้าส่วนงาน/หัวหน้าหน่วยงาน" };
   }
 
   const window = await getWindowStatus({
@@ -227,6 +250,70 @@ export async function reopenReportAction(
     entity: "QuarterlyReport",
     entityId: existing.id,
     detail: { indicatorCode: indicator.code, quarter },
+  });
+
+  revalidatePath("/reports");
+  revalidatePath(`/reports/${indicatorId}/${quarter}`);
+  revalidatePath("/dashboard");
+  return { error: null, success: true };
+}
+
+/**
+ * ส่วนกลางตีกลับผลการดำเนินงานที่ส่งมาแล้ว (ผิดพลาด) ให้ส่วนงานแก้
+ *
+ * รายงานกลับเป็นร่าง เก็บเหตุผลไว้แสดงบนหน้ารายงาน แล้วแจ้งเตือนหัวหน้าส่วนงาน
+ * ผู้รายงานแก้ไข แล้วหัวหน้าส่วนงานกดส่งผลใหม่ (ล้างเหตุผลใน saveReportAction)
+ */
+export async function returnReportAction(
+  indicatorId: string,
+  quarter: number,
+  _prev: FormState,
+  formData: FormData
+): Promise<FormState> {
+  const user = await requireUser();
+  if (!canReturnSubmission(user)) {
+    return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับผลการดำเนินงานได้" };
+  }
+
+  const returnNote = String(formData.get("returnNote") ?? "").trim().slice(0, 2000);
+  if (returnNote === "") return { error: "กรุณาระบุเหตุผลที่ตีกลับ" };
+
+  const indicator = await db.indicator.findUnique({
+    where: { id: indicatorId },
+    select: { id: true, code: true, name: true, departmentId: true },
+  });
+  if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
+
+  const existing = await db.quarterlyReport.findUnique({
+    where: { indicatorId_quarter: { indicatorId, quarter } },
+  });
+  if (!existing || existing.status !== "SUBMITTED") {
+    return { error: "ตีกลับได้เฉพาะผลที่ส่งแล้ว" };
+  }
+
+  await db.quarterlyReport.update({
+    where: { id: existing.id },
+    data: {
+      status: "DRAFT",
+      submittedAt: null,
+      submittedById: null,
+      returnedAt: new Date(),
+      returnNote,
+    },
+  });
+
+  await notifyDepartmentHeads(indicator.departmentId, {
+    title: `ส่วนกลางตีกลับผลการดำเนินงาน ข้อ ${indicator.code} ไตรมาส ${quarter}`,
+    body: `${indicator.name} · เหตุผล: ${returnNote}`,
+    link: `/reports/${indicatorId}/${quarter}`,
+  });
+
+  await writeAudit({
+    userId: user.id,
+    action: "REPORT_RETURN",
+    entity: "QuarterlyReport",
+    entityId: existing.id,
+    detail: { indicatorCode: indicator.code, quarter, returnNote },
   });
 
   revalidatePath("/reports");

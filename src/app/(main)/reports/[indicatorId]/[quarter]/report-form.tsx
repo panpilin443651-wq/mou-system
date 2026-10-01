@@ -32,12 +32,16 @@ type Criteria = { level: number; targetValue: number | null };
 function Buttons({
   isSubmitted,
   pending,
+  canSend,
 }: {
   isSubmitted: boolean;
   pending: boolean;
+  /** กดส่งผลได้ (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - ผู้รายงานเห็นแค่ปุ่มบันทึกร่าง */
+  canSend: boolean;
 }) {
   return (
     <div className="flex flex-wrap items-center gap-3">
+      {canSend && (
       <button
         type="submit"
         form={REPORT_FORM_ID}
@@ -52,6 +56,7 @@ function Buttons({
             ? "บันทึกและส่งใหม่"
             : "ส่งผลการดำเนินงาน"}
       </button>
+      )}
       <button
         type="submit"
         form={REPORT_FORM_ID}
@@ -62,6 +67,11 @@ function Buttons({
       >
         บันทึกร่างไว้ก่อน
       </button>
+      {!canSend && (
+        <span className="text-sm text-slate-600">
+          บันทึกร่างแล้วแจ้งหัวหน้าส่วนงาน/หัวหน้าหน่วยงานให้เข้ามาตรวจและกดส่งผลการดำเนินงาน
+        </span>
+      )}
     </div>
   );
 }
@@ -73,6 +83,7 @@ export function ReportForm({
   direction,
   criteria,
   isSubmitted,
+  canSend,
   initial,
   planSection,
 }: {
@@ -83,6 +94,7 @@ export function ReportForm({
   direction: ScoreDirection;
   criteria: Criteria[];
   isSubmitted: boolean;
+  canSend: boolean;
   /** แผนดำเนินงานของตัวชี้วัดนี้ วางระหว่างกล่องผลงานกับกล่องปรับคะแนน */
   planSection: React.ReactNode;
   initial: {
@@ -259,7 +271,7 @@ export function ReportForm({
         </p>
       )}
 
-      <Buttons isSubmitted={isSubmitted} pending={pending} />
+      <Buttons isSubmitted={isSubmitted} pending={pending} canSend={canSend} />
     </div>
   );
 }

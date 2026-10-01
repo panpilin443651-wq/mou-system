@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { canManageSystem } from "@/lib/permissions";
+import { canManageSystem, isDepartmentRole } from "@/lib/permissions";
 import { userSchema, initialPasswordSchema, firstError } from "@/lib/validation";
 import { writeAudit, diffFields } from "@/lib/audit";
 import { createSupabaseAdminClient } from "@/lib/supabase/server";
@@ -109,7 +109,7 @@ export async function createUserAction(
         name: input.name,
         role: input.role,
         // ADMIN และ EXECUTIVE ดูได้ทุกส่วนงานอยู่แล้ว จึงไม่ผูกสังกัด
-        departmentId: input.role === "DEPT_USER" ? input.departmentId : null,
+        departmentId: isDepartmentRole(input.role) ? input.departmentId : null,
         isActive: input.isActive,
       },
     });
@@ -170,7 +170,7 @@ export async function updateUserAction(
     return { error: "ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อย 1 บัญชีเสมอ" };
   }
 
-  const departmentId = input.role === "DEPT_USER" ? input.departmentId : null;
+  const departmentId = isDepartmentRole(input.role) ? input.departmentId : null;
 
   // เปลี่ยนอีเมล ต้องเปลี่ยนที่ Supabase ด้วย เพราะผู้ใช้ login ด้วยอีเมลที่อยู่ใน Supabase
   if (input.email !== existing.email) {

@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "รายงานผลการดำเนินงาน | ระบบรายงานผล MOU" };
 
 // เมนู "รายงานผลการดำเนินงาน" (ขั้นตอนที่ 2) แยกจากเมนู "แผนการดำเนินงาน" (/plans ขั้นตอนที่ 1)
-// ตัวชี้วัดที่ยังไม่ยืนยันแผน มีป้ายพาไปกรอกแผนก่อน
+// ตัวชี้วัดที่ยังไม่ส่งแผน มีป้ายพาไปกรอกแผนก่อน
 
 const PAGE_SIZE = 50;
 
@@ -120,7 +120,7 @@ async function DepartmentSummary({
       name: d.name,
       stats: [
         { label: "ตัวชี้วัด", value: total.toLocaleString("th-TH") },
-        { label: "ยืนยันแผนแล้ว", value: total === 0 ? "–" : `${confirmedCount}/${total}` },
+        { label: "ส่งแผนแล้ว", value: total === 0 ? "–" : `${confirmedCount}/${total}` },
         { label: "ส่งผลแล้ว", value: total === 0 ? "–" : `${done}/${total}` },
       ],
     };
@@ -229,13 +229,13 @@ async function ReportTable({
                         >
                           {ind.name}
                         </Link>
-                        {/* รายงานผลได้หลังยืนยันแผน จึงบอกไว้ตรงนี้และพาไปกรอกแผน */}
+                        {/* รายงานผลได้หลังส่งแผน จึงบอกไว้ตรงนี้และพาไปกรอกแผน */}
                         {!ind.planHeader?.confirmedAt && (
                           <Link
                             href={`/plans/${ind.id}`}
                             className="mt-0.5 inline-block rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800 hover:underline"
                           >
-                            ยังไม่ยืนยันแผน · ไปกรอกแผน
+                            ยังไม่ส่งแผน · ไปกรอกแผน
                           </Link>
                         )}
                       </td>
@@ -282,7 +282,7 @@ async function ReportTable({
           </div>
 
           <p className="text-xs text-slate-500">
-            ต้องกรอกแผนและกดยืนยันแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
+            ต้องกรอกแผนและกดส่งแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
             ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>

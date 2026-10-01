@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { ROLE_LABEL, canViewDashboard, homePath } from "@/lib/permissions";
+import { ROLE_LABEL, canViewDashboard, homePath, isDepartmentRole } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { getDashboardData } from "@/lib/dashboard";
 import {
@@ -59,7 +59,7 @@ export default async function DashboardPage() {
   // ส่วนกลางและผู้บริหารเห็นทุกแถวเพื่อเปรียบเทียบกัน
   const visibleScores = !scores
     ? []
-    : user.role === "DEPT_USER"
+    : isDepartmentRole(user.role)
       ? scores.departments.filter((d) => d.code === myCode)
       : scores.departments;
 
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
           codes: activeDepartments.filter((d) => d.commandLineId === l.id).map((d) => d.code),
         })),
         activeDepartments.filter((d) => d.commandLineId === null).map((d) => d.code),
-        user.role === "DEPT_USER" ? new Set(myCode ? [myCode] : []) : null
+        isDepartmentRole(user.role) ? new Set(myCode ? [myCode] : []) : null
       );
 
   // คะแนนเฉลี่ยบนการ์ด ใช้คะแนนปีจากไฟล์สรุปของส่วนกลาง ชุดเดียวกับกราฟและตารางข้างล่าง
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
       label: "ส่วนงาน",
       value: data.departments.length.toLocaleString("th-TH"),
       hint:
-        user.role === "DEPT_USER"
+        isDepartmentRole(user.role)
           ? "ส่วนงานของคุณ"
           : `${data.indicatorCount.toLocaleString("th-TH")} ตัวชี้วัด`,
     },
@@ -96,12 +96,12 @@ export default async function DashboardPage() {
       hint: `${data.submittedCount.toLocaleString("th-TH")} จาก ${data.indicatorCount.toLocaleString("th-TH")} ตัวชี้วัด`,
     },
     {
-      label: user.role === "DEPT_USER" ? "คะแนนปี" : "คะแนนเฉลี่ย",
+      label: isDepartmentRole(user.role) ? "คะแนนปี" : "คะแนนเฉลี่ย",
       value: averageScore === null ? "–" : averageScore.toFixed(3),
       hint: !scores
         ? `ยังไม่มีคะแนนของปีบัญชี ${data.fiscalYear?.year ?? "-"}`
         : `คะแนนปี เต็ม 5 · สะสมถึงไตรมาส ${scores.latestQuarter}${
-            user.role === "DEPT_USER" ? "" : ` · ${visibleScores.length} ส่วนงาน`
+            isDepartmentRole(user.role) ? "" : ` · ${visibleScores.length} ส่วนงาน`
           }`,
     },
     {

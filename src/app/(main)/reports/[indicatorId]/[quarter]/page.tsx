@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import { canSubmitReport, canViewDepartment } from "@/lib/permissions";
+import {
+  canReturnSubmission,
+  canSendForDepartment,
+  canSubmitReport,
+  canViewDepartment,
+} from "@/lib/permissions";
 import { db } from "@/lib/db";
-import { saveReportAction, reopenReportAction } from "@/actions/reports";
+import {
+  saveReportAction,
+  reopenReportAction,
+  returnReportAction,
+} from "@/actions/reports";
 import { QUARTERS, QUARTER_MONTHS } from "@/lib/plan";
 import { PlanTable } from "../../../plans/[indicatorId]/plan-table";
 import { planInclude, planTableProps } from "../../../plans/[indicatorId]/plan-data";
@@ -17,6 +26,7 @@ import { formatThaiDateTime } from "@/lib/datetime";
 import { getQuarterStatuses } from "@/lib/submission-window";
 import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
+import { ReturnButton } from "./return-button";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผล MOU" };
@@ -56,8 +66,10 @@ export default async function ReportPage({
   const window = statuses[quarter - 1];
   const isAdmin = user.role === "ADMIN";
   const hasPermission = canSubmitReport(user, indicator.departmentId);
+  // ผู้รายงานกรอกและบันทึกร่างได้ แต่กดส่งผลต้องเป็นหัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง)
+  const canSend = canSendForDepartment(user, indicator.departmentId);
 
-  // ขั้นตอนที่ 1: กรอกแผนดำเนินงานและกด "ยืนยันแผน" ก่อน จึงรายงานผลรายไตรมาสได้
+  // ขั้นตอนที่ 1: กรอกแผนดำเนินงานและกด "ส่งแผน" ก่อน จึงรายงานผลรายไตรมาสได้
   // ยืนยันแล้วโครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้และปลดล็อกได้)
   const confirmedAt = indicator.planHeader?.confirmedAt ?? null;
   const planReady = confirmedAt !== null;
@@ -86,14 +98,14 @@ export default async function ReportPage({
       <h2 className="text-lg font-semibold">ผลการดำเนินงานตามแผน</h2>
       {needsPlan ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          ยังไม่ได้ยืนยันแผนการดำเนินงาน ·{" "}
+          ยังไม่ได้ส่งแผนการดำเนินงาน ·{" "}
           <Link
             href={`/plans/${indicator.id}`}
             className="font-medium underline underline-offset-2"
           >
             ไปกรอกแผนการดำเนินงาน
           </Link>{" "}
-          แล้วกดยืนยันแผน จึงจะรายงานผลได้
+          แล้วกดส่งแผน จึงจะรายงานผลได้
         </p>
       ) : (
         <PlanTable
@@ -232,14 +244,14 @@ export default async function ReportPage({
             }`}
           >
             <p className="font-medium">
-              ขั้นตอนที่ 1 · กรอกแผนดำเนินงานและกดยืนยันแผน
+              ขั้นตอนที่ 1 · กรอกแผนดำเนินงาน และหัวหน้าส่วนงานกดส่งแผน
             </p>
             <p className="mt-0.5">
               {planReady ? (
-                <span className="text-emerald-800">✓ ยืนยันแผนแล้ว (แผนถูกล็อก)</span>
+                <span className="text-emerald-800">✓ ส่งแผนแล้ว (แผนถูกล็อก)</span>
               ) : (
                 <>
-                  ยังไม่ได้ยืนยันแผน ·{" "}
+                  ยังไม่ได้ส่งแผน ·{" "}
                   <Link
                     href={`/plans/${indicator.id}`}
                     className="font-medium underline underline-offset-2"
@@ -260,7 +272,7 @@ export default async function ReportPage({
             <p className="font-medium">ขั้นตอนที่ 2 · รายงานผลไตรมาส {quarter}</p>
             <p className="mt-0.5">
               {!planReady
-                ? "ทำได้หลังยืนยันแผนแล้ว"
+                ? "ทำได้หลังส่งแผนแล้ว"
                 : isSubmitted
                   ? "✓ ส่งผลแล้ว"
                   : window.canWrite
@@ -398,11 +410,34 @@ export default async function ReportPage({
               </span>
             </p>
           </div>
-          {canEdit && (
-            <ReopenButton
-              action={reopenReportAction.bind(null, indicator.id, quarter)}
-            />
-          )}
+          <div className="flex flex-wrap gap-2">
+            {canEdit && canSend && (
+              <ReopenButton
+                action={reopenReportAction.bind(null, indicator.id, quarter)}
+              />
+            )}
+            {canReturnSubmission(user) && (
+              <ReturnButton
+                action={returnReportAction.bind(null, indicator.id, quarter)}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ผลถูกตีกลับ - แสดงจนกว่าหัวหน้าส่วนงานจะกดส่งผลใหม่ */}
+      {report && !isSubmitted && report.returnNote && report.returnedAt && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+        >
+          <p className="font-medium">
+            ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {formatThaiDateTime(report.returnedAt)}
+          </p>
+          <p className="mt-0.5 whitespace-pre-line">เหตุผล: {report.returnNote}</p>
+          <p className="mt-1">
+            ผู้รายงานแก้ไขแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งผลการดำเนินงานใหม่
+          </p>
         </div>
       )}
 
@@ -423,6 +458,7 @@ export default async function ReportPage({
               targetValue: c.targetValue,
             }))}
             isSubmitted={isSubmitted}
+            canSend={canSend}
             planSection={planSection}
             initial={{
               actualValue:
@@ -440,7 +476,7 @@ export default async function ReportPage({
             <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
               <p className="text-sm text-slate-600">
                 {needsPlan
-                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนการดำเนินงานและกดยืนยันแผนก่อน"
+                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนการดำเนินงานและกดส่งแผนก่อน"
                   : hasPermission
                   ? `ตอนนี้แก้ไขไม่ได้ — ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
                   : `คุณเปิดดูรายงานนี้ได้อย่างเดียว การกรอกผลทำได้โดยผู้รับผิดชอบส่วนงาน ${indicator.department.code} และส่วนกลาง`}

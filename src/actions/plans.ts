@@ -5,7 +5,12 @@ import { del } from "@vercel/blob";
 import type { PlanSection, Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
-import { canManagePlan } from "@/lib/permissions";
+import {
+  canManagePlan,
+  canReturnSubmission,
+  canSendForDepartment,
+} from "@/lib/permissions";
+import { notifyDepartmentHeads } from "@/lib/notifications";
 import {
   planHeaderSchema,
   planLevelReportText,
@@ -36,17 +41,17 @@ import { writeAudit } from "@/lib/audit";
 //
 // ฟอร์มนี้ใช้สองหน้า แยกกันด้วยช่อง mode:
 //   plan    หน้าแผนดำเนินงาน (/plans/[id]) ส่วนหัว + โครงแผน + แผนรายเดือน
-//   report  หน้ารายงานผล ผลรายเดือน สาเหตุ แนวทางแก้ไข และรายงานผลรายระดับ (ต้องยืนยันแผนก่อน)
+//   report  หน้ารายงานผล ผลรายเดือน สาเหตุ แนวทางแก้ไข และรายงานผลรายระดับ (ต้องส่งแผนก่อน)
 //
 // ปุ่มต่าง ๆ แยกกันด้วยช่อง intent:
 //   save               บันทึกทั้งตาราง (หน้าแผนเรียกว่า "บันทึกร่างแผน")
 //   add:TARGET         บันทึกทั้งตาราง แล้วเพิ่มบรรทัดว่างต่อท้ายตารางเป้าหมาย
 //   add:STEP:<ระดับ>   บันทึกทั้งตาราง แล้วเพิ่มขั้นตอนต่อท้ายค่าเกณฑ์ระดับนั้น
 //   delete:<rowId>     บันทึกทั้งตาราง แล้วลบบรรทัดนั้น
-//   confirm            บันทึกทั้งตาราง แล้ว "ยืนยันแผน" (ล็อกโครงแผน เปิดให้รายงานผลได้)
-//   unlock             บันทึกทั้งตาราง แล้วปลดล็อกแผน (เฉพาะส่วนกลาง)
+//   confirm            บันทึกทั้งตาราง แล้ว "ส่งแผน" (ล็อกโครงแผน เปิดให้รายงานผลได้) - หัวหน้าส่วนงาน/ส่วนกลาง
+//   unlock             บันทึกทั้งตาราง แล้ว "ตีกลับแผน" พร้อมเหตุผล (returnNote) และแจ้งเตือนหัวหน้าส่วนงาน - ส่วนกลาง
 //
-// ยืนยันแผนแล้ว ผู้รับผิดชอบส่วนงานแก้ "โครงแผน" ไม่ได้อีก: แผนรายเดือน เป้าหมายตัวชี้วัด
+// ส่งแผนแล้ว ผู้รับผิดชอบส่วนงานแก้ "โครงแผน" ไม่ได้อีก: แผนรายเดือน เป้าหมายตัวชี้วัด
 // ค่าเป้าหมาย หน่วยนับ ขั้นตอนการดำเนินงาน และเพิ่ม/ลบบรรทัดไม่ได้
 // ยังกรอกผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานผลรายระดับได้ตามปกติ
 //
@@ -106,6 +111,7 @@ export async function savePlanAction(
       departmentId: true,
       fiscalYearId: true,
       code: true,
+      name: true,
       criteria: { select: { level: true }, orderBy: { level: "asc" } },
     },
   });
@@ -122,13 +128,24 @@ export async function savePlanAction(
     where: { indicatorId },
     select: { confirmedAt: true },
   });
-  // ยืนยันแผนแล้ว โครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้ได้เสมอ)
+  // ส่งแผนแล้ว โครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้ได้เสมอ)
   const structureLocked = planHeader?.confirmedAt != null && !isAdmin;
   if (structureLocked && (intent.startsWith("add:") || intent.startsWith("delete:"))) {
-    return { error: "ยืนยันแผนแล้ว เพิ่มหรือลบบรรทัดไม่ได้ ติดต่อส่วนกลางหากต้องแก้แผน" };
+    return { error: "ส่งแผนแล้ว เพิ่มหรือลบบรรทัดไม่ได้ ติดต่อส่วนกลางหากต้องแก้แผน" };
   }
-  if (intent === "unlock" && !isAdmin) {
-    return { error: "เฉพาะส่วนกลางเท่านั้นที่ปลดล็อกแผนได้" };
+  // ส่งแผน = หัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง) เท่านั้น ผู้รายงานบันทึกร่างได้อย่างเดียว
+  if (intent === "confirm" && !canSendForDepartment(user, indicator.departmentId)) {
+    return {
+      error: "ผู้กดส่งแผนการดำเนินงานต้องเป็นหัวหน้าส่วนงาน/หัวหน้าหน่วยงาน · บันทึกร่างแผนไว้แล้วแจ้งหัวหน้าให้กดส่ง",
+    };
+  }
+  // ตีกลับแผน (intent "unlock") = ส่วนกลางเท่านั้น และต้องบอกเหตุผล
+  const returnNote = String(formData.get("returnNote") ?? "").trim().slice(0, 2000);
+  if (intent === "unlock") {
+    if (!canReturnSubmission(user)) {
+      return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับแผนได้" };
+    }
+    if (returnNote === "") return { error: "กรุณาระบุเหตุผลที่ตีกลับแผน" };
   }
 
   // หน้าแผน (mode=plan) ส่งเฉพาะส่วนหัวและโครงแผน
@@ -136,10 +153,10 @@ export async function savePlanAction(
   // ช่องที่ไม่ถูกส่งมาคงค่าเดิมไว้ ไม่ถูกล้างเป็นค่าว่าง
   const isReportMode = formData.get("mode") === "report";
   const confirmed = planHeader?.confirmedAt != null;
-  // ต้องยืนยันแผนก่อน จึงรายงานผลได้ (ส่วนกลางข้ามได้)
+  // ต้องส่งแผนก่อน จึงรายงานผลได้ (ส่วนกลางข้ามได้)
   const resultsLocked = !confirmed && !isAdmin;
   if (isReportMode && resultsLocked) {
-    return { error: "กรุณากรอกแผนดำเนินงานและกดยืนยันแผนก่อน จึงจะรายงานผลได้" };
+    return { error: "กรุณากรอกแผนดำเนินงานและกดส่งแผนก่อน จึงจะรายงานผลได้" };
   }
 
   // ---- ส่วนหัวของแบบฟอร์ม (เฉพาะหน้าแผน) ----
@@ -296,7 +313,7 @@ export async function savePlanAction(
     ? "บันทึกผลการดำเนินงานเรียบร้อยแล้ว"
     : confirmed
       ? "บันทึกแผนเรียบร้อยแล้ว"
-      : "บันทึกร่างแผนเรียบร้อยแล้ว ยังแก้ไขต่อได้ · กดยืนยันแผนเมื่อกรอกครบ";
+      : "บันทึกร่างแผนเรียบร้อยแล้ว ยังแก้ไขต่อได้ · กดส่งแผนเมื่อกรอกครบ";
 
   // ---- เพิ่มบรรทัดใหม่ ----
   if (intent.startsWith("add:")) {
@@ -375,7 +392,7 @@ export async function savePlanAction(
     message = "ลบบรรทัดแล้ว";
   }
 
-  // ---- ยืนยันแผน ----
+  // ---- ส่งแผน ----
   // ตรวจจากข้อมูลที่เพิ่งบันทึก (อ่านใหม่จากฐานข้อมูล) ไม่ใช่จากฟอร์ม
   if (intent === "confirm") {
     const saved = await db.actionPlan.findMany({
@@ -388,40 +405,55 @@ export async function savePlanAction(
     if (!complete) {
       return {
         error:
-          "ยังยืนยันแผนไม่ได้ ต้องมีอย่างน้อย 1 รายการที่ตั้งชื่อและใส่ตัวเลขแผนอย่างน้อย 1 เดือน (บันทึกสิ่งที่กรอกไว้แล้ว)",
+          "ยังส่งแผนไม่ได้ ต้องมีอย่างน้อย 1 รายการที่ตั้งชื่อและใส่ตัวเลขแผนอย่างน้อย 1 เดือน (บันทึกสิ่งที่กรอกไว้แล้ว)",
       };
     }
     // ยืนยันแล้วลบบรรทัดไม่ได้ บรรทัดที่ไม่มีชื่อจะค้างอยู่ในแผนตลอดปี จึงให้จัดการก่อน
     if (saved.some((r) => r.title.trim() === "")) {
       return {
         error:
-          "ยังยืนยันแผนไม่ได้ มีบรรทัดที่ยังไม่ได้ตั้งชื่อรายการ ใส่ชื่อหรือลบบรรทัดนั้นก่อน (บันทึกสิ่งที่กรอกไว้แล้ว)",
+          "ยังส่งแผนไม่ได้ มีบรรทัดที่ยังไม่ได้ตั้งชื่อรายการ ใส่ชื่อหรือลบบรรทัดนั้นก่อน (บันทึกสิ่งที่กรอกไว้แล้ว)",
       };
     }
 
     await db.planHeader.update({
       where: { indicatorId },
-      data: { confirmedAt: new Date(), confirmedById: user.id },
+      // ส่งใหม่หลังถูกตีกลับ ล้างเหตุผลที่ตีกลับทิ้ง
+      data: { confirmedAt: new Date(), confirmedById: user.id, returnedAt: null, returnNote: null },
     });
-    message = "ยืนยันแผนเรียบร้อยแล้ว แผนถูกล็อก และรายงานผลรายไตรมาสได้แล้ว";
+    message = "ส่งแผนการดำเนินงานเรียบร้อยแล้ว แผนถูกล็อก และรายงานผลการดำเนินงานได้แล้ว";
   }
 
-  // ---- ปลดล็อกแผน (ส่วนกลาง) ----
+  // ---- ตีกลับแผน (ส่วนกลาง) ----
+  // ปลดล็อกให้ส่วนงานแก้ แล้วแจ้งเตือนหัวหน้าส่วนงาน ซึ่งต้องกดส่งแผนใหม่หลังแก้เสร็จ
   if (intent === "unlock") {
     await db.planHeader.update({
       where: { indicatorId },
-      data: { confirmedAt: null, confirmedById: null },
+      data: { confirmedAt: null, confirmedById: null, returnedAt: new Date(), returnNote },
     });
-    message = "ปลดล็อกแผนแล้ว ผู้รับผิดชอบส่วนงานแก้แผนได้ และต้องกดยืนยันแผนใหม่ก่อนรายงานผล";
+    const notified = await notifyDepartmentHeads(indicator.departmentId, {
+      title: `ส่วนกลางตีกลับแผนการดำเนินงาน ข้อ ${indicator.code}`,
+      body: `${indicator.name} · เหตุผล: ${returnNote}`,
+      link: `/plans/${indicatorId}`,
+    });
+    message =
+      notified > 0
+        ? "ตีกลับแผนแล้ว แจ้งเตือนหัวหน้าส่วนงานแล้ว · ส่วนงานแก้แผนได้ และหัวหน้าต้องกดส่งแผนใหม่"
+        : "ตีกลับแผนแล้ว แต่ส่วนงานนี้ยังไม่มีบัญชีหัวหน้าส่วนงาน จึงไม่มีผู้รับแจ้งเตือน";
   }
 
   await writeAudit({
     userId: user.id,
     action:
-      intent === "confirm" ? "PLAN_CONFIRM" : intent === "unlock" ? "PLAN_UNLOCK" : "PLAN_SAVE",
+      intent === "confirm" ? "PLAN_CONFIRM" : intent === "unlock" ? "PLAN_RETURN" : "PLAN_SAVE",
     entity: "ActionPlan",
     entityId: indicatorId,
-    detail: { indicatorCode: indicator.code, intent, rows: updates.length },
+    detail: {
+      indicatorCode: indicator.code,
+      intent,
+      rows: updates.length,
+      ...(intent === "unlock" ? { returnNote } : {}),
+    },
   });
 
   revalidatePath("/reports");

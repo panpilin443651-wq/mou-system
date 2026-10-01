@@ -6,6 +6,7 @@ import {
   canManageMouScores,
   departmentScope,
   indicatorsMenuLabel,
+  isDepartmentRole,
 } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import {
@@ -30,7 +31,7 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata() {
   const user = await requireUser();
   const title =
-    user.role === "DEPT_USER"
+    isDepartmentRole(user.role)
       ? indicatorsMenuLabel(user)
       : "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน";
   return { title: `${title} | ระบบรายงานผล MOU` };
@@ -56,7 +57,7 @@ export default async function IndicatorsPage({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold sm:text-2xl">
-            {user.role === "DEPT_USER"
+            {isDepartmentRole(user.role)
               ? indicatorsMenuLabel(user)
               : "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน"}
           </h1>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { PlanSection } from "@prisma/client";
 import type { FormState } from "@/actions/plans";
@@ -55,7 +55,7 @@ import {
 // แนบได้ทุกบรรทัดที่เห็นบนจอ เพราะบรรทัดถูกสร้างในฐานข้อมูลตั้งแต่กดเพิ่มแล้ว
 //
 // ตารางเดียวกันใช้สองหน้า (mode):
-//   plan    หน้าแผนดำเนินงาน: ส่วนหัว + รายการ + แผนรายเดือน · บันทึกร่างแผน / ยืนยันแผน
+//   plan    หน้าแผนดำเนินงาน: ส่วนหัว + รายการ + แผนรายเดือน · บันทึกร่างแผน / ส่งแผน
 //   report  หน้ารายงานผล: แผนแสดงอย่างเดียว กรอกผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน รายงานรายระดับ
 // ช่องของอีกหน้าไม่มี name จึงไม่ถูกส่งไป เซิร์ฟเวอร์คงค่าเดิมไว้ให้
 // ============================================================================
@@ -128,7 +128,7 @@ function SaveButton({ label = "บันทึกแผน" }: { label?: string 
   );
 }
 
-/** ยืนยันแผน - บันทึกทั้งตารางก่อน แล้วล็อกโครงแผน */
+/** ส่งแผนการดำเนินงาน (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - บันทึกทั้งตารางก่อน แล้วล็อกโครงแผน */
 function ConfirmButton() {
   const { pending } = useFormStatus();
   return (
@@ -141,7 +141,7 @@ function ConfirmButton() {
         // ยืนยันแล้วแก้โครงแผนเองไม่ได้อีก ต้องให้ส่วนกลางปลดล็อก จึงถามย้ำก่อน
         if (
           !window.confirm(
-            "ยืนยันแผนดำเนินงาน?\n\nหลังยืนยันจะแก้แผนรายเดือน เป้าหมายตัวชี้วัด ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก (ต้องให้ส่วนกลางปลดล็อก)",
+            "ส่งแผนการดำเนินงาน?\n\nหลังส่งจะแก้แผนรายเดือน เป้าหมายตัวชี้วัด ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก (ต้องให้ส่วนกลางตีกลับ)",
           )
         ) {
           e.preventDefault();
@@ -149,24 +149,41 @@ function ConfirmButton() {
       }}
       className="min-h-11 rounded-lg border border-brand-600 bg-surface px-5 text-sm font-medium text-brand-ink transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60"
     >
-      ยืนยันแผน
+      ส่งแผนการดำเนินงาน
     </button>
   );
 }
 
-/** ปลดล็อกแผน (เฉพาะส่วนกลาง) */
+/**
+ * ตีกลับแผน (เฉพาะส่วนกลาง) - ถามเหตุผลก่อน แล้วส่งไปกับฟอร์มในช่องซ่อน returnNote
+ * เซิร์ฟเวอร์ปลดล็อกแผน เก็บเหตุผล และแจ้งเตือนหัวหน้าส่วนงาน
+ */
 function UnlockButton() {
   const { pending } = useFormStatus();
+  const noteRef = useRef<HTMLInputElement>(null);
   return (
-    <button
-      type="submit"
-      name="intent"
-      value="unlock"
-      disabled={pending}
-      className="min-h-11 rounded-lg border border-slate-300 px-5 text-sm font-medium transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-    >
-      ปลดล็อกแผน
-    </button>
+    <>
+      <input ref={noteRef} type="hidden" name="returnNote" />
+      <button
+        type="submit"
+        name="intent"
+        value="unlock"
+        disabled={pending}
+        onClick={(e) => {
+          const note = window.prompt(
+            "ตีกลับแผนการดำเนินงาน\n\nระบุเหตุผล/สิ่งที่ต้องแก้ (หัวหน้าส่วนงานจะได้รับแจ้งเตือน):",
+          );
+          if (!note || note.trim() === "") {
+            e.preventDefault();
+            return;
+          }
+          if (noteRef.current) noteRef.current.value = note.trim();
+        }}
+        className="min-h-11 rounded-lg border border-red-300 px-5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        ตีกลับแผน
+      </button>
+    </>
   );
 }
 
@@ -185,6 +202,8 @@ export function PlanTable({
   confirmedLabel,
   structureLocked,
   canUnlock,
+  canSend,
+  returned,
 }: {
   /** plan = หน้าแผนดำเนินงาน · report = หน้ารายงานผล */
   mode: PlanTableMode;
@@ -201,15 +220,19 @@ export function PlanTable({
   levelReports: Record<number, string>;
   /** เดือนที่ล็อกไว้ (ไตรมาสที่ผ่านไปแล้ว) ช่อง 0 = ต.ค. */
   locks: MonthLocks;
-  /** ยืนยันแผนเมื่อไร (ข้อความแสดงผล) - null = ยังไม่ยืนยัน */
+  /** ส่งแผนเมื่อไร (ข้อความแสดงผล) - null = ยังไม่ยืนยัน */
   confirmedLabel: string | null;
-  /** ยืนยันแผนแล้ว และผู้ใช้คนนี้แก้โครงแผนไม่ได้ (ผู้รับผิดชอบส่วนงาน) */
+  /** ส่งแผนแล้ว และผู้ใช้คนนี้แก้โครงแผนไม่ได้ (ผู้รับผิดชอบส่วนงาน) */
   structureLocked: boolean;
   /** แสดงปุ่มปลดล็อกแผน (ส่วนกลาง) */
   canUnlock: boolean;
+  /** กดส่งแผนได้ (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - ผู้รายงานบันทึกร่างได้อย่างเดียว */
+  canSend: boolean;
+  /** ส่วนกลางตีกลับแผนล่าสุด (แสดงจนกว่าจะส่งแผนใหม่) - null = ไม่ได้ถูกตีกลับ */
+  returned: { label: string; note: string } | null;
 }) {
   // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
-  // ยืนยันแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
+  // ส่งแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
   const isPlan = mode === "plan";
   const editStructure = isPlan && canEdit && !structureLocked;
   // หน้าแผนไม่กรอกผล หน้ารายงานผลไม่แก้แผน
@@ -301,20 +324,42 @@ export function PlanTable({
         </p>
       )}
 
-      {/* ---- สถานะการยืนยันแผน (หน้าแผน) ---- */}
+      {/* ---- แผนถูกตีกลับ (หน้าแผน) ---- */}
+      {isPlan && returned && !confirmedLabel && (
+        <div
+          role="alert"
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+        >
+          <p className="font-medium">ส่วนกลางตีกลับแผนการดำเนินงาน เมื่อ {returned.label}</p>
+          <p className="mt-0.5 whitespace-pre-line">เหตุผล: {returned.note}</p>
+          <p className="mt-1">
+            ผู้รายงานแก้ไขแผนแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผนการดำเนินงานใหม่
+          </p>
+        </div>
+      )}
+
+      {/* ---- สถานะการส่งแผน (หน้าแผน) ---- */}
       {!isPlan ? null : confirmedLabel ? (
         <p className="rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-700 shadow-sm">
-          <span className="font-medium text-emerald-800">✓ ยืนยันแผนแล้ว</span> เมื่อ {confirmedLabel} ·{" "}
+          <span className="font-medium text-emerald-800">✓ ส่งแผนแล้ว</span> เมื่อ {confirmedLabel} ·{" "}
           {structureLocked
             ? "แผนรายเดือน เป้าหมายตัวชี้วัด ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานถูกล็อก ติดต่อส่วนกลางหากต้องแก้แผน"
-            : "ผู้รับผิดชอบส่วนงานแก้โครงแผนไม่ได้แล้ว ส่วนกลางยังแก้ได้ หรือกดปลดล็อกแผนให้ส่วนงานแก้เอง"}
+            : "ส่วนงานแก้โครงแผนไม่ได้แล้ว ส่วนกลางยังแก้ได้ หรือกดตีกลับแผนให้ส่วนงานแก้เอง"}
         </p>
       ) : (
         canEdit && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            กรอกไม่เสร็จกด <strong>บันทึกร่างแผน</strong> ไว้ก่อนแล้วกลับมาแก้ต่อได้ ·
-            กรอกครบแล้วกด <strong>ยืนยันแผน</strong> ด้านล่าง จึงจะรายงานผลการดำเนินงานได้ ·
-            หลังยืนยันจะแก้แผนรายเดือน เป้าหมาย ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก
+            กรอกไม่เสร็จกด <strong>บันทึกร่างแผน</strong> ไว้ก่อนแล้วกลับมาแก้ต่อได้ ·{" "}
+            {canSend ? (
+              <>
+                กรอกครบแล้วกด <strong>ส่งแผนการดำเนินงาน</strong> ด้านล่าง จึงจะรายงานผลการดำเนินงานได้ ·
+                หลังส่งจะแก้แผนรายเดือน เป้าหมาย ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก
+              </>
+            ) : (
+              <>
+                กรอกครบแล้วแจ้ง <strong>หัวหน้าส่วนงาน/หัวหน้าหน่วยงาน</strong> ให้เข้ามาตรวจและกดส่งแผนการดำเนินงาน
+              </>
+            )}
           </p>
         )
       )}
@@ -431,7 +476,7 @@ export function PlanTable({
           {isPlan ? (
             <>
               <SaveButton label={confirmedLabel ? "บันทึก" : "บันทึกร่างแผน"} />
-              {!confirmedLabel && <ConfirmButton />}
+              {!confirmedLabel && canSend && <ConfirmButton />}
               {canUnlock && <UnlockButton />}
             </>
           ) : (
