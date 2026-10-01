@@ -39,7 +39,13 @@ export function PlanEvidenceUpload({ actionPlanId }: { actionPlanId: string }) {
       }
       startTransition(() => router.refresh());
     } catch (e) {
-      setError(e instanceof Error ? e.message : "อัปโหลดไม่สำเร็จ กรุณาลองใหม่");
+      const message = e instanceof Error ? e.message : "";
+      // ไลบรารี Blob ซ่อนเหตุผลจริงจากเซิร์ฟเวอร์ไว้หลังข้อความนี้ (ดูได้จาก log ของเซิร์ฟเวอร์)
+      setError(
+        /retrieve the client token/i.test(message)
+          ? "ขออนุญาตอัปโหลดไม่สำเร็จ — ระบบเก็บไฟล์อาจยังไม่ได้ตั้งค่า หรือบรรทัดนี้ยังไม่ได้บันทึก/ไม่มีสิทธิ์แนบ ลองกดบันทึกแผนแล้วแนบใหม่ ถ้ายังไม่ได้ติดต่อส่วนกลาง"
+          : message || "อัปโหลดไม่สำเร็จ กรุณาลองใหม่",
+      );
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";

@@ -33,6 +33,18 @@ type ClientPayload =
 export async function POST(request: Request): Promise<NextResponse> {
   const body = (await request.json()) as HandleUploadBody;
 
+  // ไม่มี token แล้ว handleUpload จะพังด้วยข้อความภาษาอังกฤษที่ไม่บอกวิธีแก้
+  // ฝั่งเบราว์เซอร์ก็เห็นแค่ "Failed to retrieve the client token" จึงบอกชื่อค่าที่ขาดไว้ใน log
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error(
+      "[upload] ยังไม่ได้ตั้งค่า BLOB_READ_WRITE_TOKEN (Vercel → Storage → Blob) จึงออกบัตรผ่านอัปโหลดไม่ได้",
+    );
+    return NextResponse.json(
+      { error: "ระบบเก็บไฟล์ยังไม่ได้ตั้งค่า BLOB_READ_WRITE_TOKEN" },
+      { status: 500 },
+    );
+  }
+
   try {
     const result = await handleUpload({
       body,
@@ -121,6 +133,8 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json(result);
   } catch (error) {
     const message = error instanceof Error ? error.message : "อัปโหลดไม่สำเร็จ";
+    // เบราว์เซอร์อ่านข้อความนี้ไม่ได้ (ไลบรารี Blob แทนด้วยข้อความกลางๆ) ต้องดูสาเหตุจริงจาก log
+    console.error("[upload] ไม่ออกบัตรผ่านอัปโหลด:", message);
     return NextResponse.json({ error: message }, { status: 400 });
   }
 }
