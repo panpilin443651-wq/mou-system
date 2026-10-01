@@ -11,6 +11,7 @@ import {
   formatThaiDateTime,
 } from "@/lib/datetime";
 import { writeAudit, diffFields } from "@/lib/audit";
+import { windowRange } from "@/lib/submission-window";
 
 // ============================================================================
 // Server Action สำหรับช่วงเวลาเปิด-ปิดรับรายงาน (ข้อ 9) - เฉพาะ ADMIN
@@ -37,18 +38,31 @@ export async function updateWindowAction(
   });
   if (!existing) return { error: "ไม่พบช่วงเวลาที่จะแก้ไข" };
 
-  // ช่วงรายงานผลคือ 3 เดือนของไตรมาสเสมอ ไม่รับวันเวลาจากฟอร์ม
-  // เก็บลงตารางให้ตรงกัน แม้ lib/submission-window.ts จะคิดจาก fiscalQuarterRange เองอยู่แล้ว
-  const { start: openAt, end: closeAt } = fiscalQuarterRange(
-    existing.fiscalYear.year,
-    existing.quarter,
-  );
+  // ช่วงเปิด-ปิด: ตามไตรมาส (ค่าเริ่มต้น) หรือส่วนกลางกำหนดวันเวลาเอง
+  // เวลาที่กรอกถือเป็นเวลาไทยเสมอ แล้วแปลงเป็น UTC ก่อนเก็บ
+  const isCustom = formData.get("rangeMode") === "custom";
+  let openAt: Date;
+  let closeAt: Date;
+  if (isCustom) {
+    const open = bangkokDateTimeToUtc(String(formData.get("openAt") ?? ""));
+    const close = bangkokDateTimeToUtc(String(formData.get("closeAt") ?? ""));
+    if (!open) return { error: "กรุณากรอกวันและเวลาเปิดระบบ" };
+    if (!close) return { error: "กรุณากรอกวันและเวลาปิดระบบ" };
+    if (close <= open) return { error: "เวลาปิดระบบต้องช้ากว่าเวลาเปิดระบบ" };
+    openAt = open;
+    closeAt = close;
+  } else {
+    ({ start: openAt, end: closeAt } = fiscalQuarterRange(
+      existing.fiscalYear.year,
+      existing.quarter,
+    ));
+  }
 
   const isForceClosed = formData.get("isForceClosed") === "true";
 
   await db.submissionWindow.update({
     where: { id: windowId },
-    data: { openAt, closeAt, isForceClosed },
+    data: { openAt, closeAt, isForceClosed, isCustom },
   });
 
   await writeAudit({
@@ -64,11 +78,13 @@ export async function updateWindowAction(
           openAt: existing.openAt.toISOString(),
           closeAt: existing.closeAt.toISOString(),
           isForceClosed: existing.isForceClosed,
+          isCustom: existing.isCustom,
         },
         {
           openAt: openAt.toISOString(),
           closeAt: closeAt.toISOString(),
           isForceClosed,
+          isCustom,
         }
       ),
     },
@@ -80,7 +96,7 @@ export async function updateWindowAction(
     error: null,
     message: isForceClosed
       ? `ปิดฉุกเฉินไตรมาส ${existing.quarter} แล้ว`
-      : `ไตรมาส ${existing.quarter} เปิดรายงานตามช่วงของไตรมาส (ถึง ${formatThaiDateTime(closeAt)})`,
+      : `ไตรมาส ${existing.quarter} เปิดรายงาน${isCustom ? "ตามวันเวลาที่กำหนด" : "ตามช่วงของไตรมาส"} ${formatThaiDateTime(openAt)} ถึง ${formatThaiDateTime(closeAt)}`,
   };
 }
 
@@ -105,7 +121,8 @@ export async function addExceptionAction(
     include: { fiscalYear: { select: { year: true } } },
   });
   if (!window) return { error: "ไม่พบช่วงเวลาที่จะขยาย" };
-  const quarterEnd = fiscalQuarterRange(window.fiscalYear.year, window.quarter).end;
+  // เทียบกับเวลาปิดที่ใช้จริง (ตามไตรมาส หรือที่ส่วนกลางกำหนดเอง)
+  const quarterEnd = windowRange(window.fiscalYear.year, window.quarter, window).end;
 
   const departmentId = String(formData.get("departmentId") ?? "").trim();
   const reason = String(formData.get("reason") ?? "").trim();
@@ -116,7 +133,7 @@ export async function addExceptionAction(
   if (reason.length < 4) return { error: "กรุณาระบุเหตุผลที่ขยายเวลา" };
   if (closeAt <= quarterEnd) {
     return {
-      error: `เวลาปิดใหม่ต้องช้ากว่าวันสิ้นสุดไตรมาส (${formatThaiDateTime(quarterEnd)})`,
+      error: `เวลาปิดใหม่ต้องช้ากว่าเวลาปิดระบบของไตรมาสนี้ (${formatThaiDateTime(quarterEnd)})`,
     };
   }
 

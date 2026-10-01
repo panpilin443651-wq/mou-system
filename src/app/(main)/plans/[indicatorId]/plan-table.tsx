@@ -156,35 +156,60 @@ function ConfirmButton() {
 }
 
 /**
- * ตีกลับแผน (เฉพาะส่วนกลาง) - ถามเหตุผลก่อน แล้วส่งไปกับฟอร์มในช่องซ่อน returnNote
- * เซิร์ฟเวอร์ปลดล็อกแผน เก็บเหตุผล และแจ้งเตือนหัวหน้าส่วนงาน
+ * ช่องความเห็นของส่วนกลาง + ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) กรอบสีแดงให้เห็นชัด
+ * ความเห็นส่งไปในช่อง returnNote เซิร์ฟเวอร์ปลดล็อกแผน เก็บความเห็น
+ * และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
  */
-function UnlockButton() {
+function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
   const { pending } = useFormStatus();
-  const noteRef = useRef<HTMLInputElement>(null);
+  const noteRef = useRef<HTMLTextAreaElement>(null);
   return (
-    <>
-      <input ref={noteRef} type="hidden" name="returnNote" />
-      <button
-        type="submit"
-        name="intent"
-        value="unlock"
-        disabled={pending}
-        onClick={(e) => {
-          const note = window.prompt(
-            "ตีกลับแผนการดำเนินงาน\n\nระบุเหตุผล/สิ่งที่ต้องแก้ (หัวหน้าส่วนงานจะได้รับแจ้งเตือน):",
-          );
-          if (!note || note.trim() === "") {
-            e.preventDefault();
-            return;
-          }
-          if (noteRef.current) noteRef.current.value = note.trim();
-        }}
-        className="min-h-11 rounded-lg border border-red-300 px-5 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        ตีกลับแผน
-      </button>
-    </>
+    <section className="rounded-xl border-2 border-red-400 bg-red-50 p-4 shadow-sm sm:p-5">
+      <h2 className="flex items-center gap-2 font-semibold text-red-800">
+        <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden="true" />
+        ความเห็นส่วนกลาง / ตีกลับแผนการดำเนินงาน
+      </h2>
+      <label htmlFor="returnNote" className="mt-1 block text-sm text-red-900">
+        ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
+      </label>
+      <textarea
+        ref={noteRef}
+        id="returnNote"
+        name="returnNote"
+        rows={3}
+        maxLength={2000}
+        disabled={!canReturnNow}
+        placeholder={
+          canReturnNow
+            ? "เช่น ขั้นตอนที่ 3.1 ค่าเป้าหมายไม่สอดคล้องกับค่าเกณฑ์ระดับ 3 กรุณาปรับแผนรายเดือน"
+            : "ตีกลับได้หลังหัวหน้าส่วนงานส่งแผนแล้ว"
+        }
+        className="mt-2 w-full resize-y rounded-lg border-2 border-red-300 bg-surface px-3 py-2.5 text-base outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 disabled:bg-red-50/50"
+      />
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        <button
+          type="submit"
+          name="intent"
+          value="unlock"
+          disabled={pending || !canReturnNow}
+          onClick={(e) => {
+            if (!noteRef.current || noteRef.current.value.trim() === "") {
+              e.preventDefault();
+              window.alert("กรุณาระบุความเห็น/เหตุผลที่ตีกลับก่อน");
+              noteRef.current?.focus();
+              return;
+            }
+            if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมความเห็นนี้?")) e.preventDefault();
+          }}
+          className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {pending ? "กำลังตีกลับ..." : "ตีกลับแผน"}
+        </button>
+        {!canReturnNow && (
+          <span className="text-sm text-red-800">แผนนี้ยังไม่ได้ส่ง จึงยังตีกลับไม่ได้</span>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -203,6 +228,7 @@ export function PlanTable({
   confirmedLabel,
   structureLocked,
   canUnlock,
+  canReturn,
   canSend,
   returned,
 }: {
@@ -227,6 +253,8 @@ export function PlanTable({
   structureLocked: boolean;
   /** แสดงปุ่มปลดล็อกแผน (ส่วนกลาง) */
   canUnlock: boolean;
+  /** เป็นส่วนกลาง (แสดงช่องความเห็น/ตีกลับ) - ตีกลับได้จริงเมื่อ canUnlock */
+  canReturn: boolean;
   /** กดส่งแผนได้ (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - ผู้รายงานบันทึกร่างได้อย่างเดียว */
   canSend: boolean;
   /** ส่วนกลางตีกลับแผนล่าสุด (แสดงจนกว่าจะส่งแผนใหม่) - null = ไม่ได้ถูกตีกลับ */
@@ -321,11 +349,15 @@ export function PlanTable({
       {/* ---- แผนถูกตีกลับ (หน้าแผน) ---- */}
       {isPlan && returned && !confirmedLabel && (
         <div
+          id="return"
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+          className="scroll-mt-4 rounded-xl border-2 border-red-400 bg-red-50 px-4 py-3 text-sm text-red-900"
         >
-          <p className="font-medium">ส่วนกลางตีกลับแผนการดำเนินงาน เมื่อ {returned.label}</p>
-          <p className="mt-0.5 whitespace-pre-line">เหตุผล: {returned.note}</p>
+          <p className="font-semibold">ส่วนกลางตีกลับแผนการดำเนินงาน เมื่อ {returned.label}</p>
+          <p className="mt-1 font-medium">ความเห็นจากส่วนกลาง:</p>
+          <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
+            {returned.note}
+          </p>
           <p className="mt-1">
             ผู้รายงานแก้ไขแผนแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผนการดำเนินงานใหม่
           </p>
@@ -357,6 +389,9 @@ export function PlanTable({
           </p>
         )
       )}
+
+      {/* ---- ความเห็นส่วนกลาง / ตีกลับแผน (เฉพาะส่วนกลาง หน้าแผน) ---- */}
+      {isPlan && canReturn && <ReturnPanel canReturnNow={canUnlock} />}
 
       {/* ---- ส่วนหัวของแบบฟอร์ม ----
           กรอกที่หน้าแผน หน้ารายงานผลแสดงอย่างเดียว (ไม่มี name จึงไม่ถูกส่งไปบันทึกทับ) */}
@@ -471,7 +506,6 @@ export function PlanTable({
             <>
               <SaveButton label={confirmedLabel ? "บันทึก" : "บันทึกร่างแผน"} />
               {!confirmedLabel && canSend && <ConfirmButton />}
-              {canUnlock && <UnlockButton />}
             </>
           ) : (
             <SaveButton label="บันทึกผลการดำเนินงาน" />

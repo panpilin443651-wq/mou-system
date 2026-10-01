@@ -227,7 +227,7 @@ export default async function ReportPage({
         )}
         {!window.canWrite && hasPermission && (
           <p className="mt-0.5">
-            รายงานผลได้เฉพาะไตรมาสปัจจุบันภายใน 3 เดือนของไตรมาสนั้น
+            รายงานผลได้เฉพาะในช่วงเวลาเปิด-ปิดระบบที่ส่วนกลางกำหนด
             ติดต่อส่วนกลางหากต้องการขยายเวลา
           </p>
         )}
@@ -416,25 +416,33 @@ export default async function ReportPage({
                 action={reopenReportAction.bind(null, indicator.id, quarter)}
               />
             )}
-            {canReturnSubmission(user) && (
-              <ReturnButton
-                action={returnReportAction.bind(null, indicator.id, quarter)}
-              />
-            )}
           </div>
         </div>
+      )}
+
+      {/* ความเห็นส่วนกลาง / ตีกลับผล - แสดงเสมอสำหรับส่วนกลาง ตีกลับได้เฉพาะผลที่ส่งแล้ว */}
+      {canReturnSubmission(user) && (
+        <ReturnButton
+          action={returnReportAction.bind(null, indicator.id, quarter)}
+          quarter={quarter}
+          canReturnNow={isSubmitted}
+        />
       )}
 
       {/* ผลถูกตีกลับ - แสดงจนกว่าหัวหน้าส่วนงานจะกดส่งผลใหม่ */}
       {report && !isSubmitted && report.returnNote && report.returnedAt && (
         <div
+          id="return"
           role="alert"
-          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+          className="scroll-mt-4 rounded-xl border-2 border-red-400 bg-red-50 px-4 py-3 text-sm text-red-900"
         >
-          <p className="font-medium">
+          <p className="font-semibold">
             ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {formatThaiDateTime(report.returnedAt)}
           </p>
-          <p className="mt-0.5 whitespace-pre-line">เหตุผล: {report.returnNote}</p>
+          <p className="mt-1 font-medium">ความเห็นจากส่วนกลาง:</p>
+          <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
+            {report.returnNote}
+          </p>
           <p className="mt-1">
             ผู้รายงานแก้ไขแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งผลการดำเนินงานใหม่
           </p>

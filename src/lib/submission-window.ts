@@ -18,16 +18,19 @@ import { MONTH_COUNT, monthQuarter } from "@/lib/plan";
 // ถ้าเขียนเงื่อนไขซ้ำกระจายไปแต่ละที่ จะมีสักที่ที่ลืมตรวจ แล้วกลายเป็นช่องโหว่
 //
 // กฎที่ใช้:
-//   - ผู้รับผิดชอบส่วนงานรายงานผลได้เฉพาะไตรมาสปัจจุบัน ภายใน 3 เดือนของไตรมาสนั้น
-//     (ไตรมาส 1 = ต.ค.-ธ.ค. ...) คิดจากวันที่ตามเวลาไทย ไม่ต้องตั้งค่า
+//   - ผู้รับผิดชอบส่วนงานรายงานผลได้เฉพาะในช่วงเปิด-ปิดของไตรมาส
+//     ค่าเริ่มต้นคือ 3 เดือนของไตรมาส (ไตรมาส 1 = ต.ค.-ธ.ค. ...) ตามเวลาไทย
+//     ส่วนกลางกำหนดวันเวลาเปิด-ปิดเองได้ที่ ตั้งค่าระบบ > ช่วงเวลาเปิด-ปิด
 //     ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ไตรมาสที่ยังมาไม่ถึงก็รายงานล่วงหน้าไม่ได้
 //   - ส่วนกลางสั่ง "ปิดฉุกเฉิน" ไตรมาสได้ (SubmissionWindow.isForceClosed)
 //   - ส่วนกลางขยายเวลาให้เฉพาะส่วนงานได้ (WindowException) ขยายได้อย่างเดียว
 //   - ส่วนกลาง (ADMIN) ทำได้เสมอ เพราะต้องแก้ข้อมูลให้ส่วนงานได้แม้เลยกำหนดแล้ว
 //   - ผู้บริหารแก้ไขอะไรไม่ได้อยู่แล้วตั้งแต่ชั้นสิทธิ์
 //
-// openAt / closeAt ในตาราง SubmissionWindow ไม่ได้ใช้ตัดสินแล้ว (ตั้งแต่ 30 ก.ย. 2569)
-// ช่วงเวลามาจาก fiscalQuarterRange เสมอ จึงไม่มีทางตั้งช่วงผิดจนส่วนงานรายงานไม่ได้
+// ช่วงเวลาเปิด-ปิด (windowRange):
+//   ปกติใช้ 3 เดือนของไตรมาส (fiscalQuarterRange)
+//   ถ้าส่วนกลางกำหนดวันเวลาเองที่หน้าตั้งค่า (SubmissionWindow.isCustom) ใช้ openAt / closeAt ที่ตั้งไว้
+//   แถวที่ไม่ได้กำหนดเอง ไม่อ่าน openAt / closeAt เพราะปีเก่าบางปียังเก็บค่าแบบเดิมค้างไว้
 // ============================================================================
 
 export type WindowState =
@@ -67,8 +70,24 @@ function describe(state: WindowState, quarter: number, openAt: Date, closeAt: Da
 
 type WindowRow = {
   isForceClosed: boolean;
+  isCustom: boolean;
+  openAt: Date;
+  closeAt: Date;
   exceptions: { closeAt: Date; reason: string }[];
 } | null;
+
+/**
+ * ช่วงเปิด-ปิดที่ใช้จริงของไตรมาสหนึ่ง (ยังไม่รวมการขยายเวลาเฉพาะส่วนงาน)
+ * ส่วนกลางกำหนดเอง = openAt/closeAt ของแถว · ไม่ได้กำหนด = 3 เดือนของไตรมาส
+ */
+export function windowRange(
+  year: number,
+  quarter: number,
+  window: { isCustom: boolean; openAt: Date; closeAt: Date } | null,
+): { start: Date; end: Date } {
+  if (window?.isCustom) return { start: window.openAt, end: window.closeAt };
+  return fiscalQuarterRange(year, quarter);
+}
 
 /** ตัดสินสถานะของไตรมาสหนึ่ง จากปีบัญชี + แถว SubmissionWindow (ถ้ามี) */
 function computeStatus({
@@ -84,7 +103,7 @@ function computeStatus({
   actor: Actor;
   now: Date;
 }): WindowStatus {
-  const { start, end } = fiscalQuarterRange(year, quarter);
+  const { start, end } = windowRange(year, quarter, window);
   const isAdmin = actor.role === "ADMIN";
 
   // การขยายเวลาเฉพาะส่วนงาน ใช้ได้เฉพาะเมื่อทำให้ปิดช้าลงเท่านั้น
@@ -156,6 +175,9 @@ export async function getQuarterStatuses({
         select: {
           quarter: true,
           isForceClosed: true,
+          isCustom: true,
+          openAt: true,
+          closeAt: true,
           exceptions: {
             where: { departmentId },
             select: { closeAt: true, reason: true },

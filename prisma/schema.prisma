@@ -533,6 +533,10 @@ model SubmissionWindow {
   /// ปิดฉุกเฉินทันทีโดยไม่ต้องรอถึง closeAt
   isForceClosed Boolean @default(false)
 
+  /// true = ส่วนกลางกำหนดวันเวลาเปิด-ปิดเอง ระบบใช้ openAt/closeAt ของแถวนี้
+  /// false = ใช้ช่วง 3 เดือนของไตรมาส (fiscalQuarterRange) ตามเดิม ไม่สน openAt/closeAt ที่เก็บไว้
+  isCustom Boolean @default(false)
+
   exceptions WindowException[]
 
   createdAt DateTime @default(now())

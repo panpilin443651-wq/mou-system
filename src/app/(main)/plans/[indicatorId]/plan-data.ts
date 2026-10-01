@@ -74,6 +74,7 @@ export function planTableProps({
     confirmedLabel: confirmedAt ? formatThaiDateTime(confirmedAt) : null,
     structureLocked: confirmedAt !== null && !isAdmin,
     canUnlock: canReturnSubmission(user) && confirmedAt !== null,
+    canReturn: canReturnSubmission(user),
     canSend: canSendForDepartment(user, indicator.departmentId),
     returned:
       indicator.planHeader?.returnedAt && indicator.planHeader.returnNote

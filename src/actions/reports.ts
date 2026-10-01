@@ -8,7 +8,7 @@ import {
   canSendForDepartment,
   canSubmitReport,
 } from "@/lib/permissions";
-import { notifyDepartmentHeads } from "@/lib/notifications";
+import { notifyDepartmentUsers } from "@/lib/notifications";
 import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
@@ -312,10 +312,10 @@ export async function returnReportAction(
     },
   });
 
-  await notifyDepartmentHeads(indicator.departmentId, {
+  await notifyDepartmentUsers(indicator.departmentId, {
     title: `ส่วนกลางตีกลับผลการดำเนินงาน ข้อ ${indicator.code} ไตรมาส ${quarter}`,
     body: `${indicator.name} · เหตุผล: ${returnNote}`,
-    link: `/reports/${indicatorId}/${quarter}`,
+    link: `/reports/${indicatorId}/${quarter}#return`,
   });
 
   await writeAudit({
@@ -332,6 +332,6 @@ export async function returnReportAction(
   return {
     error: null,
     success: true,
-    message: `ตีกลับผลไตรมาส ${quarter} แล้ว แจ้งเตือนหัวหน้าส่วนงานแล้ว`,
+    message: `ตีกลับผลไตรมาส ${quarter} แล้ว แจ้งเตือนผู้รายงานและหัวหน้าส่วนงานแล้ว`,
   };
 }

@@ -68,7 +68,11 @@ export function WindowCard({
   statusLabel,
   statusTone,
   periodLabel,
+  quarterPeriodLabel,
   closeAtLabel,
+  isCustom,
+  openAtInput,
+  closeAtInput,
   isForceClosed,
   exceptions,
   departments,
@@ -80,10 +84,17 @@ export function WindowCard({
   months: string;
   statusLabel: string;
   statusTone: "open" | "closed";
-  /** ช่วง 3 เดือนของไตรมาส เช่น "1 ต.ค. 2568 – 31 ธ.ค. 2568" */
+  /** ช่วงเปิด-ปิดที่ใช้อยู่ (วันและเวลา) */
   periodLabel: string;
-  /** เวลาสิ้นสุดไตรมาส ใช้บอกว่าขยายเวลาต้องช้ากว่าเมื่อไร */
+  /** ช่วง 3 เดือนของไตรมาส เช่น "1 ต.ค. 2568 – 31 ธ.ค. 2568" (ค่าเริ่มต้น) */
+  quarterPeriodLabel: string;
+  /** เวลาปิดที่ใช้อยู่ ใช้บอกว่าขยายเวลาต้องช้ากว่าเมื่อไร */
   closeAtLabel: string;
+  /** ส่วนกลางกำหนดวันเวลาเองอยู่ */
+  isCustom: boolean;
+  /** ค่าตั้งต้นของช่อง datetime-local (เวลาไทย) */
+  openAtInput: string;
+  closeAtInput: string;
   isForceClosed: boolean;
   exceptions: Exception[];
   departments: { id: string; code: string; name: string }[];
@@ -98,6 +109,7 @@ export function WindowCard({
     error: null,
   } as FormState);
   const [showException, setShowException] = useState(false);
+  const [custom, setCustom] = useState(isCustom);
 
   return (
     <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
@@ -119,12 +131,72 @@ export function WindowCard({
 
       <form action={updateFormAction} className="space-y-4 p-4 sm:p-5">
         <div>
-          <p className="text-sm font-medium">ช่วงรายงานผล</p>
+          <p className="text-sm font-medium">ช่วงเปิด-ปิดระบบที่ใช้อยู่</p>
           <p className="mt-0.5 text-sm">{periodLabel}</p>
-          <p className="mt-1 text-xs text-slate-500">
-            ตาม 3 เดือนของไตรมาส ระบบคิดจากวันที่ให้เอง แก้ที่หน้านี้ไม่ได้
-          </p>
         </div>
+
+        <fieldset className="space-y-3">
+          <legend className="mb-1.5 text-sm font-medium">กำหนดช่วงเปิด-ปิดระบบ</legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm">
+            <label className="inline-flex min-h-11 items-center gap-2">
+              <input
+                type="radio"
+                name="rangeMode"
+                value="quarter"
+                checked={!custom}
+                onChange={() => setCustom(false)}
+                className="h-4 w-4 accent-brand-700"
+              />
+              ตามไตรมาส ({quarterPeriodLabel})
+            </label>
+            <label className="inline-flex min-h-11 items-center gap-2">
+              <input
+                type="radio"
+                name="rangeMode"
+                value="custom"
+                checked={custom}
+                onChange={() => setCustom(true)}
+                className="h-4 w-4 accent-brand-700"
+              />
+              กำหนดวันและเวลาเอง
+            </label>
+          </div>
+
+          {custom && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor={`open-${quarter}`} className="mb-1.5 block text-sm font-medium">
+                  วันและเวลาเปิดระบบ <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id={`open-${quarter}`}
+                  type="datetime-local"
+                  name="openAt"
+                  required
+                  defaultValue={openAtInput}
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label htmlFor={`close-${quarter}`} className="mb-1.5 block text-sm font-medium">
+                  วันและเวลาปิดระบบ <span className="text-red-600">*</span>
+                </label>
+                <input
+                  id={`close-${quarter}`}
+                  type="datetime-local"
+                  name="closeAt"
+                  required
+                  defaultValue={closeAtInput}
+                  className={inputClass}
+                />
+              </div>
+              <p className="text-xs text-slate-500 sm:col-span-2">
+                เวลาไทย · ส่วนงานรายงานผลได้ตั้งแต่เวลาเปิดถึงเวลาปิด หลังปิดแล้วแก้ย้อนหลังไม่ได้
+                (ยกเว้นส่วนงานที่ขยายเวลาให้ด้านล่าง)
+              </p>
+            </div>
+          )}
+        </fieldset>
 
         <div>
           <label htmlFor={`force-${quarter}`} className="mb-1.5 block text-sm font-medium">

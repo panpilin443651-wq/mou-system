@@ -10,7 +10,7 @@ import {
   canReturnSubmission,
   canSendForDepartment,
 } from "@/lib/permissions";
-import { notifyDepartmentHeads } from "@/lib/notifications";
+import { notifyDepartmentUsers } from "@/lib/notifications";
 import {
   planHeaderSchema,
   planLevelReportText,
@@ -431,15 +431,15 @@ export async function savePlanAction(
       where: { indicatorId },
       data: { confirmedAt: null, confirmedById: null, returnedAt: new Date(), returnNote },
     });
-    const notified = await notifyDepartmentHeads(indicator.departmentId, {
+    const notified = await notifyDepartmentUsers(indicator.departmentId, {
       title: `ส่วนกลางตีกลับแผนการดำเนินงาน ข้อ ${indicator.code}`,
       body: `${indicator.name} · เหตุผล: ${returnNote}`,
-      link: `/plans/${indicatorId}`,
+      link: `/plans/${indicatorId}#return`,
     });
     message =
       notified > 0
-        ? "ตีกลับแผนแล้ว แจ้งเตือนหัวหน้าส่วนงานแล้ว · ส่วนงานแก้แผนได้ และหัวหน้าต้องกดส่งแผนใหม่"
-        : "ตีกลับแผนแล้ว แต่ส่วนงานนี้ยังไม่มีบัญชีหัวหน้าส่วนงาน จึงไม่มีผู้รับแจ้งเตือน";
+        ? `ตีกลับแผนแล้ว แจ้งเตือนผู้รายงานและหัวหน้าส่วนงานแล้ว (${notified} คน) · ส่วนงานแก้แผนได้ และหัวหน้าต้องกดส่งแผนใหม่`
+        : "ตีกลับแผนแล้ว แต่ส่วนงานนี้ยังไม่มีบัญชีผู้ใช้ จึงไม่มีผู้รับแจ้งเตือน";
   }
 
   await writeAudit({
