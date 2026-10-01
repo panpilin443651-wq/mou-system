@@ -12,6 +12,7 @@ import {
   QUARTERS,
   QUARTER_MONTHS,
   currentFiscalMonthIndex,
+  planLevelGroups,
   toMonths,
 } from "@/lib/plan";
 import { savePlanAction } from "@/actions/plans";
@@ -130,7 +131,7 @@ export default async function ReportPage({
           correctiveAction: p.correctiveAction,
           attachments: p.attachments,
         }))}
-        criteria={indicator.criteria.map((c) => ({ level: c.level }))}
+        criteria={planLevelGroups(indicator.criteria, indicator.conditions)}
         levelReports={Object.fromEntries(
           indicator.planLevelReports.map((r) => [r.level, r.text])
         )}
@@ -379,9 +380,10 @@ export default async function ReportPage({
 
         {/* ข้อความเกณฑ์จาก MOU - คนกรอกผลต้องรู้ว่าแต่ละระดับต้องทำอะไรถึงจะผ่าน
             ไม่ใช่เห็นแค่ตัวเลข โดยเฉพาะตัวชี้วัดแบบ "ระดับความสำเร็จ" */}
-        {indicator.criteria.some(
-          (c) => !isPlaceholderCriteria(c.description),
-        ) && (
+        {(indicator.conditions.length > 0 ||
+          indicator.criteria.some(
+            (c) => !isPlaceholderCriteria(c.description),
+          )) && (
           <dl className="mt-4 space-y-2 border-t border-slate-200 pt-4">
             {indicator.criteria.map((c) =>
               isPlaceholderCriteria(c.description) ? null : (
@@ -397,6 +399,25 @@ export default async function ReportPage({
                   </dd>
                 </div>
               ),
+            )}
+            {/* เงื่อนไขของตัวชี้วัด ต่อท้ายระดับ 5 */}
+            {indicator.conditions.length > 0 && (
+              <div className="flex flex-col gap-1 sm:flex-row sm:gap-3">
+                <dt className="shrink-0 text-sm font-medium sm:w-20">
+                  เงื่อนไขอื่นๆ
+                </dt>
+                <dd className="text-sm leading-relaxed text-slate-700">
+                  {indicator.conditions.length === 1 ? (
+                    indicator.conditions[0]
+                  ) : (
+                    <ol className="list-decimal space-y-0.5 pl-5">
+                      {indicator.conditions.map((c, i) => (
+                        <li key={i}>{c}</li>
+                      ))}
+                    </ol>
+                  )}
+                </dd>
+              </div>
             )}
           </dl>
         )}

@@ -14,6 +14,7 @@ import {
   PLAN_SECTION_TITLE,
   PLAN_SECTION_YEAR_LABEL,
   currentFiscalMonthIndex,
+  planLevelGroups,
   summarizeRow,
   toMonths,
 } from "@/lib/plan";
@@ -389,17 +390,22 @@ export async function GET(
     if (section === "TARGET") {
       rows.forEach((row, index) => writeRow(row, String(index + 1)));
     } else {
-      // ขั้นตอนการดำเนินงาน แบ่งตามค่าเกณฑ์ระดับ 1-5 เหมือนหน้าเว็บ
-      const levels = indicator.criteria.map((c) => c.level);
-      for (const c of indicator.criteria) {
-        writeWide(`ค่าเกณฑ์ระดับ ${c.level}`, { bold: true, fill: HEADER_BG });
+      // ขั้นตอนการดำเนินงาน แบ่งตามค่าเกณฑ์ระดับ 1-5 + เงื่อนไขอื่นๆ เหมือนหน้าเว็บ
+      const groups = planLevelGroups(indicator.criteria, indicator.conditions);
+      const levels = groups.map((g) => g.level);
+      for (const c of groups) {
+        writeWide(
+          c.description ? `${c.title}
+${c.description}` : c.title,
+          { bold: true, fill: HEADER_BG, height: c.description ? 36 : undefined },
+        );
         rows
           .filter((row) => row.criteriaLevel === c.level)
           .forEach((row, index) => writeRow(row, `${c.level}.${index + 1}`));
         const report =
           indicator.planLevelReports.find((p) => p.level === c.level)?.text ??
           "";
-        writeWide(`รายงานผลการดำเนินงานของระดับ ${c.level}: ${report}`, {
+        writeWide(`รายงานผลการดำเนินงานของ${c.shortTitle}: ${report}`, {
           height: report ? 36 : undefined,
         });
       }

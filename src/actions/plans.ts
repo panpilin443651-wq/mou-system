@@ -17,6 +17,7 @@ import {
   MONTH_COUNT,
   PLAN_SECTION_ITEM_LABEL,
   isPlanComplete,
+  planLevelGroups,
   toMonths,
 } from "@/lib/plan";
 import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
@@ -145,7 +146,14 @@ export async function savePlanAction(
       actualMonths: true,
     },
   });
-  const levels = indicator.criteria.map((c) => c.level);
+  // ระดับ 1-5 ตามค่าเกณฑ์ + กลุ่มเงื่อนไขอื่นๆ ต่อท้าย
+  const groups = planLevelGroups(
+    indicator.criteria.map((c) => ({ level: c.level, description: null })),
+    [],
+  );
+  const levels = groups.map((g) => g.level);
+  const groupName = (level: number) =>
+    groups.find((g) => g.level === level)?.shortTitle ?? `ระดับ ${level}`;
 
   // เดือนของไตรมาสที่ผ่านไปแล้ว (และช่องผลของไตรมาสข้างหน้า) ล็อกไว้
   // ค่าที่ฟอร์มส่งมาสำหรับเดือนที่ล็อกถูกทิ้ง แล้วใช้ค่าเดิมในฐานข้อมูลแทนเสมอ
@@ -218,7 +226,7 @@ export async function savePlanAction(
     if (raw === null) continue;
     const parsed = planLevelReportText.safeParse(raw);
     if (!parsed.success)
-      return { error: `ระดับ ${level}: ${firstError(parsed.error)}` };
+      return { error: `${groupName(level)}: ${firstError(parsed.error)}` };
 
     updates.push(
       parsed.data === null
@@ -272,7 +280,7 @@ export async function savePlanAction(
     message =
       criteriaLevel === null
         ? `เพิ่ม${PLAN_SECTION_ITEM_LABEL[section as PlanSection]}บรรทัดใหม่แล้ว`
-        : `เพิ่มขั้นตอนการดำเนินงานของระดับ ${criteriaLevel} แล้ว`;
+        : `เพิ่มขั้นตอนการดำเนินงานของ${groupName(criteriaLevel)}แล้ว`;
   }
 
   // ---- ลบบรรทัด ----

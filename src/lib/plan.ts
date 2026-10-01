@@ -258,6 +258,62 @@ export const PLAN_SECTION_GUIDE: Record<PlanSection, string> = {
     "4. งานที่ไม่มีปัจจัยภายนอก เช่น ฤดูกาลมาเกี่ยวข้อง ขอให้เร่งดำเนินการให้แล้วเสร็จภายในไตรมาส 3",
 };
 
+// ----------------------------------------------------------------------------
+// กลุ่มของตารางขั้นตอนการดำเนินงาน: ค่าเกณฑ์ระดับ 1-5 + เงื่อนไขอื่นๆ
+// ----------------------------------------------------------------------------
+
+/**
+ * กลุ่ม "เงื่อนไขอื่นๆ (ถ้ามี)" ต่อท้ายค่าเกณฑ์ระดับ 5
+ *
+ * เก็บเป็นระดับ 6 ใน ActionPlan.criteriaLevel และ PlanLevelReport.level
+ * จะได้ใช้ตารางและช่องรายงานผลรายระดับชุดเดิมได้เลย ไม่ต้องเพิ่มตารางใหม่
+ * ไม่มี ScoreCriteria ระดับ 6 จริง จึงไม่กระทบการคิดคะแนน
+ */
+export const OTHER_CONDITIONS_LEVEL = 6;
+
+export type PlanLevelGroup = {
+  level: number;
+  /** หัวกลุ่ม เช่น "ค่าเกณฑ์ระดับ 3" */
+  title: string;
+  /** ข้อความใต้หัวกลุ่ม ใช้เรียกต่อท้ายข้อความ เช่น "ของระดับ 3" */
+  shortTitle: string;
+  /** คำอธิบายเกณฑ์ของระดับนั้น (หรือรายการเงื่อนไข) - null = ไม่มีให้แสดง */
+  description: string | null;
+};
+
+/**
+ * กลุ่มทั้งหมดของตารางขั้นตอนการดำเนินงาน ใช้ทั้งหน้าเว็บ ไฟล์ Excel และตอนบันทึก
+ * ตัวชี้วัดที่ยังไม่มีค่าเกณฑ์เลย ไม่มีกลุ่มเงื่อนไขอื่นๆ ด้วย (ยังเพิ่มขั้นตอนไม่ได้ทั้งตาราง)
+ */
+export function planLevelGroups(
+  criteria: { level: number; description: string | null }[],
+  conditions: string[],
+): PlanLevelGroup[] {
+  if (criteria.length === 0) return [];
+  return [
+    ...criteria.map((c) => ({
+      level: c.level,
+      title: `ค่าเกณฑ์ระดับ ${c.level}`,
+      shortTitle: `ระดับ ${c.level}`,
+      // ข้อความที่ระบบสร้างให้ตอนไม่ได้กรอกคำอธิบาย เช่น "ระดับ 3 = 80 บาท/ไร่"
+      // ตัดคำว่า "ระดับ 3 =" ออก เพราะหัวกลุ่มบอกระดับอยู่แล้ว
+      description:
+        c.description?.trim().replace(/^ระดับ\s*[1-5]\s*=\s*/, "") || null,
+    })),
+    {
+      level: OTHER_CONDITIONS_LEVEL,
+      title: "เงื่อนไขอื่นๆ (ถ้ามี)",
+      shortTitle: "เงื่อนไขอื่นๆ",
+      description:
+        conditions.length === 0
+          ? null
+          : conditions.length === 1
+            ? conditions[0]
+            : conditions.map((c, i) => `${i + 1}. ${c}`).join("\n"),
+    },
+  ];
+}
+
 /** แสดงตัวเลขแบบไม่ให้มีทศนิยมรุงรัง แต่ยังเก็บทศนิยมจริงไว้ถ้ามี */
 export function formatPlanNumber(value: number | null): string {
   if (value === null || !Number.isFinite(value)) return "";

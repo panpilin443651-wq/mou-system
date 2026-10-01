@@ -23,6 +23,7 @@ import {
   formatPct,
   monthQuarter,
   summarizeSection,
+  type PlanLevelGroup,
 } from "@/lib/plan";
 
 // ============================================================================
@@ -34,17 +35,16 @@ import {
 // ช่องตัวเลขเก็บใน state ของ React ด้วย เพราะคอลัมน์เปอร์เซ็นต์ต้องคิดใหม่
 // ทันทีที่พิมพ์ ให้เห็นผลเหมือนสูตรใน Excel ไม่ต้องรอกดบันทึกก่อน
 //
-// ตาราง "ติดตามการดำเนินงานตามแผน" แบ่งเป็นกลุ่มตามค่าเกณฑ์ระดับ 1-5
-//   แถวค่าเกณฑ์ล็อกไว้ (มาจาก MOU แก้ที่นี่ไม่ได้)
+// ตาราง "ติดตามการดำเนินงานตามแผน" แบ่งเป็นกลุ่มตามค่าเกณฑ์ระดับ 1-5 และเงื่อนไขอื่นๆ (ถ้ามี)
+//   แถวค่าเกณฑ์และคำอธิบายเกณฑ์ล็อกไว้ (มาจาก MOU แก้ที่นี่ไม่ได้)
 //   ใต้แต่ละระดับเพิ่มขั้นตอนการดำเนินงานได้ และมีช่องรายงานผลการดำเนินงานของระดับนั้น
 //
 // หลักฐานประกอบผลการดำเนินงานเป็นไฟล์แนบ อัปโหลดทันทีไม่ต้องรอกดบันทึก
 // แนบได้ทุกบรรทัดที่เห็นบนจอ เพราะบรรทัดถูกสร้างในฐานข้อมูลตั้งแต่กดเพิ่มแล้ว
 // ============================================================================
 
-export type PlanCriterion = {
-  level: number;
-};
+/** กลุ่มของตารางขั้นตอน - สร้างด้วย planLevelGroups() */
+export type PlanCriterion = PlanLevelGroup;
 
 export type PlanFile = {
   id: string;
@@ -172,7 +172,7 @@ export function PlanTable({
   monthsElapsed: number;
   fiscalYear: number;
   indicatorId: string;
-  /** ค่าเกณฑ์ระดับ 1-5 ของตัวชี้วัด ใช้เป็นหัวกลุ่มของตารางขั้นตอนการดำเนินงาน */
+  /** ค่าเกณฑ์ระดับ 1-5 + เงื่อนไขอื่นๆ ใช้เป็นหัวกลุ่มของตารางขั้นตอนการดำเนินงาน */
   criteria: PlanCriterion[];
   /** รายงานผลการดำเนินงานของแต่ละระดับ key = ระดับ */
   levelReports: Record<number, string>;
@@ -488,8 +488,8 @@ function SectionTable({
         <h2 className="font-semibold">{PLAN_SECTION_TITLE[section]}</h2>
         {isStep && (
           <p className="mt-0.5 text-sm text-slate-600">
-            ค่าเกณฑ์ระดับ 1-5 มาจาก MOU แก้ไขที่นี่ไม่ได้ ·
-            เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ
+            ค่าเกณฑ์ระดับ 1-5 และคำอธิบายมาจาก MOU แก้ไขที่นี่ไม่ได้ ·
+            เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ (และเงื่อนไขอื่นๆ ถ้ามี)
             และรายงานผลการดำเนินงานของระดับนั้น
           </p>
         )}
@@ -644,8 +644,14 @@ function LevelGroup({
         <td colSpan={cols} className="border border-slate-300 px-3 py-2.5">
           <span className="sticky left-3 inline-flex items-center gap-1.5 font-semibold text-brand-ink">
             <LockIcon />
-            ค่าเกณฑ์ระดับ {criterion.level}
+            {criterion.title}
           </span>
+          {/* คำอธิบายเกณฑ์จาก MOU ให้คนวางขั้นตอนรู้ว่าระดับนี้ต้องทำอะไรถึงจะผ่าน */}
+          {criterion.description && (
+            <span className="sticky left-3 mt-1 block max-w-[56rem] whitespace-pre-line text-sm leading-relaxed text-slate-700">
+              {criterion.description}
+            </span>
+          )}
         </td>
       </tr>
 
@@ -660,7 +666,7 @@ function LevelGroup({
             className="border border-slate-200 px-3 py-2 text-sm text-slate-500"
           >
             <span className={stick}>
-              ยังไม่มีขั้นตอนการดำเนินงานของระดับนี้
+              ยังไม่มีขั้นตอนการดำเนินงานของ{criterion.shortTitle}
             </span>
           </td>
         </tr>
@@ -675,7 +681,7 @@ function LevelGroup({
               value={`add:STEP:${criterion.level}`}
               className="sticky left-3 rounded-lg border border-dashed border-slate-300 px-4 py-2 text-sm font-medium text-brand-ink transition hover:border-brand-600 hover:bg-brand-50"
             >
-              + เพิ่มขั้นตอนการดำเนินงานของระดับ {criterion.level}
+              + เพิ่มขั้นตอนการดำเนินงานของ{criterion.shortTitle}
             </button>
           </td>
         </tr>
@@ -688,7 +694,7 @@ function LevelGroup({
               htmlFor={`levelReport_${criterion.level}`}
               className="mb-1 block text-sm font-medium"
             >
-              รายงานผลการดำเนินงานของระดับ {criterion.level}
+              รายงานผลการดำเนินงานของ{criterion.shortTitle}
             </label>
             <textarea
               id={`levelReport_${criterion.level}`}
