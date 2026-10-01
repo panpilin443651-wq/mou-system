@@ -9,6 +9,7 @@ import {
   isAllowedMimeType,
   isBlobUrl,
   MAX_FILE_BYTES,
+  MAX_PLAN_FILES_PER_ROW,
 } from "@/lib/attachments";
 import { writeAudit } from "@/lib/audit";
 
@@ -25,6 +26,7 @@ export type FormState = { error: string | null; success?: boolean };
 
 function revalidatePlan(indicatorId: string) {
   revalidatePath("/reports/[indicatorId]/[quarter]", "page");
+  revalidatePath(`/plans/${indicatorId}`);
   revalidatePath(`/indicators/${indicatorId}`);
 }
 
@@ -41,7 +43,15 @@ export async function recordPlanAttachmentAction(
     where: { id: actionPlanId },
     select: {
       id: true,
-      indicator: { select: { id: true, code: true, departmentId: true } },
+      _count: { select: { attachments: true } },
+      indicator: {
+        select: {
+          id: true,
+          code: true,
+          departmentId: true,
+          planHeader: { select: { confirmedAt: true } },
+        },
+      },
     },
   });
   if (!plan) {
@@ -52,6 +62,17 @@ export async function recordPlanAttachmentAction(
   if (!canManagePlan(user, plan.indicator.departmentId)) {
     await del(blobUrl).catch(() => {});
     return { error: "คุณไม่มีสิทธิ์แนบไฟล์ในแผนของส่วนงานนี้" };
+  }
+
+  if (user.role !== "ADMIN" && !plan.indicator.planHeader?.confirmedAt) {
+    await del(blobUrl).catch(() => {});
+    return { error: "ต้องยืนยันแผนดำเนินงานก่อน จึงแนบหลักฐานได้" };
+  }
+
+  // ตรวจซ้ำตอนบันทึก เพราะอัปโหลดสองไฟล์พร้อมกันจะผ่านด่านออกบัตรผ่านไปได้ทั้งคู่
+  if (plan._count.attachments >= MAX_PLAN_FILES_PER_ROW) {
+    await del(blobUrl).catch(() => {});
+    return { error: `แนบหลักฐานได้ไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ต่อขั้นตอน` };
   }
 
   let info;

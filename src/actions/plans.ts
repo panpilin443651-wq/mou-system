@@ -30,8 +30,12 @@ import { writeAudit } from "@/lib/audit";
 // คนกรอกจะไล่พิมพ์ตัวเลขทั้งตารางแล้วค่อยกดบันทึกครั้งเดียว
 // ทั้งหน้าจึงเป็นฟอร์มเดียวและมี Action เดียวที่รับทุกอย่าง
 //
+// ฟอร์มนี้ใช้สองหน้า แยกกันด้วยช่อง mode:
+//   plan    หน้าแผนดำเนินงาน (/plans/[id]) ส่วนหัว + โครงแผน + แผนรายเดือน
+//   report  หน้ารายงานผล ผลรายเดือน สาเหตุ แนวทางแก้ไข และรายงานผลรายระดับ (ต้องยืนยันแผนก่อน)
+//
 // ปุ่มต่าง ๆ แยกกันด้วยช่อง intent:
-//   save               บันทึกทั้งตาราง
+//   save               บันทึกทั้งตาราง (หน้าแผนเรียกว่า "บันทึกร่างแผน")
 //   add:TARGET         บันทึกทั้งตาราง แล้วเพิ่มบรรทัดว่างต่อท้ายตารางเป้าหมาย
 //   add:STEP:<ระดับ>   บันทึกทั้งตาราง แล้วเพิ่มขั้นตอนต่อท้ายค่าเกณฑ์ระดับนั้น
 //   delete:<rowId>     บันทึกทั้งตาราง แล้วลบบรรทัดนั้น
@@ -123,7 +127,19 @@ export async function savePlanAction(
     return { error: "เฉพาะส่วนกลางเท่านั้นที่ปลดล็อกแผนได้" };
   }
 
-  // ---- ส่วนหัวของแบบฟอร์ม ----
+  // หน้าแผน (mode=plan) ส่งเฉพาะส่วนหัวและโครงแผน
+  // หน้ารายงานผล (mode=report) ส่งเฉพาะผลรายเดือน สาเหตุ แนวทางแก้ไข และรายงานรายระดับ
+  // ช่องที่ไม่ถูกส่งมาคงค่าเดิมไว้ ไม่ถูกล้างเป็นค่าว่าง
+  const isReportMode = formData.get("mode") === "report";
+  const confirmed = planHeader?.confirmedAt != null;
+  // ต้องยืนยันแผนก่อน จึงรายงานผลได้ (ส่วนกลางข้ามได้)
+  const resultsLocked = !confirmed && !isAdmin;
+  if (isReportMode && resultsLocked) {
+    return { error: "กรุณากรอกแผนดำเนินงานและกดยืนยันแผนก่อน จึงจะรายงานผลได้" };
+  }
+
+  // ---- ส่วนหัวของแบบฟอร์ม (เฉพาะหน้าแผน) ----
+  const hasHeader = formData.has("owner");
   const header = planHeaderSchema.safeParse({
     owner: formData.get("owner") ?? "",
     budget: formData.get("budget") ?? "",
@@ -176,9 +192,12 @@ export async function savePlanAction(
   const updates: Prisma.PrismaPromise<unknown>[] = [];
 
   for (const row of rows) {
-    // แถวที่ไม่ได้ถูกส่งมาในฟอร์มถือว่าไม่ได้แก้ ปล่อยไว้ตามเดิม
-    if (formData.get(`title_${row.id}`) === null) continue;
+    // โครงแผนส่งมาจากหน้าแผน ผลส่งมาจากหน้ารายงานผล ส่วนที่ไม่ถูกส่งมาปล่อยไว้ตามเดิม
+    const hasStructure = formData.has(`title_${row.id}`) && !structureLocked;
+    const hasResult = formData.has(`a0_${row.id}`) && !resultsLocked;
+    if (!hasStructure && !hasResult) continue;
 
+    const label = PLAN_SECTION_ITEM_LABEL[row.section];
     const parsed = planRowSchema.safeParse({
       title: formData.get(`title_${row.id}`) ?? "",
       targetValue: formData.get(`target_${row.id}`) ?? "",
@@ -187,42 +206,44 @@ export async function savePlanAction(
       correctiveAction: formData.get(`fix_${row.id}`) ?? "",
     });
     if (!parsed.success) {
-      const label = PLAN_SECTION_ITEM_LABEL[row.section];
       return {
         error: `${label}ลำดับ ${row.sortOrder}: ${firstError(parsed.error)}`,
       };
     }
 
-    const planMonths = readMonths(formData, "p", row.id);
-    const actualMonths = readMonths(formData, "a", row.id);
-    if (!planMonths || !actualMonths) {
-      const label = PLAN_SECTION_ITEM_LABEL[row.section];
-      return {
-        error: `${label}ลำดับ ${row.sortOrder}: ช่องตัวเลขรายเดือนกรอกได้เฉพาะตัวเลข`,
-      };
+    const data: Prisma.ActionPlanUpdateInput = {};
+
+    if (hasStructure) {
+      const planMonths = readMonths(formData, "p", row.id);
+      if (!planMonths) {
+        return {
+          error: `${label}ลำดับ ${row.sortOrder}: ช่องตัวเลขรายเดือนกรอกได้เฉพาะตัวเลข`,
+        };
+      }
+      data.title = parsed.data.title;
+      data.targetValue = parsed.data.targetValue;
+      data.unit = parsed.data.unit;
+      data.planMonths = keepLocked(planMonths, toMonths(row.planMonths), locks.plan);
     }
 
-    updates.push(
-      db.actionPlan.update({
-        where: { id: row.id },
-        data: {
-          ...parsed.data,
-          // โครงแผนที่ล็อกแล้วใช้ค่าเดิมในฐานข้อมูลเสมอ ไม่เชื่อค่าที่ฟอร์มส่งมา
-          ...(structureLocked
-            ? { title: row.title, targetValue: row.targetValue, unit: row.unit }
-            : {}),
-          planMonths: structureLocked
-            ? toMonths(row.planMonths)
-            : keepLocked(planMonths, toMonths(row.planMonths), locks.plan),
-          actualMonths: keepLocked(actualMonths, toMonths(row.actualMonths), locks.actual),
-        },
-      }),
-    );
+    if (hasResult) {
+      const actualMonths = readMonths(formData, "a", row.id);
+      if (!actualMonths) {
+        return {
+          error: `${label}ลำดับ ${row.sortOrder}: ช่องตัวเลขรายเดือนกรอกได้เฉพาะตัวเลข`,
+        };
+      }
+      data.actualMonths = keepLocked(actualMonths, toMonths(row.actualMonths), locks.actual);
+      data.causeNote = parsed.data.causeNote;
+      data.correctiveAction = parsed.data.correctiveAction;
+    }
+
+    updates.push(db.actionPlan.update({ where: { id: row.id }, data }));
   }
 
-  // ---- รายงานผลการดำเนินงานของแต่ละระดับ ----
+  // ---- รายงานผลการดำเนินงานของแต่ละระดับ (เฉพาะหน้ารายงานผล) ----
   // ไล่จากระดับที่ตัวชี้วัดมีจริง ไม่เชื่อว่าฟอร์มส่งระดับอะไรมา
-  for (const level of levels) {
+  for (const level of resultsLocked ? [] : levels) {
     const raw = formData.get(`levelReport_${level}`);
     if (raw === null) continue;
     const parsed = planLevelReportText.safeParse(raw);
@@ -241,16 +262,21 @@ export async function savePlanAction(
   }
 
   // เขียนทั้งหมดในธุรกรรมเดียว ถ้าแถวใดพังจะไม่เหลือตารางที่บันทึกไปครึ่งเดียว
+  // ยืนยัน/ปลดล็อกต้องมีแถวส่วนหัวอยู่แล้ว จึงสร้างให้เสมอถ้ายังไม่มี (ค่าว่าง)
   await db.$transaction([
     db.planHeader.upsert({
       where: { indicatorId },
-      create: { indicatorId, ...header.data },
-      update: header.data,
+      create: { indicatorId, ...(hasHeader ? header.data : {}) },
+      update: hasHeader ? header.data : {},
     }),
     ...updates,
   ]);
 
-  let message = "บันทึกแผนเรียบร้อยแล้ว";
+  let message = isReportMode
+    ? "บันทึกผลการดำเนินงานเรียบร้อยแล้ว"
+    : confirmed
+      ? "บันทึกแผนเรียบร้อยแล้ว"
+      : "บันทึกร่างแผนเรียบร้อยแล้ว ยังแก้ไขต่อได้ · กดยืนยันแผนเมื่อกรอกครบ";
 
   // ---- เพิ่มบรรทัดใหม่ ----
   if (intent.startsWith("add:")) {

@@ -246,9 +246,9 @@ async function ReportTable({
 
                       <td className="whitespace-nowrap px-2 py-2.5 text-center">
                         <Link
-                          href={`/reports/${ind.id}/${currentQuarter}#plan`}
+                          href={`/plans/${ind.id}`}
                           className="-my-2.5 inline-flex min-h-11 items-center justify-center rounded px-2 text-xs font-medium transition hover:ring-1 hover:ring-brand-600"
-                          title="วางแผนและติดตามแผนดำเนินงาน"
+                          title="กรอกแผนการดำเนินงาน"
                         >
                           {plan.count === 0 ? (
                             <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
