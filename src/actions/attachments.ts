@@ -5,7 +5,13 @@ import { head, del } from "@vercel/blob";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/session";
 import { canSubmitReport } from "@/lib/permissions";
-import { isAllowedMimeType, isBlobUrl, MAX_FILE_BYTES } from "@/lib/attachments";
+import {
+  formatBytes,
+  isAllowedMimeType,
+  isBlobUrl,
+  MAX_FILE_BYTES,
+  MAX_PLAN_FILES_PER_ROW,
+} from "@/lib/attachments";
 import { writeAudit } from "@/lib/audit";
 import { getWindowStatus } from "@/lib/submission-window";
 
@@ -71,7 +77,7 @@ export async function recordAttachmentAction(
   }
   if (info.size > MAX_FILE_BYTES) {
     await del(blobUrl).catch(() => {});
-    return { error: "ไฟล์ใหญ่เกิน 10 MB" };
+    return { error: `ไฟล์ใหญ่เกิน ${formatBytes(MAX_FILE_BYTES)}` };
   }
 
   // ต้องมีรายงานของไตรมาสนั้นก่อน ไฟล์แนบจึงจะผูกได้
@@ -82,6 +88,15 @@ export async function recordAttachmentAction(
     create: { indicatorId, quarter, status: "DRAFT" },
     select: { id: true },
   });
+
+  // ตรวจซ้ำตอนบันทึก เพราะอัปโหลดพร้อมกันหลายไฟล์จะผ่านด่านออกบัตรผ่านไปได้ทั้งหมด
+  const existing = await db.attachment.count({
+    where: { reportId: report.id, criteriaLevel },
+  });
+  if (existing >= MAX_PLAN_FILES_PER_ROW) {
+    await del(blobUrl).catch(() => {});
+    return { error: `แนบไฟล์ได้ไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ต่อระดับ` };
+  }
 
   const created = await db.attachment.create({
     data: {

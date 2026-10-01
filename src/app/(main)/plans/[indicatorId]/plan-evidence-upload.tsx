@@ -21,7 +21,7 @@ export function PlanEvidenceUpload({ actionPlanId }: { actionPlanId: string }) {
   async function handleFile(file: File) {
     setError(null);
     if (file.size > MAX_FILE_BYTES) {
-      setError(`ไฟล์ใหญ่ ${formatBytes(file.size)} เกิน 10 MB`);
+      setError(`ไฟล์ใหญ่ ${formatBytes(file.size)} เกิน ${formatBytes(MAX_FILE_BYTES)}`);
       return;
     }
 
@@ -31,6 +31,8 @@ export function PlanEvidenceUpload({ actionPlanId }: { actionPlanId: string }) {
         access: "public",
         handleUploadUrl: "/api/attachments/upload",
         clientPayload: JSON.stringify({ kind: "plan", actionPlanId }),
+        // ไฟล์ใหญ่ (ได้ถึง 50 MB) แบ่งส่งเป็นส่วนๆ เน็ตสะดุดกลางทางจะได้ไม่ต้องเริ่มใหม่ทั้งไฟล์
+        multipart: file.size > 10 * 1024 * 1024,
       });
       const result = await recordPlanAttachmentAction(actionPlanId, blob.url, file.name);
       if (result.error) {
