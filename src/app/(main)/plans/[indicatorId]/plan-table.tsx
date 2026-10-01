@@ -645,8 +645,12 @@ function LevelGroup({
           <span className="sticky left-3 inline-flex items-center gap-1.5 font-semibold text-brand-ink">
             <LockIcon />
             {criterion.title}
+            {/* ค่าเกณฑ์ของระดับนี้ ให้คนวางขั้นตอนเห็นว่าต้องได้เท่าไรถึงจะผ่าน */}
+            {criterion.value && (
+              <span className="font-normal text-slate-800">: {criterion.value}</span>
+            )}
           </span>
-          {/* คำอธิบายเกณฑ์จาก MOU ให้คนวางขั้นตอนรู้ว่าระดับนี้ต้องทำอะไรถึงจะผ่าน */}
+          {/* รายการเงื่อนไขของกลุ่มเงื่อนไขอื่นๆ */}
           {criterion.description && (
             <span className="sticky left-3 mt-1 block max-w-[56rem] whitespace-pre-line text-sm leading-relaxed text-slate-700">
               {criterion.description}

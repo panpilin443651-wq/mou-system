@@ -131,7 +131,11 @@ export default async function ReportPage({
           correctiveAction: p.correctiveAction,
           attachments: p.attachments,
         }))}
-        criteria={planLevelGroups(indicator.criteria, indicator.conditions)}
+        criteria={planLevelGroups(
+          indicator.criteria,
+          indicator.unit,
+          indicator.conditions,
+        )}
         levelReports={Object.fromEntries(
           indicator.planLevelReports.map((r) => [r.level, r.text])
         )}

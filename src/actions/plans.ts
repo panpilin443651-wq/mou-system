@@ -148,7 +148,8 @@ export async function savePlanAction(
   });
   // ระดับ 1-5 ตามค่าเกณฑ์ + กลุ่มเงื่อนไขอื่นๆ ต่อท้าย
   const groups = planLevelGroups(
-    indicator.criteria.map((c) => ({ level: c.level, description: null })),
+    indicator.criteria.map((c) => ({ level: c.level, targetValue: null, description: null })),
+    "",
     [],
   );
   const levels = groups.map((g) => g.level);

@@ -277,7 +277,9 @@ export type PlanLevelGroup = {
   title: string;
   /** ข้อความใต้หัวกลุ่ม ใช้เรียกต่อท้ายข้อความ เช่น "ของระดับ 3" */
   shortTitle: string;
-  /** คำอธิบายเกณฑ์ของระดับนั้น (หรือรายการเงื่อนไข) - null = ไม่มีให้แสดง */
+  /** ค่าเกณฑ์ของระดับนั้น แสดงต่อท้ายหัวกลุ่ม เช่น "80 บาท/ไร่" - null = ไม่มี */
+  value: string | null;
+  /** ข้อความใต้หัวกลุ่ม (รายการเงื่อนไขของกลุ่มเงื่อนไขอื่นๆ) - null = ไม่มีให้แสดง */
   description: string | null;
 };
 
@@ -286,7 +288,8 @@ export type PlanLevelGroup = {
  * ตัวชี้วัดที่ยังไม่มีค่าเกณฑ์เลย ไม่มีกลุ่มเงื่อนไขอื่นๆ ด้วย (ยังเพิ่มขั้นตอนไม่ได้ทั้งตาราง)
  */
 export function planLevelGroups(
-  criteria: { level: number; description: string | null }[],
+  criteria: { level: number; targetValue: number | null; description: string | null }[],
+  unit: string,
   conditions: string[],
 ): PlanLevelGroup[] {
   if (criteria.length === 0) return [];
@@ -295,15 +298,19 @@ export function planLevelGroups(
       level: c.level,
       title: `ค่าเกณฑ์ระดับ ${c.level}`,
       shortTitle: `ระดับ ${c.level}`,
-      // ข้อความที่ระบบสร้างให้ตอนไม่ได้กรอกคำอธิบาย เช่น "ระดับ 3 = 80 บาท/ไร่"
-      // ตัดคำว่า "ระดับ 3 =" ออก เพราะหัวกลุ่มบอกระดับอยู่แล้ว
-      description:
-        c.description?.trim().replace(/^ระดับ\s*[1-5]\s*=\s*/, "") || null,
+      // เกณฑ์ตัวเลขแสดงค่า + หน่วย เกณฑ์แบบข้อความแสดงข้อความเกณฑ์จาก MOU
+      // (ตัดคำว่า "ระดับ 3 =" ที่ระบบเติมให้ออก เพราะหัวกลุ่มบอกระดับอยู่แล้ว)
+      value:
+        c.targetValue !== null
+          ? `${formatPlanNumber(c.targetValue)} ${unit}`.trim()
+          : c.description?.trim().replace(/^ระดับ\s*[1-5]\s*=\s*/, "") || null,
+      description: null,
     })),
     {
       level: OTHER_CONDITIONS_LEVEL,
       title: "เงื่อนไขอื่นๆ (ถ้ามี)",
       shortTitle: "เงื่อนไขอื่นๆ",
+      value: null,
       description:
         conditions.length === 0
           ? null

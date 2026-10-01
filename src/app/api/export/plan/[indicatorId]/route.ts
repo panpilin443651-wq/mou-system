@@ -391,12 +391,17 @@ export async function GET(
       rows.forEach((row, index) => writeRow(row, String(index + 1)));
     } else {
       // ขั้นตอนการดำเนินงาน แบ่งตามค่าเกณฑ์ระดับ 1-5 + เงื่อนไขอื่นๆ เหมือนหน้าเว็บ
-      const groups = planLevelGroups(indicator.criteria, indicator.conditions);
+      const groups = planLevelGroups(
+        indicator.criteria,
+        indicator.unit,
+        indicator.conditions,
+      );
       const levels = groups.map((g) => g.level);
       for (const c of groups) {
         writeWide(
-          c.description ? `${c.title}
-${c.description}` : c.title,
+          [c.value ? `${c.title} : ${c.value}` : c.title, c.description]
+            .filter(Boolean)
+            .join("\n"),
           { bold: true, fill: HEADER_BG, height: c.description ? 36 : undefined },
         );
         rows
