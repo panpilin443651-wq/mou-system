@@ -16,8 +16,12 @@ import {
 import {
   MONTH_COUNT,
   PLAN_SECTION_ITEM_LABEL,
+  formatPlanNumber,
   isPlanComplete,
   planLevelGroups,
+  planRowLabel,
+  sumMonths,
+  targetMismatch,
   toMonths,
 } from "@/lib/plan";
 import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
@@ -190,6 +194,8 @@ export async function savePlanAction(
       a.section === b.section && a.criteriaLevel === b.criteriaLevel;
 
   const updates: Prisma.PrismaPromise<unknown>[] = [];
+  /** รายการที่ค่าเป้าหมายไม่ตรงกับรวมแผนทั้งปี - มีแม้แต่รายการเดียวก็ไม่บันทึกทั้งตาราง */
+  const mismatches: string[] = [];
 
   for (const row of rows) {
     // โครงแผนส่งมาจากหน้าแผน ผลส่งมาจากหน้ารายงานผล ส่วนที่ไม่ถูกส่งมาปล่อยไว้ตามเดิม
@@ -223,7 +229,13 @@ export async function savePlanAction(
       data.title = parsed.data.title;
       data.targetValue = parsed.data.targetValue;
       data.unit = parsed.data.unit;
-      data.planMonths = keepLocked(planMonths, toMonths(row.planMonths), locks.plan);
+      const finalMonths = keepLocked(planMonths, toMonths(row.planMonths), locks.plan);
+      data.planMonths = finalMonths;
+      if (targetMismatch(parsed.data.targetValue, finalMonths)) {
+        mismatches.push(
+          `${label}ลำดับ ${planRowLabel(row)}: ค่าเป้าหมาย ${formatPlanNumber(parsed.data.targetValue)} แต่รวมแผนทั้งปี ${formatPlanNumber(sumMonths(finalMonths)) || "0"}`,
+        );
+      }
     }
 
     if (hasResult) {
@@ -239,6 +251,14 @@ export async function savePlanAction(
     }
 
     updates.push(db.actionPlan.update({ where: { id: row.id }, data }));
+  }
+
+  // ค่าเป้าหมายต้องเท่ากับรวมแผนทั้งปี ไม่งั้นไม่บันทึกอะไรเลย (หน้าเว็บเด้งเตือนก่อนแล้ว นี่คือด่านจริง)
+  // ยกเว้นส่วนกลางกดปลดล็อกแผน เพื่อให้ส่วนงานกลับไปแก้แผนที่ไม่ตรงได้
+  if (mismatches.length > 0 && intent !== "unlock") {
+    return {
+      error: `บันทึกแผนไม่ได้ ค่าเป้าหมายไม่ตรงกับรวมแผนทั้งปี: ${mismatches.join(" · ")}`,
+    };
   }
 
   // ---- รายงานผลการดำเนินงานของแต่ละระดับ (เฉพาะหน้ารายงานผล) ----

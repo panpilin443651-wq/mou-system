@@ -8,6 +8,7 @@ import { canManagePlan } from "@/lib/permissions";
 import {
   isAllowedMimeType,
   isBlobUrl,
+  formatBytes,
   MAX_FILE_BYTES,
   MAX_PLAN_FILES_PER_ROW,
 } from "@/lib/attachments";
@@ -87,7 +88,7 @@ export async function recordPlanAttachmentAction(
   }
   if (info.size > MAX_FILE_BYTES) {
     await del(blobUrl).catch(() => {});
-    return { error: "ไฟล์ใหญ่เกิน 10 MB" };
+    return { error: `ไฟล์ใหญ่เกิน ${formatBytes(MAX_FILE_BYTES)}` };
   }
 
   const created = await db.planAttachment.create({

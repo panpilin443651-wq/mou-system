@@ -7,6 +7,7 @@ import type { FormState } from "@/actions/plans";
 import type { MonthLocks } from "@/lib/submission-window";
 import { deletePlanAttachmentAction } from "@/actions/plan-attachments";
 import {
+  MAX_FILE_BYTES,
   MAX_PLAN_FILES_PER_ROW,
   fileKindLabel,
   formatBytes,
@@ -26,8 +27,13 @@ import {
   PLAN_SECTION_YEAR_LABEL,
   formatPct,
   formatPlanNumber,
+  LEVEL_REPORT_MAX_WORDS,
+  countWords,
   monthQuarter,
+  planRowLabel,
+  sumMonths,
   summarizeSection,
+  targetMismatch,
   type PlanLevelGroup,
   type PlanRowSummary,
 } from "@/lib/plan";
@@ -83,7 +89,7 @@ export type PlanRowData = {
 };
 
 /** ช่องในตารางเก็บเป็นข้อความ ไม่ใช่ตัวเลข เพื่อให้พิมพ์ "1." ค้างไว้ได้โดยเลขไม่หาย */
-type RowState = PlanRowData & { plan: string[]; actual: string[] };
+type RowState = PlanRowData & { target: string; plan: string[]; actual: string[] };
 
 const numText = (v: number | null) => (v === null ? "" : String(v));
 const toNum = (v: string) => {
@@ -96,6 +102,7 @@ const toNum = (v: string) => {
 function toRowState(rows: PlanRowData[]): RowState[] {
   return rows.map((r) => ({
     ...r,
+    target: numText(r.targetValue),
     plan: r.planMonths.map(numText),
     actual: r.actualMonths.map(numText),
   }));
@@ -238,26 +245,44 @@ export function PlanTable({
     Math.min(MONTH_COUNT, Math.max(1, monthsElapsed)),
   );
 
-  const setCell = (
-    rowId: string,
-    field: "plan" | "actual",
-    monthIndex: number,
-    value: string,
-  ) => {
+  const setCell: OnCell = (rowId, field, monthIndex, value) => {
     setData((prev) =>
       prev.map((r) =>
-        r.id === rowId
-          ? {
-              ...r,
-              [field]: r[field].map((v, i) => (i === monthIndex ? value : v)),
-            }
-          : r,
+        r.id !== rowId
+          ? r
+          : field === "target"
+            ? { ...r, target: value }
+            : {
+                ...r,
+                [field]: r[field].map((v, i) => (i === monthIndex ? value : v)),
+              },
       ),
     );
   };
 
+  // ค่าเป้าหมายต้องเท่ากับรวมแผนทั้งปี ไม่ตรงแม้แต่รายการเดียวก็เด้งเตือนและไม่ส่งฟอร์ม
+  // (เซิร์ฟเวอร์ตรวจซ้ำและปฏิเสธเหมือนกัน) ยกเว้นปุ่มปลดล็อกแผนของส่วนกลาง
+  const checkTargets = (e: React.FormEvent<HTMLFormElement>) => {
+    if (!editStructure) return;
+    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    if (submitter?.value === "unlock") return;
+
+    const problems = data
+      .filter((r) => targetMismatch(toNum(r.target), r.plan.map(toNum)))
+      .map(
+        (r) =>
+          `• ${PLAN_SECTION_ITEM_LABEL[r.section]} ลำดับ ${planRowLabel(r)}: ค่าเป้าหมาย ${r.target} แต่รวมแผนทั้งปี ${formatPlanNumber(sumMonths(r.plan.map(toNum))) || "0"}`,
+      );
+    if (problems.length === 0) return;
+
+    e.preventDefault();
+    window.alert(
+      `บันทึกแผนไม่ได้\n\nค่าเป้าหมายต้องเท่ากับรวมแผนทั้งปี (ต.ค. – ก.ย.) กรุณาแก้รายการต่อไปนี้:\n${problems.join("\n")}`,
+    );
+  };
+
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} onSubmit={checkTargets} className="space-y-5">
       <input type="hidden" name="mode" value={mode} />
       {state.error && (
         <p
@@ -301,7 +326,7 @@ export function PlanTable({
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
             <label htmlFor="owner" className="mb-1.5 block text-sm font-medium">
-              ผู้รับผิดชอบตัวชี้วัด
+              ส่วนงาน/หน่วยงานที่รับผิดชอบตัวชี้วัด
             </label>
             <input
               id="owner"
@@ -455,12 +480,7 @@ function SectionTable({
   editStructure: boolean;
   rows: RowState[];
   upto: number;
-  onCell: (
-    rowId: string,
-    field: "plan" | "actual",
-    monthIndex: number,
-    value: string,
-  ) => void;
+  onCell: OnCell;
   filesByRow: Map<string, PlanFile[]>;
   criteria: PlanCriterion[];
   levelReports: Record<number, string>;
@@ -762,20 +782,55 @@ function LevelGroup({
               >
                 รายงานผลการดำเนินงานของ{criterion.shortTitle}
               </label>
-              <textarea
+              <LevelReportInput
                 id={`levelReport_${criterion.level}`}
-                name={`levelReport_${criterion.level}`}
                 defaultValue={report}
                 readOnly={!editResults}
-                rows={3}
-                placeholder={
-                  editResults ? "ผลที่เกิดขึ้นจริงเทียบกับค่าเกณฑ์ระดับนี้" : ""
-                }
-                className={`${textInput} resize-y read-only:bg-slate-50`}
               />
             </div>
           </td>
         </tr>
+      )}
+    </>
+  );
+}
+
+/**
+ * ช่อง "รายงานผลการดำเนินงานของระดับ" พร้อมตัวนับคำ (ไม่เกิน LEVEL_REPORT_MAX_WORDS คำ)
+ * ตัวนับใช้ countWords ตัวเดียวกับเซิร์ฟเวอร์ ตัวเลขบนจอจึงตรงกับที่ถูกตรวจจริง
+ */
+function LevelReportInput({
+  id,
+  defaultValue,
+  readOnly,
+}: {
+  id: string;
+  defaultValue: string;
+  readOnly: boolean;
+}) {
+  const [words, setWords] = useState(() => countWords(defaultValue));
+  const over = words > LEVEL_REPORT_MAX_WORDS;
+  const max = LEVEL_REPORT_MAX_WORDS.toLocaleString("th-TH");
+  return (
+    <>
+      <textarea
+        id={id}
+        name={id}
+        defaultValue={defaultValue}
+        readOnly={readOnly}
+        rows={3}
+        onChange={(e) => setWords(countWords(e.target.value))}
+        placeholder={
+          readOnly ? "" : `ผลที่เกิดขึ้นจริงเทียบกับค่าเกณฑ์ระดับนี้ (ไม่เกิน ${max} คำ)`
+        }
+        aria-invalid={over}
+        className={`${textInput} resize-y read-only:bg-slate-50 ${over ? "border-red-400" : ""}`}
+      />
+      {!readOnly && (
+        <p className={`mt-0.5 text-right text-xs ${over ? "font-medium text-red-700" : "text-slate-500"}`}>
+          {words.toLocaleString("th-TH")} / {max} คำ
+          {over && " · เกินจำนวนที่กำหนด บันทึกไม่ได้"}
+        </p>
       )}
     </>
   );
@@ -868,7 +923,7 @@ function HeaderRow({
           <Th className="text-left">
             หลักฐานประกอบผลการดำเนินงาน
             <span className="block text-xs font-normal text-slate-500">
-              ไม่เกิน {MAX_PLAN_FILES_PER_ROW} ไฟล์
+              ไม่เกิน {MAX_PLAN_FILES_PER_ROW} ไฟล์ · ไฟล์ละไม่เกิน {formatBytes(MAX_FILE_BYTES)}
             </span>
           </Th>
         </>
@@ -895,9 +950,10 @@ function LockIcon() {
   );
 }
 
+/** field "target" = ช่องค่าเป้าหมาย (ไม่ใช้ monthIndex) */
 type OnCell = (
   rowId: string,
-  field: "plan" | "actual",
+  field: "plan" | "actual" | "target",
   monthIndex: number,
   value: string,
 ) => void;
@@ -925,6 +981,7 @@ function PlanRow({
   const hasLockedData =
     row.planMonths.some((v, i) => locks.plan[i] && v !== null) ||
     row.actualMonths.some((v, i) => locks.actual[i] && v !== null);
+  const mismatch = targetMismatch(toNum(row.target), row.plan.map(toNum));
 
   return (
     <tr className="hover:bg-slate-50/60">
@@ -942,10 +999,12 @@ function PlanRow({
       <td className={sharedCell}>
         <input
           name={`target_${row.id}`}
-          defaultValue={row.targetValue === null ? "" : String(row.targetValue)}
+          value={row.target}
+          onChange={(e) => onCell(row.id, "target", -1, e.target.value)}
           readOnly={!editStructure}
           inputMode="decimal"
-          className={`${textInput} text-right tabular-nums read-only:bg-slate-50`}
+          aria-invalid={mismatch}
+          className={`${textInput} text-right tabular-nums read-only:bg-slate-50 ${mismatch ? "border-red-400" : ""}`}
         />
       </td>
       <td className={sharedCell}>
@@ -970,9 +1029,13 @@ function PlanRow({
         />
       ))}
       <td
-        className={`${sharedCell} border-l-2 border-l-slate-300 text-right font-medium tabular-nums text-brand-ink`}
+        className={`${sharedCell} border-l-2 border-l-slate-300 text-right font-medium tabular-nums ${
+          mismatch ? "bg-red-50 text-red-700" : "text-brand-ink"
+        }`}
+        title={mismatch ? "รวมแผนทั้งปีไม่เท่ากับค่าเป้าหมาย" : undefined}
       >
         {formatPlanNumber(summary.planYear) || "–"}
+        {mismatch && <span className="block text-[11px] font-normal">ไม่ตรงค่าเป้าหมาย</span>}
       </td>
       {editStructure && (
         <td className={`${sharedCell} text-center`}>
@@ -1126,7 +1189,7 @@ function RowPair({
   );
 }
 
-/** ช่องหลักฐานประกอบผลการดำเนินงาน: รายชื่อไฟล์ + ปุ่มแนบเอกสาร (ไม่เกิน 4 ไฟล์ต่อขั้นตอน) */
+/** ช่องหลักฐานประกอบผลการดำเนินงาน: รายชื่อไฟล์ + ปุ่มแนบเอกสาร (ไม่เกิน MAX_PLAN_FILES_PER_ROW ไฟล์ต่อขั้นตอน) */
 function EvidenceFiles({
   files,
   canEdit,

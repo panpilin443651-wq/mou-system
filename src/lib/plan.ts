@@ -146,6 +146,49 @@ export function isPlanComplete(
   );
 }
 
+/**
+ * ค่าเป้าหมายของรายการ ไม่ตรงกับผลรวมแผนรายเดือนทั้งปี
+ *
+ * ใช้ทั้งหน้าเว็บ (เด้งแจ้งเตือนก่อนส่ง) และ savePlanAction (ปฏิเสธการบันทึก)
+ * ช่องค่าเป้าหมายว่าง = ไม่ตรวจ · ปัดทศนิยม 6 ตำแหน่งก่อนเทียบ กันเศษทศนิยมของการบวกเลข
+ */
+export function targetMismatch(targetValue: number | null, planMonths: MonthValues): boolean {
+  if (targetValue === null) return false;
+  const round = (n: number) => Math.round(n * 1e6) / 1e6;
+  return round(targetValue) !== round(sumMonths(planMonths));
+}
+
+/** "รายงานผลการดำเนินงานของระดับ" เขียนได้ไม่เกินกี่คำ */
+export const LEVEL_REPORT_MAX_WORDS = 10_000;
+
+/**
+ * นับจำนวนคำ ใช้ทั้งตัวนับบนหน้าเว็บและตอนตรวจที่เซิร์ฟเวอร์ ผลจึงตรงกันเสมอ
+ *
+ * ภาษาไทยไม่เว้นวรรคระหว่างคำ นับด้วยการแยกช่องว่างจะได้ทั้งย่อหน้าเป็นคำเดียว
+ * จึงใช้ Intl.Segmenter ตัดคำตามพจนานุกรมภาษาไทย (นับเฉพาะส่วนที่เป็นคำ ไม่นับเว้นวรรคและเครื่องหมาย)
+ */
+export function countWords(text: string): number {
+  if (text.trim() === "") return 0;
+  if (typeof Intl !== "undefined" && "Segmenter" in Intl) {
+    const segmenter = new Intl.Segmenter("th", { granularity: "word" });
+    let count = 0;
+    for (const s of segmenter.segment(text)) if (s.isWordLike) count++;
+    return count;
+  }
+  return text.trim().split(/\s+/).length;
+}
+
+/** เลขลำดับของรายการตามที่แสดงในตาราง เช่น "2" (เป้าหมาย) หรือ "3.1" (ขั้นที่ 1 ของระดับ 3) */
+export function planRowLabel(row: {
+  section: PlanSection;
+  criteriaLevel: number | null;
+  sortOrder: number;
+}): string {
+  return row.section === "STEP" && row.criteriaLevel !== null
+    ? `${row.criteriaLevel}.${row.sortOrder}`
+    : String(row.sortOrder);
+}
+
 // ----------------------------------------------------------------------------
 // สรุปผลรายแถวและรายตาราง
 // ----------------------------------------------------------------------------

@@ -138,6 +138,13 @@ export async function POST(request: Request): Promise<NextResponse> {
         if (!window.canWrite)
           throw new Error(`แนบไฟล์ไม่ได้ — ${window.message}`);
 
+        // 5. ไม่เกิน 3 ไฟล์ต่อระดับคะแนน (เงื่อนไขเดียวกับหลักฐานในแผน)
+        const existing = await db.attachment.count({
+          where: { criteriaLevel, report: { indicatorId, quarter } },
+        });
+        if (existing >= MAX_PLAN_FILES_PER_ROW)
+          throw new Error(`แนบไฟล์ได้ไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ต่อระดับ`);
+
         return {
           ...uploadRules,
           tokenPayload: JSON.stringify({ indicatorId, quarter, criteriaLevel }),

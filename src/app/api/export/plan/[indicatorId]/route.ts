@@ -179,8 +179,8 @@ export async function GET(
 
   const headerLines: [string, string][] = [
     ["ชื่อตัวชี้วัด", indicator.name],
-    ["ผู้รับผิดชอบตัวชี้วัด", indicator.planHeader?.owner ?? ""],
-    ["งบประมาณ", indicator.planHeader?.budget ?? ""],
+    ["ส่วนงาน/หน่วยงานที่รับผิดชอบตัวชี้วัด", indicator.planHeader?.owner ?? ""],
+    ["งบประมาณ (ถ้ามี)", indicator.planHeader?.budget ?? ""],
   ];
   for (const [label, value] of headerLines) {
     sheet.getCell(r, COL_INDEX).value = label;
