@@ -24,7 +24,7 @@ async function demoUsers() {
     orderBy: { name: "asc" },
   });
 
-  const roleOrder = { DEPT_USER: 0, EXECUTIVE: 1, ADMIN: 2 } as const;
+  const roleOrder = { DEPT_USER: 0, DEPT_HEAD: 1, EXECUTIVE: 2, ADMIN: 3 } as const;
   return users.sort(
     (a, b) =>
       roleOrder[a.role] - roleOrder[b.role] ||

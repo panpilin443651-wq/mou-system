@@ -7,6 +7,7 @@ import {
   canSubmitReport,
   canViewDepartment,
   indicatorsMenuLabel,
+  isDepartmentRole,
 } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { PLAN_SECTION_ITEM_LABEL, summarizeRow, toMonths } from "@/lib/plan";
@@ -68,7 +69,7 @@ export default async function IndicatorDetailPage({
     <div className="space-y-5">
       <div>
         <Link href="/indicators" className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline">
-          ← กลับไป{user.role === "DEPT_USER" ? indicatorsMenuLabel(user) : "รายการส่วนงานและหน่วยงาน"}
+          ← กลับไป{isDepartmentRole(user.role) ? indicatorsMenuLabel(user) : "รายการส่วนงานและหน่วยงาน"}
         </Link>
 
         <div className="mt-2 flex flex-wrap items-start justify-between gap-3">

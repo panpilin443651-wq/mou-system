@@ -24,7 +24,9 @@ datasource db {
 
 enum Role {
   ADMIN // ส่วนกลาง - จัดการทุกอย่าง สร้างตัวชี้วัดให้ส่วนงาน
-  DEPT_USER // ผู้รับผิดชอบส่วนงาน - เห็นเฉพาะของตัวเอง กรอกผลได้ แก้ตัวชี้วัดไม่ได้
+  DEPT_USER // ผู้รับผิดชอบส่วนงาน (ผู้รายงาน) - เห็นเฉพาะของตัวเอง กรอกแผน/ผลและบันทึกร่างได้ แต่กดส่งไม่ได้
+  DEPT_HEAD // หัวหน้าส่วนงาน/หัวหน้าหน่วยงานที่ไม่สังกัดส่วนงาน - ทำได้เหมือนผู้รายงาน และเป็นผู้กดส่งแผน/ส่งผล
+  //           รับแจ้งเตือน (กระดิ่ง) เมื่อส่วนกลางตีกลับแผนหรือผล
   EXECUTIVE // ผู้บริหาร - ดูได้ทุกส่วนงาน แต่แก้ไขอะไรไม่ได้
 }
 
@@ -131,6 +133,7 @@ model User {
   auditLogs         AuditLog[]
   editedMouScores   MouScore[]
   uploadedPlanFiles PlanAttachment[]
+  notifications     Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -282,6 +285,11 @@ model PlanHeader {
   /// id ของผู้ใช้ที่กดยืนยัน (ไม่ผูก relation เพราะใช้แสดงผลอย่างเดียว)
   confirmedById String?
 
+  /// ส่วนกลางตีกลับแผนเมื่อไร และเหตุผล - ตีกลับแล้ว confirmedAt เป็น null (แผนปลดล็อกให้แก้)
+  /// ล้างทั้งสองช่องเมื่อหัวหน้าส่วนงานกดส่งแผนใหม่
+  returnedAt DateTime?
+  returnNote String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -430,6 +438,11 @@ model QuarterlyReport {
   submittedAt   DateTime?
   submittedById String?
   submittedBy   User?        @relation("ReportSubmitter", fields: [submittedById], references: [id], onDelete: SetNull)
+
+  /// ส่วนกลางตีกลับผลเมื่อไร และเหตุผล - ตีกลับแล้ว status กลับเป็น DRAFT
+  /// ล้างทั้งสองช่องเมื่อหัวหน้าส่วนงานกดส่งผลใหม่
+  returnedAt DateTime?
+  returnNote String?
 
   attachments      Attachment[]
   /// 4. รายงานผลการดำเนินงาน แยกเป็นแต่ละค่าเกณฑ์
@@ -592,6 +605,30 @@ model MouScore {
   /// 1 ตัวชี้วัด มีคะแนนได้ไตรมาสละ 1 ชุดเท่านั้น
   @@unique([indicatorId, quarter])
   @@index([indicatorId])
+}
+
+// ============================================================================
+// การแจ้งเตือน (กระดิ่งบนแถบเมนู)
+// ============================================================================
+
+/// แจ้งเตือนถึงผู้ใช้หนึ่งคน เช่น "ส่วนกลางตีกลับแผน ข้อ 2.1"
+/// ส่งถึงหัวหน้าส่วนงานทุกคนของส่วนงานนั้น (1 คน = 1 แถว แต่ละคนอ่านแล้วแยกกัน)
+model Notification {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title String
+  body  String?
+  /// หน้าที่กดแล้วพาไป เช่น /plans/<id>
+  link  String?
+
+  /// null = ยังไม่อ่าน (กระดิ่งเป็นสีแดง)
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt])
 }
 
 // ============================================================================

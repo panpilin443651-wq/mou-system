@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผล MOU" };
 
 // หน้าแผนการดำเนินงาน (ขั้นตอนที่ 1) แยกจากหน้ารายงานผลการดำเนินงาน (ขั้นตอนที่ 2)
-// กรอกส่วนหัว เป้าหมาย ขั้นตอน และแผนรายเดือน · บันทึกร่างแผนไว้ก่อนได้ · ยืนยันแผนแล้วจึงรายงานผลได้
+// กรอกส่วนหัว เป้าหมาย ขั้นตอน และแผนรายเดือน · บันทึกร่างแผนไว้ก่อนได้ · ส่งแผนแล้วจึงรายงานผลได้
 export default async function IndicatorPlanPage({
   params,
 }: {
@@ -85,12 +85,12 @@ export default async function IndicatorPlanPage({
                 : "border-brand-200 bg-brand-50 text-brand-900"
             }`}
           >
-            <p className="font-medium">ขั้นตอนที่ 1 · กรอกแผนการดำเนินงาน (หน้านี้)</p>
+            <p className="font-medium">ขั้นตอนที่ 1 · กรอกและส่งแผนการดำเนินงาน (หน้านี้)</p>
             <p className="mt-0.5">
               {confirmed ? (
-                <span className="text-emerald-800">✓ ยืนยันแผนแล้ว</span>
+                <span className="text-emerald-800">✓ ส่งแผนแล้ว</span>
               ) : (
-                "บันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วกดยืนยันแผน"
+                "บันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผน"
               )}
             </p>
           </li>
@@ -111,7 +111,7 @@ export default async function IndicatorPlanPage({
                   ไปรายงานผลไตรมาส {quarter}
                 </Link>
               ) : (
-                "ทำได้หลังยืนยันแผนแล้ว"
+                "ทำได้หลังส่งแผนแล้ว"
               )}
             </p>
           </li>

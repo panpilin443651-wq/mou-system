@@ -1,6 +1,6 @@
 import type { Prisma } from "@prisma/client";
 import type { CurrentUser } from "@/lib/session";
-import { canManagePlan } from "@/lib/permissions";
+import { canManagePlan, canReturnSubmission, canSendForDepartment } from "@/lib/permissions";
 import { currentFiscalMonthIndex, planLevelGroups, toMonths } from "@/lib/plan";
 import { monthLocks, type WindowStatus } from "@/lib/submission-window";
 import { formatThaiDateTime } from "@/lib/datetime";
@@ -73,7 +73,15 @@ export function planTableProps({
     locks: monthLocks(statuses),
     confirmedLabel: confirmedAt ? formatThaiDateTime(confirmedAt) : null,
     structureLocked: confirmedAt !== null && !isAdmin,
-    canUnlock: isAdmin && canEdit && confirmedAt !== null,
+    canUnlock: canReturnSubmission(user) && confirmedAt !== null,
+    canSend: canSendForDepartment(user, indicator.departmentId),
+    returned:
+      indicator.planHeader?.returnedAt && indicator.planHeader.returnNote
+        ? {
+            label: formatThaiDateTime(indicator.planHeader.returnedAt),
+            note: indicator.planHeader.returnNote,
+          }
+        : null,
     monthsElapsed: currentFiscalMonthIndex(indicator.fiscalYear.year),
     fiscalYear: indicator.fiscalYear.year,
     indicatorId: indicator.id,

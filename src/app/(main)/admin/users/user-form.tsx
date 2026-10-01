@@ -11,7 +11,7 @@ import type { FormState } from "@/actions/users";
 export type UserFormValues = {
   email: string;
   name: string;
-  role: "ADMIN" | "DEPT_USER" | "EXECUTIVE";
+  role: "ADMIN" | "DEPT_USER" | "DEPT_HEAD" | "EXECUTIVE";
   departmentId: string;
   isActive: boolean;
 };
@@ -150,7 +150,8 @@ export function UserForm({
               onChange={(e) => setRole(e.target.value as UserFormValues["role"])}
               className={`${inputClass} bg-surface disabled:bg-slate-100 disabled:text-slate-500`}
             >
-              <option value="DEPT_USER">ผู้รับผิดชอบส่วนงาน — กรอกผลของส่วนงานตัวเอง</option>
+              <option value="DEPT_USER">ผู้รับผิดชอบส่วนงาน (ผู้รายงาน) — กรอกแผน/ผลและบันทึกร่าง</option>
+              <option value="DEPT_HEAD">หัวหน้าส่วนงาน/หัวหน้าหน่วยงานที่ไม่สังกัดส่วนงาน — กดส่งแผน/ส่งผล รับแจ้งเตือนเมื่อถูกตีกลับ</option>
               <option value="EXECUTIVE">ผู้บริหาร — ดูได้ทุกส่วนงาน แก้ไขไม่ได้</option>
               <option value="ADMIN">ผู้ดูแลระบบ (ส่วนกลาง) — ทำได้ทุกอย่าง</option>
             </select>
@@ -179,7 +180,7 @@ export function UserForm({
           </Field>
         </div>
 
-        {role === "DEPT_USER" ? (
+        {role === "DEPT_USER" || role === "DEPT_HEAD" ? (
           <Field
             label="สังกัดส่วนงาน"
             htmlFor="departmentId"

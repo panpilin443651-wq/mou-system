@@ -6,6 +6,7 @@ import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "./mobile-nav";
+import { unreadCount } from "@/lib/notifications";
 
 // โฟลเดอร์ (main) ที่มีวงเล็บ = จัดกลุ่มไฟล์โดยไม่กลายเป็นส่วนหนึ่งของ URL
 // ทุกหน้าในกลุ่มนี้จะได้แถบเมนูนี้ และต้อง login ก่อนเสมอ
@@ -21,6 +22,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         select: { code: true, name: true },
       })
     : null;
+
+  // กระดิ่ง: แจ้งเตือนที่ยังไม่อ่าน (เช่น ส่วนกลางตีกลับแผน/ผล) - มีแล้วกระดิ่งเป็นสีแดง
+  const unread = await unreadCount(user.id);
 
   const links = [
     { href: "/dashboard", label: "ภาพรวม", show: menus.dashboard },
@@ -65,6 +69,24 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               </Link>
             ))}
           </nav>
+
+          <Link
+            href="/notifications"
+            aria-label={unread > 0 ? `แจ้งเตือน ยังไม่อ่าน ${unread} รายการ` : "แจ้งเตือน"}
+            title={unread > 0 ? `มีแจ้งเตือนใหม่ ${unread} รายการ` : "แจ้งเตือน"}
+            className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition ${
+              unread > 0 ? "text-red-600 hover:bg-red-50" : "text-slate-500 hover:bg-slate-100"
+            }`}
+          >
+            <svg viewBox="0 0 24 24" fill={unread > 0 ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} className="h-6 w-6" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+            </svg>
+            {unread > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-surface">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </Link>
 
           <ThemeToggle />
 

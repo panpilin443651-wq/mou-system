@@ -95,7 +95,7 @@ export const userSchema = z
       .email("รูปแบบอีเมลไม่ถูกต้อง")
       .transform((v) => v.toLowerCase()),
     name: z.string().trim().min(2, "กรุณากรอกชื่อ-นามสกุล").max(150, "ชื่อยาวเกินไป"),
-    role: z.enum(["ADMIN", "DEPT_USER", "EXECUTIVE"]),
+    role: z.enum(["ADMIN", "DEPT_USER", "DEPT_HEAD", "EXECUTIVE"]),
     departmentId: z
       .string()
       .trim()
@@ -103,9 +103,9 @@ export const userSchema = z
       .nullable(),
     isActive: z.enum(["true", "false"]).transform((v) => v === "true"),
   })
-  .refine((v) => v.role !== "DEPT_USER" || v.departmentId !== null, {
+  .refine((v) => (v.role !== "DEPT_USER" && v.role !== "DEPT_HEAD") || v.departmentId !== null, {
     // ถ้า DEPT_USER ไม่มีสังกัด จะมองไม่เห็นข้อมูลอะไรเลยและใช้งานไม่ได้
-    message: "ผู้รับผิดชอบส่วนงานต้องระบุสังกัด",
+    message: "ผู้รับผิดชอบส่วนงานและหัวหน้าส่วนงานต้องระบุสังกัด",
     path: ["departmentId"],
   });
 

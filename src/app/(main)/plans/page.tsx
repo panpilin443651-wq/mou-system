@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผล MOU" };
 
 // เมนู "แผนการดำเนินงาน" (ขั้นตอนที่ 1) แยกจากเมนู "รายงานผลการดำเนินงาน" (ขั้นตอนที่ 2)
-// ชั้นที่ 1 รายชื่อส่วนงาน + จำนวนตัวชี้วัดที่ยืนยันแผนแล้ว · ชั้นที่ 2 ตัวชี้วัดของส่วนงาน + สถานะแผน
+// ชั้นที่ 1 รายชื่อส่วนงาน + จำนวนตัวชี้วัดที่ส่งแผนแล้ว · ชั้นที่ 2 ตัวชี้วัดของส่วนงาน + สถานะแผน
 // หน้ากรอกแผนของแต่ละตัวชี้วัดอยู่ที่ /plans/[id]
 
 const PAGE_SIZE = 50;
@@ -78,7 +78,7 @@ export default async function PlansPage({
   );
 }
 
-/** ชั้นที่ 1 - รายชื่อส่วนงาน พร้อมจำนวนตัวชี้วัดที่วางแผน/ยืนยันแผนแล้ว */
+/** ชั้นที่ 1 - รายชื่อส่วนงาน พร้อมจำนวนตัวชี้วัดที่วางแผน/ส่งแผนแล้ว */
 async function DepartmentSummary({
   baseWhere,
   departments,
@@ -118,7 +118,7 @@ async function DepartmentSummary({
       stats: [
         { label: "ตัวชี้วัด", value: total.toLocaleString("th-TH") },
         { label: "วางแผนแล้ว", value: fraction(plannedBy.get(d.id) ?? 0) },
-        { label: "ยืนยันแผนแล้ว", value: fraction(confirmedBy.get(d.id) ?? 0) },
+        { label: "ส่งแผนแล้ว", value: fraction(confirmedBy.get(d.id) ?? 0) },
       ],
     };
   });
@@ -231,7 +231,7 @@ async function PlanList({
                             className="rounded bg-brand-50 px-1.5 py-0.5 text-brand-ink"
                             title={`ยืนยันเมื่อ ${formatThaiDateTime(confirmedAt)}`}
                           >
-                            ✓ ยืนยันแผนแล้ว
+                            ✓ ส่งแผนแล้ว
                           </span>
                         ) : ind.plans.length === 0 ? (
                           <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
@@ -251,7 +251,7 @@ async function PlanList({
           </div>
 
           <p className="text-xs text-slate-500">
-            กรอกแผนการดำเนินงานแล้วกดบันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วกดยืนยันแผน
+            กรอกแผนการดำเนินงานแล้วกดบันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วกดส่งแผน
             จึงรายงานผลการดำเนินงานได้ (เมนูรายงานผลการดำเนินงาน) · ยืนยันแล้วแผนถูกล็อก ติดต่อส่วนกลางหากต้องแก้
           </p>
 
