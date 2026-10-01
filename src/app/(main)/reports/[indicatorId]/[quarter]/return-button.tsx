@@ -57,10 +57,10 @@ export function ReturnButton({
     >
       <h2 className="flex items-center gap-2 font-semibold text-red-800">
         <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden="true" />
-        ความเห็นส่วนกลาง / ตีกลับผลไตรมาส {quarter}
+        ความเห็นส่วนกลาง
       </h2>
       <label htmlFor="returnNote" className="mt-1 block text-sm text-red-900">
-        ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
+        ผลไตรมาส {quarter} · ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข แล้วกดตีกลับผล · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
       </label>
       <textarea
         ref={noteRef}

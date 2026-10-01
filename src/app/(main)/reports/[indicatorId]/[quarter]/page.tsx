@@ -112,6 +112,16 @@ export default async function ReportPage({
           {...planTableProps({ indicator, user, statuses, mode: "report" })}
         />
       )}
+      {/* ความเห็นส่วนกลาง + ตีกลับผล อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ
+          แสดงเสมอสำหรับส่วนกลาง ตีกลับได้เฉพาะผลที่ส่งแล้ว
+          เป็นฟอร์มแยกของตัวเอง วางต่อจากฟอร์มตาราง (ไม่ซ้อนกัน) */}
+      {canReturnSubmission(user) && (
+        <ReturnButton
+          action={returnReportAction.bind(null, indicator.id, quarter)}
+          quarter={quarter}
+          canReturnNow={isSubmitted}
+        />
+      )}
     </section>
   );
 
@@ -418,15 +428,6 @@ export default async function ReportPage({
             )}
           </div>
         </div>
-      )}
-
-      {/* ความเห็นส่วนกลาง / ตีกลับผล - แสดงเสมอสำหรับส่วนกลาง ตีกลับได้เฉพาะผลที่ส่งแล้ว */}
-      {canReturnSubmission(user) && (
-        <ReturnButton
-          action={returnReportAction.bind(null, indicator.id, quarter)}
-          quarter={quarter}
-          canReturnNow={isSubmitted}
-        />
       )}
 
       {/* ผลถูกตีกลับ - แสดงจนกว่าหัวหน้าส่วนงานจะกดส่งผลใหม่ */}

@@ -167,7 +167,7 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
     <section className="rounded-xl border-2 border-red-400 bg-red-50 p-4 shadow-sm sm:p-5">
       <h2 className="flex items-center gap-2 font-semibold text-red-800">
         <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden="true" />
-        ความเห็นส่วนกลาง / ตีกลับแผนการดำเนินงาน
+        ความเห็นส่วนกลาง
       </h2>
       <label htmlFor="returnNote" className="mt-1 block text-sm text-red-900">
         ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
@@ -390,9 +390,6 @@ export function PlanTable({
         )
       )}
 
-      {/* ---- ความเห็นส่วนกลาง / ตีกลับแผน (เฉพาะส่วนกลาง หน้าแผน) ---- */}
-      {isPlan && canReturn && <ReturnPanel canReturnNow={canUnlock} />}
-
       {/* ---- ส่วนหัวของแบบฟอร์ม ----
           กรอกที่หน้าแผน หน้ารายงานผลแสดงอย่างเดียว (ไม่มี name จึงไม่ถูกส่งไปบันทึกทับ) */}
       <section className="rounded-xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
@@ -499,6 +496,10 @@ export function PlanTable({
           locks={locks}
         />
       ))}
+
+      {/* ---- ความเห็นส่วนกลาง + ตีกลับแผน (เฉพาะส่วนกลาง หน้าแผน)
+          อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ ส่วนกลางอ่านแผนครบแล้วค่อยเขียนความเห็น ---- */}
+      {isPlan && canReturn && <ReturnPanel canReturnNow={canUnlock} />}
 
       {canEdit && (
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
