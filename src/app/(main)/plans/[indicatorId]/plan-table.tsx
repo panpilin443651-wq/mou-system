@@ -6,7 +6,11 @@ import type { PlanSection } from "@prisma/client";
 import type { FormState } from "@/actions/plans";
 import type { MonthLocks } from "@/lib/submission-window";
 import { deletePlanAttachmentAction } from "@/actions/plan-attachments";
-import { fileKindLabel, formatBytes } from "@/lib/attachments";
+import {
+  MAX_PLAN_FILES_PER_ROW,
+  fileKindLabel,
+  formatBytes,
+} from "@/lib/attachments";
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
 import {
@@ -21,9 +25,11 @@ import {
   PLAN_SECTION_TITLE,
   PLAN_SECTION_YEAR_LABEL,
   formatPct,
+  formatPlanNumber,
   monthQuarter,
   summarizeSection,
   type PlanLevelGroup,
+  type PlanRowSummary,
 } from "@/lib/plan";
 
 // ============================================================================
@@ -41,10 +47,17 @@ import {
 //
 // หลักฐานประกอบผลการดำเนินงานเป็นไฟล์แนบ อัปโหลดทันทีไม่ต้องรอกดบันทึก
 // แนบได้ทุกบรรทัดที่เห็นบนจอ เพราะบรรทัดถูกสร้างในฐานข้อมูลตั้งแต่กดเพิ่มแล้ว
+//
+// ตารางเดียวกันใช้สองหน้า (mode):
+//   plan    หน้าแผนดำเนินงาน: ส่วนหัว + รายการ + แผนรายเดือน · บันทึกร่างแผน / ยืนยันแผน
+//   report  หน้ารายงานผล: แผนแสดงอย่างเดียว กรอกผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน รายงานรายระดับ
+// ช่องของอีกหน้าไม่มี name จึงไม่ถูกส่งไป เซิร์ฟเวอร์คงค่าเดิมไว้ให้
 // ============================================================================
 
 /** กลุ่มของตารางขั้นตอน - สร้างด้วย planLevelGroups() */
 export type PlanCriterion = PlanLevelGroup;
+
+export type PlanTableMode = "plan" | "report";
 
 export type PlanFile = {
   id: string;
@@ -151,6 +164,7 @@ function UnlockButton() {
 }
 
 export function PlanTable({
+  mode,
   action,
   canEdit,
   header,
@@ -165,6 +179,8 @@ export function PlanTable({
   structureLocked,
   canUnlock,
 }: {
+  /** plan = หน้าแผนดำเนินงาน · report = หน้ารายงานผล */
+  mode: PlanTableMode;
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   canEdit: boolean;
   header: { owner: string; budget: string };
@@ -187,7 +203,10 @@ export function PlanTable({
 }) {
   // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
   // ยืนยันแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
-  const editStructure = canEdit && !structureLocked;
+  const isPlan = mode === "plan";
+  const editStructure = isPlan && canEdit && !structureLocked;
+  // หน้าแผนไม่กรอกผล หน้ารายงานผลไม่แก้แผน
+  const editResults = !isPlan && canEdit;
   const [state, formAction] = useActionState(action, {
     error: null,
   } as FormState);
@@ -239,6 +258,7 @@ export function PlanTable({
 
   return (
     <form action={formAction} className="space-y-5">
+      <input type="hidden" name="mode" value={mode} />
       {state.error && (
         <p
           role="alert"
@@ -256,8 +276,8 @@ export function PlanTable({
         </p>
       )}
 
-      {/* ---- สถานะการยืนยันแผน ---- */}
-      {confirmedLabel ? (
+      {/* ---- สถานะการยืนยันแผน (หน้าแผน) ---- */}
+      {!isPlan ? null : confirmedLabel ? (
         <p className="rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-700 shadow-sm">
           <span className="font-medium text-emerald-800">✓ ยืนยันแผนแล้ว</span> เมื่อ {confirmedLabel} ·{" "}
           {structureLocked
@@ -267,13 +287,15 @@ export function PlanTable({
       ) : (
         canEdit && (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            กรอกแผนให้ครบแล้วกด <strong>ยืนยันแผน</strong> ด้านล่าง จึงจะรายงานผลรายไตรมาสได้ ·
+            กรอกไม่เสร็จกด <strong>บันทึกร่างแผน</strong> ไว้ก่อนแล้วกลับมาแก้ต่อได้ ·
+            กรอกครบแล้วกด <strong>ยืนยันแผน</strong> ด้านล่าง จึงจะรายงานผลการดำเนินงานได้ ·
             หลังยืนยันจะแก้แผนรายเดือน เป้าหมาย ค่าเป้าหมาย หน่วยนับ และขั้นตอนการดำเนินงานไม่ได้อีก
           </p>
         )
       )}
 
-      {/* ---- ส่วนหัวของแบบฟอร์ม ---- */}
+      {/* ---- ส่วนหัวของแบบฟอร์ม ----
+          กรอกที่หน้าแผน หน้ารายงานผลแสดงอย่างเดียว (ไม่มี name จึงไม่ถูกส่งไปบันทึกทับ) */}
       <section className="rounded-xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
         <h2 className="font-semibold">ข้อมูลหัวแบบฟอร์ม</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -283,10 +305,10 @@ export function PlanTable({
             </label>
             <input
               id="owner"
-              name="owner"
+              name={isPlan ? "owner" : undefined}
               defaultValue={header.owner}
-              readOnly={!canEdit}
-              placeholder="เช่น การยางแห่งประเทศไทยเขตภาคเหนือ/กองแผนและวิชาการ"
+              readOnly={!isPlan || !canEdit}
+              placeholder={isPlan ? "เช่น การยางแห่งประเทศไทยเขตภาคเหนือ/กองแผนและวิชาการ" : ""}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none read-only:bg-slate-50 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
             />
           </div>
@@ -295,40 +317,48 @@ export function PlanTable({
               htmlFor="budget"
               className="mb-1.5 block text-sm font-medium"
             >
-              งบประมาณ
+              งบประมาณ <span className="font-normal text-slate-500">(ถ้ามี)</span>
             </label>
             <input
               id="budget"
-              name="budget"
+              name={isPlan ? "budget" : undefined}
               defaultValue={header.budget}
-              readOnly={!canEdit}
-              placeholder="เช่น 71,000 บาท"
+              readOnly={!isPlan || !canEdit}
+              placeholder={isPlan ? "เช่น 71,000 บาท · ไม่มีงบประมาณเว้นว่างได้" : ""}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none read-only:bg-slate-50 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
             />
           </div>
         </div>
       </section>
 
-      {/* ---- ตัวเลือกเดือนที่ใช้คิดยอดสะสม ---- */}
+      {/* ---- ตัวเลือกเดือนที่ใช้คิดยอดสะสม (หน้ารายงานผล) ---- */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm shadow-sm">
-        <label htmlFor="upto" className="font-medium">
-          คิดยอดสะสมถึงเดือน
-        </label>
-        <select
-          id="upto"
-          value={upto}
-          onChange={(e) => setUpto(Number(e.target.value))}
-          className="min-h-11 rounded-lg border border-slate-300 px-3 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
-        >
-          {FISCAL_MONTHS.map((m, i) => (
-            <option key={m} value={i + 1}>
-              {m}
-            </option>
-          ))}
-        </select>
-        <span className="text-slate-500">
-          ปีบัญชี {fiscalYear} · ค่าเริ่มต้นคือเดือนปัจจุบัน
-        </span>
+        {isPlan ? (
+          <span className="text-slate-600">
+            ปีบัญชี {fiscalYear} · กรอกแผนรายเดือน ต.ค. – ก.ย. ช่อง &quot;รวม&quot; คือแผนทั้งปี
+          </span>
+        ) : (
+          <>
+            <label htmlFor="upto" className="font-medium">
+              คิดยอดสะสมถึงเดือน
+            </label>
+            <select
+              id="upto"
+              value={upto}
+              onChange={(e) => setUpto(Number(e.target.value))}
+              className="min-h-11 rounded-lg border border-slate-300 px-3 outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
+            >
+              {FISCAL_MONTHS.map((m, i) => (
+                <option key={m} value={i + 1}>
+                  {m}
+                </option>
+              ))}
+            </select>
+            <span className="text-slate-500">
+              ปีบัญชี {fiscalYear} · ค่าเริ่มต้นคือเดือนปัจจุบัน
+            </span>
+          </>
+        )}
 
         {/* ปุ่มดาวน์โหลดอยู่ตรงนี้เพราะต้องส่งเดือนที่เลือกไปด้วย
             ไฟล์ที่ได้จะคิดยอดสะสมช่วงเดียวกับที่เห็นบนหน้าจอพอดี */}
@@ -340,12 +370,16 @@ export function PlanTable({
         </a>
       </div>
 
-      {canEdit && (structureLocked || locks.plan.some(Boolean) || locks.actual.some(Boolean)) && (
+      {canEdit &&
+        (isPlan
+          ? structureLocked || locks.plan.some(Boolean)
+          : locks.actual.some(Boolean)) && (
         <p className="flex items-start gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-600 shadow-sm">
           <span className="mt-0.5 inline-block h-4 w-6 shrink-0 rounded border border-slate-200 bg-slate-100" aria-hidden="true" />
           <span>
-            ช่องสีเทาแก้ไขไม่ได้ · ช่อง &quot;ผล&quot; กรอกได้เฉพาะเดือนในไตรมาสที่เปิดรายงานอยู่ ·
-            ช่อง &quot;แผน&quot; ของไตรมาสที่ผ่านไปแล้วล็อกไว้ แก้ย้อนหลังไม่ได้
+            {isPlan
+              ? "ช่องสีเทาแก้ไขไม่ได้ · แผนของไตรมาสที่ผ่านไปแล้วล็อกไว้ แก้ย้อนหลังไม่ได้"
+              : "ช่องสีเทาแก้ไขไม่ได้ · ช่อง \"ผล\" กรอกได้เฉพาะเดือนในไตรมาสที่เปิดรายงานอยู่ · ช่อง \"แผน\" แก้ที่หน้าแผนดำเนินงาน"}
           </span>
         </p>
       )}
@@ -353,8 +387,9 @@ export function PlanTable({
       {PLAN_SECTIONS.map((section) => (
         <SectionTable
           key={section}
+          mode={mode}
           section={section}
-          canEdit={canEdit}
+          editResults={editResults}
           editStructure={editStructure}
           rows={data.filter((r) => r.section === section)}
           upto={upto}
@@ -368,9 +403,15 @@ export function PlanTable({
 
       {canEdit && (
         <div className="sticky bottom-0 -mx-4 flex flex-wrap items-center gap-3 border-t border-slate-200 bg-surface/95 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border">
-          <SaveButton label={confirmedLabel ? "บันทึก" : "บันทึกแผน"} />
-          {!confirmedLabel && <ConfirmButton />}
-          {canUnlock && <UnlockButton />}
+          {isPlan ? (
+            <>
+              <SaveButton label={confirmedLabel ? "บันทึก" : "บันทึกร่างแผน"} />
+              {!confirmedLabel && <ConfirmButton />}
+              {canUnlock && <UnlockButton />}
+            </>
+          ) : (
+            <SaveButton label="บันทึกผลการดำเนินงาน" />
+          )}
           <span className="text-sm text-slate-600">
             ตัวเลขที่พิมพ์จะยังไม่ถูกเก็บจนกว่าจะกดบันทึก
           </span>
@@ -380,16 +421,23 @@ export function PlanTable({
   );
 }
 
-/** จำนวนคอลัมน์ของตาราง ใช้กับแถวที่กินเต็มความกว้าง */
-function columnCount(canEdit: boolean) {
-  // ลำดับ · รายการ · ค่าเป้าหมาย · หน่วย · แผน/ผล · 12 เดือน
-  // · สะสม · ทั้งปี · สาเหตุ · แนวทางแก้ไข · หลักฐาน · (ลบ)
-  return 5 + MONTH_COUNT + 5 + (canEdit ? 1 : 0);
+/**
+ * จำนวนคอลัมน์ของตาราง ใช้กับแถวที่กินเต็มความกว้าง
+ *
+ * หน้าแผน: ลำดับ · รายการ · ค่าเป้าหมาย · หน่วย · 12 เดือน · รวม · (ลบ)
+ * หน้ารายงานผล: ลำดับ · รายการ · ค่าเป้าหมาย · หน่วย · แผน/ผล · 12 เดือน
+ *   · ผล/แผนสะสม · % สะสม · % ทั้งปี · สาเหตุ · แนวทางแก้ไข · หลักฐาน
+ */
+function columnCount(mode: PlanTableMode, editStructure: boolean) {
+  return mode === "plan"
+    ? 4 + MONTH_COUNT + 1 + (editStructure ? 1 : 0)
+    : 5 + MONTH_COUNT + 6;
 }
 
 function SectionTable({
+  mode,
   section,
-  canEdit,
+  editResults,
   editStructure,
   rows,
   upto,
@@ -399,8 +447,10 @@ function SectionTable({
   levelReports,
   locks,
 }: {
+  mode: PlanTableMode;
   section: PlanSection;
-  canEdit: boolean;
+  /** กรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้ (หน้ารายงานผล) */
+  editResults: boolean;
   /** แก้โครงแผนได้ (ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน เพิ่ม/ลบบรรทัด) */
   editStructure: boolean;
   rows: RowState[];
@@ -417,6 +467,7 @@ function SectionTable({
   locks: MonthLocks;
 }) {
   const isStep = section === "STEP";
+  const isPlan = mode === "plan";
   const levels = criteria.map((c) => c.level);
 
   // ตาราง STEP เรียงตามระดับก่อน แล้วตามลำดับในระดับ
@@ -441,31 +492,34 @@ function SectionTable({
     upto,
   );
   const summaryById = new Map(ordered.map((r, i) => [r.id, summary.rows[i]]));
-  const cols = columnCount(editStructure);
+  const cols = columnCount(mode, editStructure);
 
   const renderRows = (list: RowState[], prefix: string) =>
     list.map((row, index) => {
       const rowSummary = summaryById.get(row.id)!;
-      return (
+      const props = {
+        row,
+        label: `${prefix}${index + 1}`,
+        summary: rowSummary,
+        onCell,
+        locks,
+      };
+      return isPlan ? (
+        <PlanRow key={row.id} {...props} editStructure={editStructure} />
+      ) : (
         <RowPair
           key={row.id}
-          row={row}
-          label={`${prefix}${index + 1}`}
-          canEdit={canEdit}
-          editStructure={editStructure}
-          cumPct={rowSummary.cumPct}
-          yearPct={rowSummary.yearPct}
-          onCell={onCell}
+          {...props}
+          canEdit={editResults}
           files={filesByRow.get(row.id) ?? []}
-          locks={locks}
         />
       );
     });
 
-  // บรรทัดสรุปท้ายตาราง ตรงกับสูตร AVERAGE ในไฟล์ต้นฉบับ
-  const averageRow = (
+  // บรรทัดสรุปท้ายตาราง ตรงกับสูตร AVERAGE ในไฟล์ต้นฉบับ (หน้ารายงานผล)
+  const averageRow = isPlan ? null : (
     <tr className="bg-slate-50 font-medium">
-      <td colSpan={5 + MONTH_COUNT} className="border border-slate-200 px-3 py-2.5">
+      <td colSpan={5 + MONTH_COUNT + 1} className="border border-slate-200 px-3 py-2.5">
         <span className="sticky left-3">ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย</span>
       </td>
       <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
@@ -474,7 +528,7 @@ function SectionTable({
       <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
         {formatPct(summary.avgYearPct)}
       </td>
-      <td colSpan={editStructure ? 4 : 3} className="border border-slate-200" />
+      <td colSpan={3} className="border border-slate-200" />
     </tr>
   );
 
@@ -488,9 +542,10 @@ function SectionTable({
         <h2 className="font-semibold">{PLAN_SECTION_TITLE[section]}</h2>
         {isStep && (
           <p className="mt-0.5 text-sm text-slate-600">
-            ค่าเกณฑ์ระดับ 1-5 และคำอธิบายมาจาก MOU แก้ไขที่นี่ไม่ได้ ·
-            เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ (และเงื่อนไขอื่นๆ ถ้ามี)
-            และรายงานผลการดำเนินงานของระดับนั้น
+            ค่าเกณฑ์ระดับ 1-5 และคำอธิบายมาจาก MOU แก้ไขที่นี่ไม่ได้ ·{" "}
+            {isPlan
+              ? "เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ (และเงื่อนไขอื่นๆ ถ้ามี) พร้อมแผนรายเดือน"
+              : `กรอกผลรายเดือนของแต่ละขั้นตอน แนบหลักฐานได้ขั้นตอนละไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ และรายงานผลการดำเนินงานของแต่ละระดับ`}
           </p>
         )}
       </div>
@@ -504,9 +559,9 @@ function SectionTable({
       ) : !isStep ? (
         // ตารางเป้าหมายมักสั้น จำกัดความสูงไว้ให้แถบเลื่อนแนวนอนอยู่ในจอเสมอ
         // และหัวตารางลอยค้างด้านบนกรอบ
-        <TableFrame canEdit={editStructure} className="max-h-[70vh] overflow-auto">
+        <TableFrame mode={mode} editStructure={editStructure} className="max-h-[70vh] overflow-auto">
           <thead className="sticky top-0 z-10">
-            <HeaderRow section={section} canEdit={editStructure} />
+            <HeaderRow section={section} mode={mode} editStructure={editStructure} />
           </thead>
           <tbody>
             {renderRows(rows, "")}
@@ -521,13 +576,14 @@ function SectionTable({
           {criteria.map((c) => {
             const steps = rows.filter((r) => r.criteriaLevel === c.level);
             return (
-              <TableFrame key={c.level} canEdit={editStructure} className="overflow-x-auto">
+              <TableFrame key={c.level} mode={mode} editStructure={editStructure} className="overflow-x-auto">
                 <tbody>
                   <LevelGroup
                     section={section}
                     criterion={c}
                     cols={cols}
-                    canEdit={canEdit}
+                    mode={mode}
+                    editResults={editResults}
                     editStructure={editStructure}
                     stepCount={steps.length}
                     report={levelReports[c.level] ?? ""}
@@ -540,7 +596,7 @@ function SectionTable({
           })}
 
           {orphans.length > 0 && (
-            <TableFrame canEdit={editStructure} className="overflow-x-auto">
+            <TableFrame mode={mode} editStructure={editStructure} className="overflow-x-auto">
               <tbody>
                 <tr className="bg-amber-50">
                   <td
@@ -552,7 +608,7 @@ function SectionTable({
                     </span>
                   </td>
                 </tr>
-                <HeaderRow section={section} canEdit={editStructure} />
+                <HeaderRow section={section} mode={mode} editStructure={editStructure} />
                 {renderRows(orphans, "")}
               </tbody>
             </TableFrame>
@@ -561,6 +617,7 @@ function SectionTable({
           {/* สรุปท้ายตาราง เป็นกล่องแยกแทนแถวในตาราง
               เพราะตารางขั้นตอนแยกเป็นหลายตาราง แถวค่าเฉลี่ยที่อยู่ตารางสุดท้ายจะไม่มีหัวคอลัมน์กำกับ
               ผู้อ่านไม่รู้ว่าตัวเลขสองตัวคืออะไร จึงเขียนชื่อกำกับไว้ตรงตัวเลขเลย */}
+          {!isPlan && (
           <div className="rounded-lg border border-brand-200 bg-brand-50 p-4">
             <h3 className="font-semibold text-brand-900">
               ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย
@@ -588,6 +645,7 @@ function SectionTable({
               </div>
             </dl>
           </div>
+          )}
         </div>
       )}
 
@@ -619,7 +677,8 @@ function LevelGroup({
   section,
   criterion,
   cols,
-  canEdit,
+  mode,
+  editResults,
   editStructure,
   stepCount,
   report,
@@ -628,7 +687,8 @@ function LevelGroup({
   section: PlanSection;
   criterion: PlanCriterion;
   cols: number;
-  canEdit: boolean;
+  mode: PlanTableMode;
+  editResults: boolean;
   editStructure: boolean;
   stepCount: number;
   report: string;
@@ -659,7 +719,7 @@ function LevelGroup({
         </td>
       </tr>
 
-      <HeaderRow section={section} canEdit={editStructure} />
+      <HeaderRow section={section} mode={mode} editStructure={editStructure} />
 
       {children}
 
@@ -691,29 +751,32 @@ function LevelGroup({
         </tr>
       )}
 
-      <tr>
-        <td colSpan={cols} className="border border-slate-200 px-3 py-2">
-          <div className={`${stick} w-[56rem]`}>
-            <label
-              htmlFor={`levelReport_${criterion.level}`}
-              className="mb-1 block text-sm font-medium"
-            >
-              รายงานผลการดำเนินงานของ{criterion.shortTitle}
-            </label>
-            <textarea
-              id={`levelReport_${criterion.level}`}
-              name={`levelReport_${criterion.level}`}
-              defaultValue={report}
-              readOnly={!canEdit}
-              rows={3}
-              placeholder={
-                canEdit ? "ผลที่เกิดขึ้นจริงเทียบกับค่าเกณฑ์ระดับนี้" : ""
-              }
-              className={`${textInput} resize-y read-only:bg-slate-50`}
-            />
-          </div>
-        </td>
-      </tr>
+      {/* รายงานผลรายระดับอยู่หน้ารายงานผล */}
+      {mode === "report" && (
+        <tr>
+          <td colSpan={cols} className="border border-slate-200 px-3 py-2">
+            <div className={`${stick} w-[56rem]`}>
+              <label
+                htmlFor={`levelReport_${criterion.level}`}
+                className="mb-1 block text-sm font-medium"
+              >
+                รายงานผลการดำเนินงานของ{criterion.shortTitle}
+              </label>
+              <textarea
+                id={`levelReport_${criterion.level}`}
+                name={`levelReport_${criterion.level}`}
+                defaultValue={report}
+                readOnly={!editResults}
+                rows={3}
+                placeholder={
+                  editResults ? "ผลที่เกิดขึ้นจริงเทียบกับค่าเกณฑ์ระดับนี้" : ""
+                }
+                className={`${textInput} resize-y read-only:bg-slate-50`}
+              />
+            </div>
+          </td>
+        </tr>
+      )}
     </>
   );
 }
@@ -726,32 +789,42 @@ function LevelGroup({
  * ตารางกว้างกว่าจอเสมอเพราะมี 12 เดือน จึงเลื่อนแนวนอนในกรอบตัวเอง ไม่ให้ทั้งหน้าเลื่อนซ้ายขวา
  */
 function TableFrame({
-  canEdit,
+  mode,
+  editStructure,
   className,
   children,
 }: {
-  canEdit: boolean;
+  mode: PlanTableMode;
+  editStructure: boolean;
   className: string;
   children: React.ReactNode;
 }) {
+  const isPlan = mode === "plan";
   return (
     <div className={className}>
-      <table className="w-[124rem] table-fixed border-collapse text-sm">
+      <table
+        className={`${isPlan ? "w-[82rem]" : "w-[130rem]"} table-fixed border-collapse text-sm`}
+      >
         <colgroup>
           <col className="w-14" />
           <col className="w-72" />
           <col className="w-24" />
           <col className="w-20" />
-          <col className="w-16" />
+          {!isPlan && <col className="w-16" />}
           {FISCAL_MONTHS.map((m) => (
             <col key={m} className="w-12" />
           ))}
           <col className="w-24" />
-          <col className="w-24" />
-          <col className="w-48" />
-          <col className="w-40" />
-          <col className="w-52" />
-          {canEdit && <col className="w-16" />}
+          {!isPlan && (
+            <>
+              <col className="w-24" />
+              <col className="w-24" />
+              <col className="w-48" />
+              <col className="w-40" />
+              <col className="w-52" />
+            </>
+          )}
+          {isPlan && editStructure && <col className="w-16" />}
         </colgroup>
         {children}
       </table>
@@ -760,25 +833,47 @@ function TableFrame({
 }
 
 /** แถวหัวคอลัมน์ของตารางแผน ใช้ทั้งหัวตารางเป้าหมาย และหัวตารางซ้ำของแต่ละค่าเกณฑ์ */
-function HeaderRow({ section, canEdit }: { section: PlanSection; canEdit: boolean }) {
+function HeaderRow({
+  section,
+  mode,
+  editStructure,
+}: {
+  section: PlanSection;
+  mode: PlanTableMode;
+  editStructure: boolean;
+}) {
+  const isPlan = mode === "plan";
   return (
     <tr className="bg-slate-50 text-slate-700 shadow-[0_1px_0_0_var(--color-slate-200)]">
       <Th>{PLAN_SECTION_INDEX_LABEL[section]}</Th>
       <Th className="text-left">{PLAN_SECTION_ITEM_LABEL[section]}</Th>
       <Th>ค่าเป้าหมาย</Th>
       <Th>หน่วยนับ</Th>
-      <Th>แผน/ผล</Th>
+      {!isPlan && <Th>แผน/ผล</Th>}
       {FISCAL_MONTHS.map((m, i) => (
         <Th key={m} className={i % 3 === 0 ? "border-l-2 border-l-slate-300" : ""}>
           {m}
         </Th>
       ))}
-      <Th className="border-l-2 border-l-slate-300">{PLAN_SECTION_CUM_LABEL[section]}</Th>
-      <Th>{PLAN_SECTION_YEAR_LABEL[section]}</Th>
-      <Th className="text-left">{PLAN_SECTION_CAUSE_LABEL[section]}</Th>
-      <Th className="text-left">แนวทางการดำเนินการแก้ไข</Th>
-      <Th className="text-left">หลักฐานประกอบผลการดำเนินงาน</Th>
-      {canEdit && <Th>ลบ</Th>}
+      {isPlan ? (
+        <Th className="border-l-2 border-l-slate-300">รวมแผนทั้งปี</Th>
+      ) : (
+        <>
+          {/* ยอดสะสมของแผน (บรรทัดบน) และผล (บรรทัดล่าง) ตรงกับคอลัมน์ผลสะสมในไฟล์ Excel */}
+          <Th className="border-l-2 border-l-slate-300">ผล/แผนการดำเนินงานสะสม</Th>
+          <Th>{PLAN_SECTION_CUM_LABEL[section]}</Th>
+          <Th>{PLAN_SECTION_YEAR_LABEL[section]}</Th>
+          <Th className="text-left">{PLAN_SECTION_CAUSE_LABEL[section]}</Th>
+          <Th className="text-left">แนวทางการดำเนินการแก้ไข</Th>
+          <Th className="text-left">
+            หลักฐานประกอบผลการดำเนินงาน
+            <span className="block text-xs font-normal text-slate-500">
+              ไม่เกิน {MAX_PLAN_FILES_PER_ROW} ไฟล์
+            </span>
+          </Th>
+        </>
+      )}
+      {isPlan && editStructure && <Th>ลบ</Th>}
     </tr>
   );
 }
@@ -800,41 +895,136 @@ function LockIcon() {
   );
 }
 
-function RowPair({
+type OnCell = (
+  rowId: string,
+  field: "plan" | "actual",
+  monthIndex: number,
+  value: string,
+) => void;
+
+const sharedCell = "border border-slate-200 px-2 py-1.5 align-top";
+
+/** 1 รายการในหน้าแผน: บรรทัดเดียว มีแต่แผนรายเดือน (ผลกรอกที่หน้ารายงานผล) */
+function PlanRow({
   row,
   label,
-  canEdit,
   editStructure,
-  cumPct,
-  yearPct,
+  summary,
   onCell,
-  files,
   locks,
 }: {
   row: RowState;
   /** เลขลำดับที่แสดง เช่น "2" หรือ "3.1" (ขั้นที่ 1 ของระดับ 3) */
   label: string;
-  canEdit: boolean;
   editStructure: boolean;
-  cumPct: number;
-  yearPct: number;
-  onCell: (
-    rowId: string,
-    field: "plan" | "actual",
-    monthIndex: number,
-    value: string,
-  ) => void;
+  summary: PlanRowSummary;
+  onCell: OnCell;
+  locks: MonthLocks;
+}) {
+  // บรรทัดที่มีตัวเลขในเดือนที่ล็อกลบไม่ได้ (เซิร์ฟเวอร์ก็ปฏิเสธเหมือนกัน)
+  const hasLockedData =
+    row.planMonths.some((v, i) => locks.plan[i] && v !== null) ||
+    row.actualMonths.some((v, i) => locks.actual[i] && v !== null);
+
+  return (
+    <tr className="hover:bg-slate-50/60">
+      <td className={`${sharedCell} text-center tabular-nums`}>{label}</td>
+      <td className={sharedCell}>
+        <textarea
+          name={`title_${row.id}`}
+          defaultValue={row.title}
+          readOnly={!editStructure}
+          rows={2}
+          placeholder="พิมพ์ชื่อรายการ"
+          className={`${textInput} resize-y read-only:bg-slate-50`}
+        />
+      </td>
+      <td className={sharedCell}>
+        <input
+          name={`target_${row.id}`}
+          defaultValue={row.targetValue === null ? "" : String(row.targetValue)}
+          readOnly={!editStructure}
+          inputMode="decimal"
+          className={`${textInput} text-right tabular-nums read-only:bg-slate-50`}
+        />
+      </td>
+      <td className={sharedCell}>
+        <input
+          name={`unit_${row.id}`}
+          defaultValue={row.unit ?? ""}
+          readOnly={!editStructure}
+          placeholder="ไร่ / ครั้ง"
+          className={`${textInput} read-only:bg-slate-50`}
+        />
+      </td>
+      {row.plan.map((value, i) => (
+        <MonthCell
+          key={i}
+          name={`p${i}_${row.id}`}
+          value={value}
+          readOnly={!editStructure || locks.plan[i]}
+          locked={editStructure && locks.plan[i]}
+          monthIndex={i}
+          label={`แผนเดือน${FISCAL_MONTHS[i]}`}
+          onChange={(v) => onCell(row.id, "plan", i, v)}
+        />
+      ))}
+      <td
+        className={`${sharedCell} border-l-2 border-l-slate-300 text-right font-medium tabular-nums text-brand-ink`}
+      >
+        {formatPlanNumber(summary.planYear) || "–"}
+      </td>
+      {editStructure && (
+        <td className={`${sharedCell} text-center`}>
+          {hasLockedData ? (
+            <span
+              className="text-xs text-slate-400"
+              title="มีข้อมูลในไตรมาสที่ปิดไปแล้ว จึงลบไม่ได้"
+            >
+              ลบไม่ได้
+            </span>
+          ) : (
+            <button
+              type="submit"
+              name="intent"
+              value={`delete:${row.id}`}
+              className="min-h-11 rounded-lg px-2 text-sm text-red-700 transition hover:bg-red-50"
+              aria-label={`ลบบรรทัดที่ ${label}`}
+            >
+              ลบ
+            </button>
+          )}
+        </td>
+      )}
+    </tr>
+  );
+}
+
+/**
+ * 1 รายการในหน้ารายงานผล: สองบรรทัด แผน (แสดงอย่างเดียว) / ผล (กรอกได้)
+ * ชื่อรายการและช่องแผนไม่มี name จึงไม่ถูกส่งไปบันทึกทับโครงแผน
+ */
+function RowPair({
+  row,
+  label,
+  canEdit,
+  summary,
+  onCell,
+  files,
+  locks,
+}: {
+  row: RowState;
+  label: string;
+  /** กรอกผล สาเหตุ แนวทางแก้ไข และแนบหลักฐานได้ */
+  canEdit: boolean;
+  summary: PlanRowSummary;
+  onCell: OnCell;
   files: PlanFile[];
   locks: MonthLocks;
 }) {
   // 1 รายการกินสองบรรทัด (แผน/ผล) ช่องที่ใช้ร่วมกันจึงใช้ rowSpan
   // ให้หน้าตาตรงกับแบบฟอร์มกระดาษ
-  const shared = "border border-slate-200 px-2 py-1.5 align-top";
-
-  // บรรทัดที่มีตัวเลขในเดือนที่ล็อกลบไม่ได้ (เซิร์ฟเวอร์ก็ปฏิเสธเหมือนกัน)
-  const hasLockedData =
-    row.planMonths.some((v, i) => locks.plan[i] && v !== null) ||
-    row.actualMonths.some((v, i) => locks.actual[i] && v !== null);
+  const shared = sharedCell;
 
   return (
     <>
@@ -842,35 +1032,14 @@ function RowPair({
         <td rowSpan={2} className={`${shared} text-center tabular-nums`}>
           {label}
         </td>
-        <td rowSpan={2} className={shared}>
-          <textarea
-            name={`title_${row.id}`}
-            defaultValue={row.title}
-            readOnly={!editStructure}
-            rows={2}
-            placeholder="พิมพ์ชื่อรายการ"
-            className={`${textInput} resize-y read-only:bg-slate-50`}
-          />
+        <td rowSpan={2} className={`${shared} whitespace-pre-line`}>
+          {row.title || <span className="text-slate-400">(ยังไม่ตั้งชื่อ)</span>}
+        </td>
+        <td rowSpan={2} className={`${shared} text-right tabular-nums`}>
+          {formatPlanNumber(row.targetValue)}
         </td>
         <td rowSpan={2} className={shared}>
-          <input
-            name={`target_${row.id}`}
-            defaultValue={
-              row.targetValue === null ? "" : String(row.targetValue)
-            }
-            readOnly={!editStructure}
-            inputMode="decimal"
-            className={`${textInput} text-right tabular-nums read-only:bg-slate-50`}
-          />
-        </td>
-        <td rowSpan={2} className={shared}>
-          <input
-            name={`unit_${row.id}`}
-            defaultValue={row.unit ?? ""}
-            readOnly={!editStructure}
-            placeholder="ไร่ / ครั้ง"
-            className={`${textInput} read-only:bg-slate-50`}
-          />
+          {row.unit ?? ""}
         </td>
 
         <td className="border border-slate-200 bg-slate-50 px-2 py-1.5 text-center text-xs font-medium">
@@ -879,27 +1048,30 @@ function RowPair({
         {row.plan.map((value, i) => (
           <MonthCell
             key={i}
-            name={`p${i}_${row.id}`}
             value={value}
-            readOnly={!editStructure || locks.plan[i]}
-            locked={canEdit && (!editStructure || locks.plan[i])}
+            readOnly
+            locked={canEdit}
             monthIndex={i}
             label={`แผนเดือน${FISCAL_MONTHS[i]}`}
-            onChange={(v) => onCell(row.id, "plan", i, v)}
+            onChange={() => {}}
           />
         ))}
 
-        <td
-          rowSpan={2}
-          className={`${shared} border-l-2 border-l-slate-300 text-right font-medium tabular-nums text-brand-ink`}
-        >
-          {formatPct(cumPct)}
+        {/* ยอดแผนสะสม (บรรทัดแผน) */}
+        <td className="border border-slate-200 border-l-2 border-l-slate-300 px-2 py-1.5 text-right tabular-nums">
+          {formatPlanNumber(summary.planCum) || "0"}
         </td>
         <td
           rowSpan={2}
           className={`${shared} text-right font-medium tabular-nums text-brand-ink`}
         >
-          {formatPct(yearPct)}
+          {formatPct(summary.cumPct)}
+        </td>
+        <td
+          rowSpan={2}
+          className={`${shared} text-right font-medium tabular-nums text-brand-ink`}
+        >
+          {formatPct(summary.yearPct)}
         </td>
 
         <td rowSpan={2} className={shared}>
@@ -927,29 +1099,6 @@ function RowPair({
             actionPlanId={row.id}
           />
         </td>
-
-        {editStructure && (
-          <td rowSpan={2} className={`${shared} text-center`}>
-            {hasLockedData ? (
-              <span
-                className="text-xs text-slate-400"
-                title="มีข้อมูลในไตรมาสที่ปิดไปแล้ว จึงลบไม่ได้"
-              >
-                ลบไม่ได้
-              </span>
-            ) : (
-              <button
-                type="submit"
-                name="intent"
-                value={`delete:${row.id}`}
-                className="min-h-11 rounded-lg px-2 text-sm text-red-700 transition hover:bg-red-50"
-                aria-label={`ลบบรรทัดที่ ${label}`}
-              >
-                ลบ
-              </button>
-            )}
-          </td>
-        )}
       </tr>
 
       <tr className="hover:bg-slate-50/60">
@@ -968,12 +1117,16 @@ function RowPair({
             onChange={(v) => onCell(row.id, "actual", i, v)}
           />
         ))}
+        {/* ยอดผลสะสม (บรรทัดผล) */}
+        <td className="border border-slate-200 border-l-2 border-l-slate-300 px-2 py-1.5 text-right font-medium tabular-nums">
+          {formatPlanNumber(summary.actualCum) || "0"}
+        </td>
       </tr>
     </>
   );
 }
 
-/** ช่องหลักฐานประกอบผลการดำเนินงาน: รายชื่อไฟล์ + ปุ่มแนบเอกสาร */
+/** ช่องหลักฐานประกอบผลการดำเนินงาน: รายชื่อไฟล์ + ปุ่มแนบเอกสาร (ไม่เกิน 4 ไฟล์ต่อขั้นตอน) */
 function EvidenceFiles({
   files,
   canEdit,
@@ -983,6 +1136,7 @@ function EvidenceFiles({
   canEdit: boolean;
   actionPlanId: string;
 }) {
+  const full = files.length >= MAX_PLAN_FILES_PER_ROW;
   return (
     <div className="space-y-1.5">
       {files.length === 0 && !canEdit && (
@@ -1011,7 +1165,19 @@ function EvidenceFiles({
           </div>
         </div>
       ))}
-      {canEdit && <PlanEvidenceUpload actionPlanId={actionPlanId} />}
+      {canEdit &&
+        (full ? (
+          <p className="text-[11px] text-slate-500">
+            ครบ {MAX_PLAN_FILES_PER_ROW} ไฟล์แล้ว · ลบไฟล์เดิมก่อนจึงแนบเพิ่มได้
+          </p>
+        ) : (
+          <>
+            <PlanEvidenceUpload actionPlanId={actionPlanId} />
+            <p className="text-[11px] text-slate-500">
+              แนบแล้ว {files.length}/{MAX_PLAN_FILES_PER_ROW} ไฟล์
+            </p>
+          </>
+        ))}
     </div>
   );
 }
@@ -1025,7 +1191,8 @@ function MonthCell({
   label,
   onChange,
 }: {
-  name: string;
+  /** ไม่มี name = แสดงอย่างเดียว ไม่ถูกส่งไปกับฟอร์ม */
+  name?: string;
   value: string;
   readOnly: boolean;
   /** ล็อกเพราะไตรมาสปิดแล้ว (ต่างจาก readOnly เพราะไม่มีสิทธิ์ ซึ่งไม่ต้องแต้มสี) */

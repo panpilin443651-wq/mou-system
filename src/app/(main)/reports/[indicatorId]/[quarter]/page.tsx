@@ -1,22 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
-import {
-  canManagePlan,
-  canSubmitReport,
-  canViewDepartment,
-} from "@/lib/permissions";
+import { canSubmitReport, canViewDepartment } from "@/lib/permissions";
 import { db } from "@/lib/db";
 import { saveReportAction, reopenReportAction } from "@/actions/reports";
-import {
-  QUARTERS,
-  QUARTER_MONTHS,
-  currentFiscalMonthIndex,
-  planLevelGroups,
-  toMonths,
-} from "@/lib/plan";
-import { savePlanAction } from "@/actions/plans";
+import { QUARTERS, QUARTER_MONTHS } from "@/lib/plan";
 import { PlanTable } from "../../../plans/[indicatorId]/plan-table";
+import { planInclude, planTableProps } from "../../../plans/[indicatorId]/plan-data";
 import {
   isPlaceholderCriteria,
   scoreClass,
@@ -24,10 +14,7 @@ import {
   targetLabel,
 } from "@/lib/scoring";
 import { formatThaiDateTime } from "@/lib/datetime";
-import {
-  getQuarterStatuses,
-  monthLocks,
-} from "@/lib/submission-window";
+import { getQuarterStatuses } from "@/lib/submission-window";
 import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 
@@ -48,20 +35,8 @@ export default async function ReportPage({
   const indicator = await db.indicator.findUnique({
     where: { id: indicatorId },
     include: {
+      ...planInclude,
       department: { select: { code: true, name: true } },
-      fiscalYear: { select: { year: true } },
-      criteria: { orderBy: { level: "asc" } },
-      planHeader: true,
-      plans: {
-        orderBy: [{ section: "asc" }, { criteriaLevel: "asc" }, { sortOrder: "asc" }],
-        include: {
-          attachments: {
-            orderBy: { uploadedAt: "asc" },
-            select: { id: true, originalName: true, mimeType: true, sizeBytes: true },
-          },
-        },
-      },
-      planLevelReports: { select: { level: true, text: true } },
       reports: { where: { quarter } },
     },
   });
@@ -103,50 +78,28 @@ export default async function ReportPage({
       : null;
   const source = report ?? carried;
 
-  // แผนดำเนินงานของตัวชี้วัดเดียวกัน แสดงในหน้านี้เลย ไม่ต้องสลับไปอีกหน้า
-  // สิทธิ์แก้แผนแยกจากสิทธิ์กรอกผล แต่ช่องแผน/ผลรายเดือนล็อกตามไตรมาส (monthLocks)
-  // ส่วนหัวแบบฟอร์ม ชื่อรายการ และรายงานผลรายระดับยังแก้ได้ตลอดปี
-  const canEditPlan = canManagePlan(user, indicator.departmentId);
+  // ผลการดำเนินงานตามแผน: กรอกผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับ
+  // ตัวแผนกรอกที่หน้าแผนการดำเนินงาน (/plans/[id]) ซึ่งต้องยืนยันก่อนจึงรายงานผลได้
   const planSection = (
     // key จำเป็น: ส่วนนี้ถูกส่งเข้า ReportForm เป็น prop ถ้าไม่มี key React จะเตือนเรื่อง key ในโหมด dev
-    <section key="plan" id="plan" className="scroll-mt-4">
-      <PlanTable
-        action={savePlanAction.bind(null, indicator.id)}
-        canEdit={canEditPlan}
-        header={{
-          owner: indicator.planHeader?.owner ?? "",
-          budget: indicator.planHeader?.budget ?? "",
-        }}
-        rows={indicator.plans.map((p) => ({
-          id: p.id,
-          section: p.section,
-          sortOrder: p.sortOrder,
-          criteriaLevel: p.criteriaLevel,
-          title: p.title,
-          targetValue: p.targetValue,
-          unit: p.unit,
-          planMonths: toMonths(p.planMonths),
-          actualMonths: toMonths(p.actualMonths),
-          causeNote: p.causeNote,
-          correctiveAction: p.correctiveAction,
-          attachments: p.attachments,
-        }))}
-        criteria={planLevelGroups(
-          indicator.criteria,
-          indicator.unit,
-          indicator.conditions,
-        )}
-        levelReports={Object.fromEntries(
-          indicator.planLevelReports.map((r) => [r.level, r.text])
-        )}
-        locks={monthLocks(statuses)}
-        confirmedLabel={confirmedAt ? formatThaiDateTime(confirmedAt) : null}
-        structureLocked={confirmedAt !== null && !isAdmin}
-        canUnlock={isAdmin && canEditPlan && confirmedAt !== null}
-        monthsElapsed={currentFiscalMonthIndex(indicator.fiscalYear.year)}
-        fiscalYear={indicator.fiscalYear.year}
-        indicatorId={indicator.id}
-      />
+    <section key="plan" id="plan" className="scroll-mt-4 space-y-3">
+      <h2 className="text-lg font-semibold">ผลการดำเนินงานตามแผน</h2>
+      {needsPlan ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          ยังไม่ได้ยืนยันแผนการดำเนินงาน ·{" "}
+          <Link
+            href={`/plans/${indicator.id}`}
+            className="font-medium underline underline-offset-2"
+          >
+            ไปกรอกแผนการดำเนินงาน
+          </Link>{" "}
+          แล้วกดยืนยันแผน จึงจะรายงานผลได้
+        </p>
+      ) : (
+        <PlanTable
+          {...planTableProps({ indicator, user, statuses, mode: "report" })}
+        />
+      )}
     </section>
   );
 
@@ -185,12 +138,12 @@ export default async function ReportPage({
           >
             ดูรายละเอียดตัวชี้วัด
           </Link>
-          {/* แผนดำเนินงานอยู่ในหน้านี้แล้ว ปุ่มนี้พาเลื่อนลงไปที่หัวข้อแผน */}
+          {/* แผนการดำเนินงานแยกเป็นหน้าของตัวเอง (ขั้นตอนที่ 1) */}
           <Link
-            href="#plan"
+            href={`/plans/${indicator.id}`}
             className="inline-flex min-h-11 items-center rounded-lg border border-brand-600 bg-surface px-4 text-sm font-medium text-brand-ink transition hover:bg-brand-50"
           >
-            แผนดำเนินงาน
+            แผนการดำเนินงาน
           </Link>
           <Link
             href={`/reports/${indicator.id}/${quarter}/print`}
@@ -287,9 +240,12 @@ export default async function ReportPage({
               ) : (
                 <>
                   ยังไม่ได้ยืนยันแผน ·{" "}
-                  <a href="#plan" className="font-medium underline underline-offset-2">
+                  <Link
+                    href={`/plans/${indicator.id}`}
+                    className="font-medium underline underline-offset-2"
+                  >
                     ไปกรอกแผน
-                  </a>
+                  </Link>
                 </>
               )}
             </p>
@@ -484,7 +440,7 @@ export default async function ReportPage({
             <section className="space-y-4 rounded-xl border border-slate-200 bg-surface p-5">
               <p className="text-sm text-slate-600">
                 {needsPlan
-                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนดำเนินงานด้านล่างและกดยืนยันแผนก่อน"
+                  ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนการดำเนินงานและกดยืนยันแผนก่อน"
                   : hasPermission
                   ? `ตอนนี้แก้ไขไม่ได้ — ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
                   : `คุณเปิดดูรายงานนี้ได้อย่างเดียว การกรอกผลทำได้โดยผู้รับผิดชอบส่วนงาน ${indicator.department.code} และส่วนกลาง`}

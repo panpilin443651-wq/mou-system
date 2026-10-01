@@ -247,7 +247,7 @@ export default async function IndicatorDetailPage({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5">
           <h2 className="font-semibold">แผนดำเนินงาน</h2>
           <Link
-            href={`/reports/${indicator.id}/${defaultQuarter(indicator.fiscalYear.year)}#plan`}
+            href={`/plans/${indicator.id}`}
             className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-3 text-sm font-medium transition hover:bg-slate-50"
           >
             {canManagePlan(user, indicator.departmentId) ? "จัดการแผน" : "ดูแผนทั้งหมด"}

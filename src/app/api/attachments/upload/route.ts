@@ -3,7 +3,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/session";
 import { canManagePlan, canSubmitReport } from "@/lib/permissions";
-import { ALLOWED_MIME_TYPES, MAX_FILE_BYTES } from "@/lib/attachments";
+import {
+  ALLOWED_MIME_TYPES,
+  MAX_FILE_BYTES,
+  MAX_PLAN_FILES_PER_ROW,
+} from "@/lib/attachments";
 import { getWindowStatus } from "@/lib/submission-window";
 
 // ============================================================================
@@ -74,12 +78,27 @@ export async function POST(request: Request): Promise<NextResponse> {
         if (payload.kind === "plan") {
           const plan = await db.actionPlan.findUnique({
             where: { id: String(payload.actionPlanId) },
-            select: { indicator: { select: { departmentId: true } } },
+            select: {
+              _count: { select: { attachments: true } },
+              indicator: {
+                select: {
+                  departmentId: true,
+                  planHeader: { select: { confirmedAt: true } },
+                },
+              },
+            },
           });
           if (!plan)
             throw new Error("ไม่พบบรรทัดแผนนี้ กรุณากดบันทึกแผนก่อนแนบไฟล์");
           if (!canManagePlan(user, plan.indicator.departmentId)) {
             throw new Error("คุณไม่มีสิทธิ์แนบไฟล์ในแผนของส่วนงานนี้");
+          }
+          // หลักฐานเป็นส่วนของการรายงานผล ต้องยืนยันแผนก่อน (ส่วนกลางข้ามได้)
+          if (user.role !== "ADMIN" && !plan.indicator.planHeader?.confirmedAt) {
+            throw new Error("ต้องยืนยันแผนดำเนินงานก่อน จึงแนบหลักฐานได้");
+          }
+          if (plan._count.attachments >= MAX_PLAN_FILES_PER_ROW) {
+            throw new Error(`แนบหลักฐานได้ไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ต่อขั้นตอน`);
           }
           return {
             ...uploadRules,
