@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getQuarterStatuses, defaultQuarter } from "@/lib/submission-window";
 import { PlanTable } from "./plan-table";
 import { planInclude, planTableProps } from "./plan-data";
+import { PLAN_COMMENT_QUARTER, loadComments } from "@/lib/review-comments";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผล MOU" };
@@ -38,6 +39,7 @@ export default async function IndicatorPlanPage({
   const quarter = defaultQuarter(indicator.fiscalYear.year);
   const confirmed = indicator.planHeader?.confirmedAt != null;
   const canEdit = canManagePlan(user, indicator.departmentId);
+  const comments = await loadComments(indicator.id, PLAN_COMMENT_QUARTER);
 
   return (
     <div className="space-y-5">
@@ -119,7 +121,7 @@ export default async function IndicatorPlanPage({
       )}
 
       <PlanTable
-        {...planTableProps({ indicator, user, statuses, mode: "plan" })}
+        {...planTableProps({ indicator, user, statuses, mode: "plan", comments })}
       />
     </div>
   );

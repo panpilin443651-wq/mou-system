@@ -1,6 +1,14 @@
 "use client";
 
-import { useActionState, useEffect, useMemo, useRef, useState } from "react";
+import {
+  createContext,
+  useActionState,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useFormStatus } from "react-dom";
 import type { PlanSection } from "@prisma/client";
 import type { FormState } from "@/actions/plans";
@@ -15,6 +23,7 @@ import {
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
 import { SuccessDialog } from "@/components/success-dialog";
+import { COMMENT_MAX_LENGTH, levelCommentKey } from "@/lib/review-comments";
 import {
   FISCAL_MONTHS,
   MONTH_COUNT,
@@ -155,37 +164,88 @@ function ConfirmButton() {
   );
 }
 
+// ----------------------------------------------------------------------------
+// ความเห็นส่วนกลาง: กล่องสีแดงใต้เป้าหมายตัวชี้วัด และใต้ค่าเกณฑ์แต่ละระดับ
+// ----------------------------------------------------------------------------
+// ส่วนกลางเขียนได้ (ช่องชื่อ comment_<section>) ส่วนงานเห็นแบบอ่านอย่างเดียวเมื่อมีความเห็น
+// หน้ารายงานผล กล่องผูกกับฟอร์มตีกลับผลด้วย formId (ไม่ถูกส่งไปกับฟอร์มบันทึกผล)
+
+export type PlanComments = {
+  /** section -> ข้อความ ("TARGET", "L1".."L6") */
+  values: Record<string, string>;
+  /** ส่วนกลาง = เขียนได้ · คนอื่น = อ่านอย่างเดียว */
+  editable: boolean;
+  /** id ของฟอร์มที่กล่องความเห็นผูกอยู่ (หน้ารายงานผล) - ไม่ระบุ = ฟอร์มตารางแผนเอง */
+  formId?: string;
+};
+
+const CommentContext = createContext<PlanComments>({ values: {}, editable: false });
+
+/** ในฟอร์มนี้มีกล่องความเห็นที่เขียนแล้วอย่างน้อย 1 กล่องหรือไม่ */
+export function hasAnyComment(form: HTMLFormElement | null): boolean {
+  if (!form) return false;
+  return Array.from(form.elements).some(
+    (el) =>
+      el instanceof HTMLTextAreaElement &&
+      el.name.startsWith("comment_") &&
+      el.value.trim() !== "",
+  );
+}
+
+/** กล่องความเห็นส่วนกลางของส่วนหนึ่ง - ไม่มีความเห็นและแก้ไม่ได้ = ไม่แสดงอะไร */
+function CommentBox({ section, title }: { section: string; title: string }) {
+  const { values, editable, formId } = useContext(CommentContext);
+  const text = values[section] ?? "";
+  if (!editable && text === "") return null;
+
+  const id = `comment_${section}`;
+  return (
+    <div className="rounded-lg border-2 border-red-400 bg-red-50 p-3">
+      <label
+        htmlFor={editable ? id : undefined}
+        className="flex items-center gap-2 text-sm font-semibold text-red-800"
+      >
+        <span className="h-2 w-2 rounded-full bg-red-600" aria-hidden="true" />
+        ความเห็นส่วนกลาง
+        <span className="font-normal text-red-700">· {title}</span>
+      </label>
+      {editable ? (
+        <textarea
+          id={id}
+          name={id}
+          form={formId}
+          defaultValue={text}
+          rows={2}
+          maxLength={COMMENT_MAX_LENGTH}
+          placeholder={`ความเห็น/สิ่งที่ต้องแก้ของ${title} (เว้นว่างได้ถ้าไม่มี)`}
+          className="mt-1.5 w-full resize-y rounded-lg border border-red-300 bg-surface px-3 py-2 text-sm outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
+        />
+      ) : (
+        <p className="mt-1.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-sm text-red-900">
+          {text}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /**
- * ช่องความเห็นของส่วนกลาง + ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) กรอบสีแดงให้เห็นชัด
- * ความเห็นส่งไปในช่อง returnNote เซิร์ฟเวอร์ปลดล็อกแผน เก็บความเห็น
- * และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
+ * ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) - ความเห็นมาจากกล่องใต้แต่ละส่วน (comment_<section>)
+ * เซิร์ฟเวอร์ปลดล็อกแผน เก็บความเห็น และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
  */
 function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
   const { pending } = useFormStatus();
-  const noteRef = useRef<HTMLTextAreaElement>(null);
   return (
     <section className="rounded-xl border-2 border-red-400 bg-red-50 p-4 shadow-sm sm:p-5">
       <h2 className="flex items-center gap-2 font-semibold text-red-800">
         <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden="true" />
-        ความเห็นส่วนกลาง
+        ตีกลับแผนการดำเนินงาน
       </h2>
-      <label htmlFor="returnNote" className="mt-1 block text-sm text-red-900">
-        ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
-      </label>
-      <textarea
-        ref={noteRef}
-        id="returnNote"
-        name="returnNote"
-        rows={3}
-        maxLength={2000}
-        disabled={!canReturnNow}
-        placeholder={
-          canReturnNow
-            ? "เช่น ขั้นตอนที่ 3.1 ค่าเป้าหมายไม่สอดคล้องกับค่าเกณฑ์ระดับ 3 กรุณาปรับแผนรายเดือน"
-            : "ตีกลับได้หลังหัวหน้าส่วนงานส่งแผนแล้ว"
-        }
-        className="mt-2 w-full resize-y rounded-lg border-2 border-red-300 bg-surface px-3 py-2.5 text-base outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 disabled:bg-red-50/50"
-      />
+      <p className="mt-1 text-sm text-red-900">
+        เขียนความเห็นในกล่อง <strong>ความเห็นส่วนกลาง</strong> สีแดงใต้เป้าหมายตัวชี้วัด
+        และใต้ค่าเกณฑ์ระดับที่ต้องแก้ (อย่างน้อย 1 กล่อง) แล้วกดตีกลับแผน ·
+        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นใต้แต่ละส่วน
+      </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
           type="submit"
@@ -193,13 +253,12 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
           value="unlock"
           disabled={pending || !canReturnNow}
           onClick={(e) => {
-            if (!noteRef.current || noteRef.current.value.trim() === "") {
+            if (!hasAnyComment(e.currentTarget.form)) {
               e.preventDefault();
-              window.alert("กรุณาระบุความเห็น/เหตุผลที่ตีกลับก่อน");
-              noteRef.current?.focus();
+              window.alert("กรุณาเขียนความเห็นในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
               return;
             }
-            if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมความเห็นนี้?")) e.preventDefault();
+            if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมความเห็นที่เขียนไว้?")) e.preventDefault();
           }}
           className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -231,6 +290,7 @@ export function PlanTable({
   canReturn,
   canSend,
   returned,
+  comments,
 }: {
   /** plan = หน้าแผนดำเนินงาน · report = หน้ารายงานผล */
   mode: PlanTableMode;
@@ -259,6 +319,8 @@ export function PlanTable({
   canSend: boolean;
   /** ส่วนกลางตีกลับแผนล่าสุด (แสดงจนกว่าจะส่งแผนใหม่) - null = ไม่ได้ถูกตีกลับ */
   returned: { label: string; note: string } | null;
+  /** ความเห็นส่วนกลางใต้แต่ละส่วน */
+  comments: PlanComments;
 }) {
   // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
   // ส่งแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
@@ -334,6 +396,7 @@ export function PlanTable({
   };
 
   return (
+    <CommentContext.Provider value={comments}>
     <form action={formAction} onSubmit={checkTargets} className="space-y-5">
       <input type="hidden" name="mode" value={mode} />
       {state.error && (
@@ -517,6 +580,7 @@ export function PlanTable({
         </div>
       )}
     </form>
+    </CommentContext.Provider>
   );
 }
 
@@ -743,6 +807,12 @@ function SectionTable({
         </div>
       )}
 
+      {!isStep && (
+        <div className="px-3 pb-3 sm:px-4 sm:pb-4">
+          <CommentBox section="TARGET" title="เป้าหมายตัวชี้วัด" />
+        </div>
+      )}
+
       <div className="space-y-3 border-t border-slate-200 p-4 sm:p-5">
         {editStructure && !isStep && (
           <button
@@ -865,7 +935,25 @@ function LevelGroup({
           </td>
         </tr>
       )}
+
+      {/* ความเห็นส่วนกลางของระดับนี้ (ใต้ค่าเกณฑ์) */}
+      <CommentRow cols={cols} section={levelCommentKey(criterion.level)} title={criterion.title} />
     </>
+  );
+}
+
+/** แถวกินเต็มความกว้างของตาราง ใส่กล่องความเห็นส่วนกลาง - ไม่มีอะไรให้แสดงก็ไม่มีแถว */
+function CommentRow({ cols, section, title }: { cols: number; section: string; title: string }) {
+  const { values, editable } = useContext(CommentContext);
+  if (!editable && !values[section]) return null;
+  return (
+    <tr>
+      <td colSpan={cols} className="border border-slate-200 px-3 py-2">
+        <div className="sticky left-3 w-[56rem] max-w-[calc(100vw-4rem)]">
+          <CommentBox section={section} title={title} />
+        </div>
+      </td>
+    </tr>
   );
 }
 

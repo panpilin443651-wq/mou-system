@@ -1,34 +1,30 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { FormState } from "@/actions/reports";
 import { SuccessDialog } from "@/components/success-dialog";
+import { hasAnyComment } from "../../../plans/[indicatorId]/plan-table";
 
-// ช่องความเห็นของส่วนกลาง + ปุ่ม "ตีกลับผล" สำหรับผลที่ส่งมาแล้วแต่ผิดพลาด
-// กรอบสีแดงให้เห็นชัด ความเห็นไปแสดงบนหน้ารายงาน และในแจ้งเตือน (กระดิ่ง)
-// ของผู้รายงานและหัวหน้าส่วนงาน
+// ปุ่ม "ตีกลับผล" ของส่วนกลาง สำหรับผลที่ส่งมาแล้วแต่ผิดพลาด
+// ความเห็นเขียนในกล่อง "ความเห็นส่วนกลาง" สีแดงใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
+// กล่องเหล่านั้นอยู่ในตารางแผน (คนละฟอร์ม) จึงผูกเข้าฟอร์มนี้ด้วย form={RETURN_FORM_ID}
 
-function Button({
-  noteRef,
-  disabled,
-}: {
-  noteRef: React.RefObject<HTMLTextAreaElement | null>;
-  disabled: boolean;
-}) {
+export const RETURN_FORM_ID = "report-return-form";
+
+function Button({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   return (
     <button
       type="submit"
       disabled={pending || disabled}
       onClick={(e) => {
-        if (!noteRef.current || noteRef.current.value.trim() === "") {
+        if (!hasAnyComment(e.currentTarget.form)) {
           e.preventDefault();
-          window.alert("กรุณาระบุความเห็น/เหตุผลที่ตีกลับก่อน");
-          noteRef.current?.focus();
+          window.alert("กรุณาเขียนความเห็นในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
           return;
         }
-        if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมความเห็นนี้?")) e.preventDefault();
+        if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมความเห็นที่เขียนไว้?")) e.preventDefault();
       }}
       className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
     >
@@ -48,36 +44,24 @@ export function ReturnButton({
   canReturnNow: boolean;
 }) {
   const [state, formAction] = useActionState(action, { error: null } as FormState);
-  const noteRef = useRef<HTMLTextAreaElement>(null);
 
   return (
     <form
+      id={RETURN_FORM_ID}
       action={formAction}
       className="rounded-xl border-2 border-red-400 bg-red-50 p-4 shadow-sm sm:p-5"
     >
       <h2 className="flex items-center gap-2 font-semibold text-red-800">
         <span className="h-2.5 w-2.5 rounded-full bg-red-600" aria-hidden="true" />
-        ความเห็นส่วนกลาง
+        ตีกลับผลการดำเนินงาน
       </h2>
-      <label htmlFor="returnNote" className="mt-1 block text-sm text-red-900">
-        ผลไตรมาส {quarter} · ระบุสิ่งที่ผิดพลาดหรือต้องแก้ไข แล้วกดตีกลับผล · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นนี้
-      </label>
-      <textarea
-        ref={noteRef}
-        id="returnNote"
-        name="returnNote"
-        rows={3}
-        maxLength={2000}
-        disabled={!canReturnNow}
-        placeholder={
-          canReturnNow
-            ? "เช่น ผลงานที่ทำได้ไม่ตรงกับหลักฐานที่แนบ กรุณาตรวจสอบตัวเลขเดือน พ.ย."
-            : "ตีกลับได้หลังหัวหน้าส่วนงานส่งผลไตรมาสนี้แล้ว"
-        }
-        className="mt-2 w-full resize-y rounded-lg border-2 border-red-300 bg-surface px-3 py-2.5 text-base outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 disabled:bg-red-50/50"
-      />
+      <p className="mt-1 text-sm text-red-900">
+        ผลไตรมาส {quarter} · เขียนความเห็นในกล่อง <strong>ความเห็นส่วนกลาง</strong> สีแดงใต้เป้าหมายตัวชี้วัด
+        และใต้ค่าเกณฑ์ระดับที่ต้องแก้ (อย่างน้อย 1 กล่อง) แล้วกดตีกลับผล ·
+        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นใต้แต่ละส่วน
+      </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <Button noteRef={noteRef} disabled={!canReturnNow} />
+        <Button disabled={!canReturnNow} />
         {!canReturnNow && (
           <span className="text-sm text-red-800">ผลไตรมาสนี้ยังไม่ได้ส่ง จึงยังตีกลับไม่ได้</span>
         )}

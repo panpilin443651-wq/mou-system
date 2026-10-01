@@ -26,7 +26,8 @@ import { formatThaiDateTime } from "@/lib/datetime";
 import { getQuarterStatuses } from "@/lib/submission-window";
 import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
-import { ReturnButton } from "./return-button";
+import { RETURN_FORM_ID, ReturnButton } from "./return-button";
+import { loadComments } from "@/lib/review-comments";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผล MOU" };
@@ -78,6 +79,8 @@ export default async function ReportPage({
   const canEdit = hasPermission && window.canWrite && !needsPlan;
   const report = indicator.reports[0] ?? null;
   const isSubmitted = report?.status === "SUBMITTED";
+  // ความเห็นส่วนกลางใต้เป้าหมายตัวชี้วัด/ค่าเกณฑ์ ของผลไตรมาสนี้
+  const comments = await loadComments(indicator.id, quarter);
 
   // ไตรมาสที่ยังไม่มีรายงาน ยกข้อมูลของไตรมาสล่าสุดก่อนหน้ามาเป็นค่าตั้งต้น
   // ผู้กรอกจะได้แก้ต่อจากของเดิม (ช่องที่ไม่อยู่ในฟอร์มยกไปตอนบันทึกใน saveReportAction)
@@ -109,7 +112,14 @@ export default async function ReportPage({
         </p>
       ) : (
         <PlanTable
-          {...planTableProps({ indicator, user, statuses, mode: "report" })}
+          {...planTableProps({
+            indicator,
+            user,
+            statuses,
+            mode: "report",
+            comments,
+            commentFormId: RETURN_FORM_ID,
+          })}
         />
       )}
       {/* ความเห็นส่วนกลาง + ตีกลับผล อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ

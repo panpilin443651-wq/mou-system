@@ -34,11 +34,17 @@ export function planTableProps({
   user,
   statuses,
   mode,
+  comments,
+  commentFormId,
 }: {
   indicator: IndicatorWithPlan;
   user: CurrentUser;
   statuses: WindowStatus[];
   mode: "plan" | "report";
+  /** ความเห็นส่วนกลางใต้แต่ละส่วน (loadComments) - หน้าแผนใช้ไตรมาส 0 หน้ารายงานผลใช้ไตรมาสนั้น */
+  comments: Record<string, string>;
+  /** หน้ารายงานผล: กล่องความเห็นผูกกับฟอร์มตีกลับผล */
+  commentFormId?: string;
 }): React.ComponentProps<typeof PlanTable> {
   const isAdmin = user.role === "ADMIN";
   const confirmedAt = indicator.planHeader?.confirmedAt ?? null;
@@ -75,6 +81,11 @@ export function planTableProps({
     structureLocked: confirmedAt !== null && !isAdmin,
     canUnlock: canReturnSubmission(user) && confirmedAt !== null,
     canReturn: canReturnSubmission(user),
+    comments: {
+      values: comments,
+      editable: canReturnSubmission(user),
+      formId: commentFormId,
+    },
     canSend: canSendForDepartment(user, indicator.departmentId),
     returned:
       indicator.planHeader?.returnedAt && indicator.planHeader.returnNote

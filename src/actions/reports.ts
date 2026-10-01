@@ -9,6 +9,13 @@ import {
   canSubmitReport,
 } from "@/lib/permissions";
 import { notifyDepartmentUsers } from "@/lib/notifications";
+import {
+  clearComments,
+  combineComments,
+  commentSections,
+  readComments,
+  replaceCommentsOps,
+} from "@/lib/review-comments";
 import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
@@ -142,6 +149,8 @@ export async function saveReportAction(
   // ไม่เขียนทับคอลัมน์และตาราง CriteriaProgress เดิม ข้อมูลที่เคยกรอกจึงไม่หาย
   if (existing) {
     await db.quarterlyReport.update({ where: { id: existing.id }, data });
+    // ส่งใหม่หลังถูกตีกลับ ล้างความเห็นใต้แต่ละส่วนของไตรมาสนี้
+    if (submitting) await clearComments(indicatorId, quarter);
   } else {
     // รายงานไตรมาสใหม่ ยกข้อมูลทั้งหมดของไตรมาสก่อนหน้ามาด้วย
     // (ช่องที่อยู่ในฟอร์มยกไปตั้งแต่ตอนเปิดหน้าแล้ว ตรงนี้ยกช่องที่ไม่อยู่ในฟอร์ม)
@@ -285,14 +294,24 @@ export async function returnReportAction(
     return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับผลการดำเนินงานได้" };
   }
 
-  const returnNote = String(formData.get("returnNote") ?? "").trim().slice(0, 2000);
-  if (returnNote === "") return { error: "กรุณาระบุเหตุผลที่ตีกลับ" };
-
   const indicator = await db.indicator.findUnique({
     where: { id: indicatorId },
-    select: { id: true, code: true, name: true, departmentId: true },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      departmentId: true,
+      criteria: { select: { level: true }, orderBy: { level: "asc" } },
+    },
   });
   if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
+
+  // ความเห็นส่วนกลางจากกล่องใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
+  const comments = readComments(formData, commentSections(indicator.criteria.map((c) => c.level)));
+  if (comments.length === 0) {
+    return { error: "กรุณาเขียนความเห็นในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
+  }
+  const returnNote = combineComments(comments);
 
   const existing = await db.quarterlyReport.findUnique({
     where: { indicatorId_quarter: { indicatorId, quarter } },
@@ -301,20 +320,25 @@ export async function returnReportAction(
     return { error: "ตีกลับได้เฉพาะผลที่ส่งแล้ว" };
   }
 
-  await db.quarterlyReport.update({
-    where: { id: existing.id },
-    data: {
-      status: "DRAFT",
-      submittedAt: null,
-      submittedById: null,
-      returnedAt: new Date(),
-      returnNote,
-    },
-  });
+  await db.$transaction([
+    db.quarterlyReport.update({
+      where: { id: existing.id },
+      data: {
+        status: "DRAFT",
+        submittedAt: null,
+        submittedById: null,
+        returnedAt: new Date(),
+        returnNote,
+      },
+    }),
+    ...replaceCommentsOps(indicatorId, quarter, comments),
+  ]);
 
   await notifyDepartmentUsers(indicator.departmentId, {
     title: `ส่วนกลางตีกลับผลการดำเนินงาน ข้อ ${indicator.code} ไตรมาส ${quarter}`,
-    body: `${indicator.name} · เหตุผล: ${returnNote}`,
+    body: `${indicator.name}
+ความเห็นส่วนกลาง:
+${returnNote}`,
     link: `/reports/${indicatorId}/${quarter}#return`,
   });
 

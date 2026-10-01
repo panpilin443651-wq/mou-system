@@ -12,6 +12,14 @@ import {
 } from "@/lib/permissions";
 import { notifyDepartmentUsers } from "@/lib/notifications";
 import {
+  PLAN_COMMENT_QUARTER,
+  clearComments,
+  combineComments,
+  commentSections,
+  readComments,
+  replaceCommentsOps,
+} from "@/lib/review-comments";
+import {
   planHeaderSchema,
   planLevelReportText,
   planRowSchema,
@@ -49,7 +57,7 @@ import { writeAudit } from "@/lib/audit";
 //   add:STEP:<ระดับ>   บันทึกทั้งตาราง แล้วเพิ่มขั้นตอนต่อท้ายค่าเกณฑ์ระดับนั้น
 //   delete:<rowId>     บันทึกทั้งตาราง แล้วลบบรรทัดนั้น
 //   confirm            บันทึกทั้งตาราง แล้ว "ส่งแผน" (ล็อกโครงแผน เปิดให้รายงานผลได้) - หัวหน้าส่วนงาน/ส่วนกลาง
-//   unlock             บันทึกทั้งตาราง แล้ว "ตีกลับแผน" พร้อมเหตุผล (returnNote) และแจ้งเตือนหัวหน้าส่วนงาน - ส่วนกลาง
+//   unlock             บันทึกทั้งตาราง แล้ว "ตีกลับแผน" พร้อมความเห็นใต้แต่ละส่วน (comment_<section>) และแจ้งเตือนส่วนงาน - ส่วนกลาง
 //
 // ส่งแผนแล้ว ผู้รับผิดชอบส่วนงานแก้ "โครงแผน" ไม่ได้อีก: แผนรายเดือน เป้าหมายตัวชี้วัด
 // ค่าเป้าหมาย หน่วยนับ ขั้นตอนการดำเนินงาน และเพิ่ม/ลบบรรทัดไม่ได้
@@ -140,12 +148,19 @@ export async function savePlanAction(
     };
   }
   // ตีกลับแผน (intent "unlock") = ส่วนกลางเท่านั้น และต้องบอกเหตุผล
-  const returnNote = String(formData.get("returnNote") ?? "").trim().slice(0, 2000);
+  // ความเห็นส่วนกลางจากกล่องใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ (ไล่ตามส่วนที่ตัวชี้วัดมีจริง)
+  const comments =
+    intent === "unlock"
+      ? readComments(formData, commentSections(indicator.criteria.map((c) => c.level)))
+      : [];
+  const returnNote = combineComments(comments);
   if (intent === "unlock") {
     if (!canReturnSubmission(user)) {
       return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับแผนได้" };
     }
-    if (returnNote === "") return { error: "กรุณาระบุเหตุผลที่ตีกลับแผน" };
+    if (comments.length === 0) {
+      return { error: "กรุณาเขียนความเห็นในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
+    }
   }
 
   // หน้าแผน (mode=plan) ส่งเฉพาะส่วนหัวและโครงแผน
@@ -416,24 +431,32 @@ export async function savePlanAction(
       };
     }
 
-    await db.planHeader.update({
-      where: { indicatorId },
-      // ส่งใหม่หลังถูกตีกลับ ล้างเหตุผลที่ตีกลับทิ้ง
-      data: { confirmedAt: new Date(), confirmedById: user.id, returnedAt: null, returnNote: null },
-    });
+    // ส่งใหม่หลังถูกตีกลับ ล้างเหตุผลและความเห็นใต้แต่ละส่วนทิ้ง
+    await db.$transaction([
+      db.planHeader.update({
+        where: { indicatorId },
+        data: { confirmedAt: new Date(), confirmedById: user.id, returnedAt: null, returnNote: null },
+      }),
+      clearComments(indicatorId, PLAN_COMMENT_QUARTER),
+    ]);
     message = "ส่งแผนการดำเนินงานเรียบร้อยแล้ว แผนถูกล็อก และรายงานผลการดำเนินงานได้แล้ว";
   }
 
   // ---- ตีกลับแผน (ส่วนกลาง) ----
   // ปลดล็อกให้ส่วนงานแก้ แล้วแจ้งเตือนหัวหน้าส่วนงาน ซึ่งต้องกดส่งแผนใหม่หลังแก้เสร็จ
   if (intent === "unlock") {
-    await db.planHeader.update({
-      where: { indicatorId },
-      data: { confirmedAt: null, confirmedById: null, returnedAt: new Date(), returnNote },
-    });
+    await db.$transaction([
+      db.planHeader.update({
+        where: { indicatorId },
+        data: { confirmedAt: null, confirmedById: null, returnedAt: new Date(), returnNote },
+      }),
+      ...replaceCommentsOps(indicatorId, PLAN_COMMENT_QUARTER, comments),
+    ]);
     const notified = await notifyDepartmentUsers(indicator.departmentId, {
       title: `ส่วนกลางตีกลับแผนการดำเนินงาน ข้อ ${indicator.code}`,
-      body: `${indicator.name} · เหตุผล: ${returnNote}`,
+      body: `${indicator.name}
+ความเห็นส่วนกลาง:
+${returnNote}`,
       link: `/plans/${indicatorId}#return`,
     });
     message =

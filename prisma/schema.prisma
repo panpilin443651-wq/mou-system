@@ -220,6 +220,7 @@ model Indicator {
   plans            ActionPlan[]
   planHeader       PlanHeader?
   planLevelReports PlanLevelReport[]
+  reviewComments   ReviewComment[]
   reports          QuarterlyReport[]
   mouScores        MouScore[]
 
@@ -362,6 +363,28 @@ model PlanLevelReport {
   updatedAt DateTime @updatedAt
 
   @@unique([indicatorId, level])
+}
+
+/// "ความเห็นส่วนกลาง" ที่เขียนไว้ใต้แต่ละส่วนของตารางแผน ตอนตีกลับแผนหรือผล
+///
+/// แยกตามส่วน (section): "TARGET" = ใต้ตารางเป้าหมายตัวชี้วัด · "L1".."L6" = ใต้ค่าเกณฑ์ระดับ 1-5 และเงื่อนไขอื่นๆ
+/// quarter 0 = ความเห็นต่อแผน (หน้าแผน) · 1-4 = ความเห็นต่อผลของไตรมาสนั้น (หน้ารายงานผล)
+/// ใช้ 0 แทน null เพราะ unique ใน PostgreSQL มองว่า null ไม่ซ้ำกัน จะเกิดแถวซ้ำได้
+/// ลบทิ้งเมื่อหัวหน้าส่วนงานกดส่งแผน/ส่งผลใหม่
+model ReviewComment {
+  id String @id @default(cuid())
+
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id], onDelete: Cascade)
+
+  quarter Int    @default(0)
+  section String
+  text    String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([indicatorId, quarter, section])
 }
 
 /// ไฟล์หลักฐานประกอบผลการดำเนินงาน ของบรรทัดหนึ่งในแผนดำเนินงาน
