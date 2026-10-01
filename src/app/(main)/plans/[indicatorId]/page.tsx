@@ -43,10 +43,10 @@ export default async function IndicatorPlanPage({
     <div className="space-y-5">
       <div>
         <Link
-          href={`/reports?dept=${indicator.departmentId}`}
+          href={`/plans?dept=${indicator.departmentId}`}
           className="inline-flex min-h-11 items-center text-sm text-brand-ink hover:underline"
         >
-          ← กลับไปรายการตัวชี้วัด
+          ← กลับไปรายการแผนการดำเนินงาน
         </Link>
 
         <p className="mt-2 text-sm font-medium text-brand-ink">แผนการดำเนินงาน</p>

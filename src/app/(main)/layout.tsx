@@ -25,12 +25,9 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   const links = [
     { href: "/dashboard", label: "ภาพรวม", show: menus.dashboard },
     { href: "/indicators", label: indicatorsMenuLabel(user), show: menus.indicators },
-    // รายงานผลกับแผนดำเนินงานรวมเป็นเมนูเดียว (หน้า /plans พาไปที่หน้านี้)
-    {
-      href: "/reports",
-      label: "รายงานผลการดำเนินงาน",
-      show: menus.reports || menus.plans,
-    },
+    // แผน (ขั้นตอนที่ 1) กับรายงานผล (ขั้นตอนที่ 2) แยกเป็นคนละเมนู
+    { href: "/plans", label: "แผนการดำเนินงาน", show: menus.plans },
+    { href: "/reports", label: "รายงานผลการดำเนินงาน", show: menus.reports },
     { href: "/admin", label: "ตั้งค่าระบบ", show: menus.admin },
     { href: "/account", label: "บัญชีของฉัน", show: true },
   ].filter((l) => l.show);

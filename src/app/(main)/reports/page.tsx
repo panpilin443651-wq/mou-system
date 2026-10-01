@@ -6,7 +6,6 @@ import { db } from "@/lib/db";
 import { QUARTERS } from "@/lib/plan";
 import { defaultQuarter } from "@/lib/submission-window";
 import { scoreClass, weightedScore } from "@/lib/scoring";
-import { formatPct, summarizeSection, toMonths } from "@/lib/plan";
 import { compareCode } from "@/lib/mou-scores";
 import {
   visibleDepartments,
@@ -19,9 +18,8 @@ import { DepartmentList, BackToDepartments, type DepartmentRow } from "../depart
 export const dynamic = "force-dynamic";
 export const metadata = { title: "รายงานผลการดำเนินงาน | ระบบรายงานผล MOU" };
 
-// หน้านี้รวมเมนู "รายงานผล" กับ "แผนดำเนินงาน" ไว้ที่เดียว
-// เพราะทั้งสองทำงานกับตัวชี้วัดชุดเดียวกันของส่วนงานเดียวกัน ผู้ใช้จะได้ไม่ต้องสลับเมนูไปมา
-// หน้ากรอกยังแยกกันเหมือนเดิม: /reports/[id]/[ไตรมาส] กับ /plans/[id]
+// เมนู "รายงานผลการดำเนินงาน" (ขั้นตอนที่ 2) แยกจากเมนู "แผนการดำเนินงาน" (/plans ขั้นตอนที่ 1)
+// ตัวชี้วัดที่ยังไม่ยืนยันแผน มีป้ายพาไปกรอกแผนก่อน
 
 const PAGE_SIZE = 50;
 
@@ -54,8 +52,8 @@ export default async function ReportsPage({
         <p className="mt-1 text-sm text-slate-600">
           {fiscalYear ? `ปีบัญชี ${fiscalYear.year}` : "ยังไม่ได้ตั้งปีบัญชี"}
           {current
-            ? ` · ${current.code} ${current.name} · กดช่องไตรมาสเพื่อกรอกผล หรือกดช่องแผนเพื่อวางแผน`
-            : ` · เลือกส่วนงานเพื่อกรอกผลและวางแผน`}
+            ? ` · ${current.code} ${current.name} · กดช่องไตรมาสเพื่อกรอกผล`
+            : ` · เลือกส่วนงานเพื่อกรอกผล`}
         </p>
       </div>
 
@@ -90,7 +88,7 @@ async function DepartmentSummary({
   departments: { id: string; code: string; name: string }[];
 }) {
   // นับทีเดียวทุกหน่วย แทนการยิงคำถามทีละส่วนงาน
-  const [totals, submitted, planned] = await Promise.all([
+  const [totals, submitted, confirmed] = await Promise.all([
     db.indicator.groupBy({
       by: ["departmentId"],
       where: baseWhere,
@@ -103,26 +101,26 @@ async function DepartmentSummary({
     }),
     db.indicator.groupBy({
       by: ["departmentId"],
-      where: { ...baseWhere, plans: { some: {} } },
+      where: { ...baseWhere, planHeader: { confirmedAt: { not: null } } },
       _count: { _all: true },
     }),
   ]);
 
   const totalBy = new Map(totals.map((g) => [g.departmentId, g._count._all]));
   const submittedBy = new Map(submitted.map((g) => [g.departmentId, g._count._all]));
-  const plannedBy = new Map(planned.map((g) => [g.departmentId, g._count._all]));
+  const confirmedBy = new Map(confirmed.map((g) => [g.departmentId, g._count._all]));
 
   const rows: DepartmentRow[] = departments.map((d) => {
     const total = totalBy.get(d.id) ?? 0;
     const done = submittedBy.get(d.id) ?? 0;
-    const plannedCount = plannedBy.get(d.id) ?? 0;
+    const confirmedCount = confirmedBy.get(d.id) ?? 0;
     return {
       id: d.id,
       code: d.code,
       name: d.name,
       stats: [
         { label: "ตัวชี้วัด", value: total.toLocaleString("th-TH") },
-        { label: "วางแผนแล้ว", value: total === 0 ? "–" : `${plannedCount}/${total}` },
+        { label: "ยืนยันแผนแล้ว", value: total === 0 ? "–" : `${confirmedCount}/${total}` },
         { label: "ส่งผลแล้ว", value: total === 0 ? "–" : `${done}/${total}` },
       ],
     };
@@ -162,7 +160,6 @@ async function ReportTable({
       where,
       include: {
         reports: { select: { quarter: true, status: true, scoreLevel: true } },
-        plans: { select: { planMonths: true, actualMonths: true } },
         planHeader: { select: { confirmedAt: true } },
       },
       orderBy: { code: "asc" },
@@ -199,7 +196,6 @@ async function ReportTable({
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="px-4 py-2.5 font-medium">ข้อ</th>
                   <th className="px-3 py-2.5 font-medium">ชื่อตัวชี้วัด</th>
-                  <th className="whitespace-nowrap px-2 py-2.5 text-center font-medium">แผนดำเนินงาน</th>
                   {QUARTERS.map((q) => (
                     <th key={q} className="whitespace-nowrap px-2 py-2.5 text-center font-medium">
                       ไตรมาส {q}
@@ -220,15 +216,6 @@ async function ReportTable({
                     .sort((a, b) => b.quarter - a.quarter);
                   const latest = submitted[0] ?? null;
                   const weighted = weightedScore(latest?.scoreLevel ?? null, ind.weight);
-                  // สูตรเดียวกับหน้าแผนและไฟล์ Excel เทียบผลทั้งปีกับแผนทั้งปี
-                  const plan = summarizeSection(
-                    ind.plans.map((p) => ({
-                      planMonths: toMonths(p.planMonths),
-                      actualMonths: toMonths(p.actualMonths),
-                    })),
-                    12
-                  );
-
                   return (
                     <tr
                       key={ind.id}
@@ -242,28 +229,15 @@ async function ReportTable({
                         >
                           {ind.name}
                         </Link>
-                      </td>
-
-                      <td className="whitespace-nowrap px-2 py-2.5 text-center">
-                        <Link
-                          href={`/plans/${ind.id}`}
-                          className="-my-2.5 inline-flex min-h-11 items-center justify-center rounded px-2 text-xs font-medium transition hover:ring-1 hover:ring-brand-600"
-                          title="กรอกแผนการดำเนินงาน"
-                        >
-                          {plan.count === 0 ? (
-                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
-                              ยังไม่วางแผน
-                            </span>
-                          ) : !ind.planHeader?.confirmedAt ? (
-                            <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
-                              ยังไม่ยืนยันแผน
-                            </span>
-                          ) : (
-                            <span className="rounded bg-brand-50 px-1.5 py-0.5 tabular-nums text-brand-ink">
-                              {plan.count} รายการ · {formatPct(plan.avgYearPct)}
-                            </span>
-                          )}
-                        </Link>
+                        {/* รายงานผลได้หลังยืนยันแผน จึงบอกไว้ตรงนี้และพาไปกรอกแผน */}
+                        {!ind.planHeader?.confirmedAt && (
+                          <Link
+                            href={`/plans/${ind.id}`}
+                            className="mt-0.5 inline-block rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800 hover:underline"
+                          >
+                            ยังไม่ยืนยันแผน · ไปกรอกแผน
+                          </Link>
+                        )}
                       </td>
 
                       {QUARTERS.map((q) => {
@@ -308,8 +282,8 @@ async function ReportTable({
           </div>
 
           <p className="text-xs text-slate-500">
-            ขั้นตอนแรกต้องกรอกแผนดำเนินงานและกดยืนยันแผน จึงรายงานผลรายไตรมาสได้ (ยืนยันแล้วแผนถูกล็อก) · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
-            ช่องแผนดำเนินงานบอกจำนวนรายการในแผน และผลเทียบแผนทั้งปี · ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
+            ต้องกรอกแผนและกดยืนยันแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
+            ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>
 
