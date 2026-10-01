@@ -14,6 +14,7 @@ import {
 } from "@/lib/attachments";
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
+import { SuccessDialog } from "@/components/success-dialog";
 import {
   FISCAL_MONTHS,
   MONTH_COUNT,
@@ -315,14 +316,7 @@ export function PlanTable({
           {state.error}
         </p>
       )}
-      {state.success && state.message && (
-        <p
-          role="status"
-          className="rounded-lg bg-brand-50 px-4 py-3 text-sm text-brand-900"
-        >
-          {state.message}
-        </p>
-      )}
+      <SuccessDialog state={state} />
 
       {/* ---- แผนถูกตีกลับ (หน้าแผน) ---- */}
       {isPlan && returned && !confirmedLabel && (

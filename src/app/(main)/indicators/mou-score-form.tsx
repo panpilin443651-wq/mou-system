@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useMemo } from "react";
+import { SuccessDialog } from "@/components/success-dialog";
 import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { saveMouScores, type MouScoreFormState } from "@/actions/mou-scores";
@@ -68,6 +69,15 @@ export function MouScoreForm({
   backHref: string;
 }) {
   const [state, formAction] = useActionState(saveMouScores, initialState);
+  // ผูกกับ state ที่ได้จากการบันทึกเท่านั้น pop up จะได้ไม่เด้งซ้ำทุกครั้งที่หน้าแสดงผลใหม่
+  const dialogState = useMemo(
+    () => ({
+      error: state.error,
+      success: Boolean(state.savedAt),
+      message: `บันทึกคะแนนไตรมาส ${quarter} เรียบร้อยแล้ว`,
+    }),
+    [state, quarter],
+  );
 
   let lastDimension: string | null = null;
   let lastGroup: string | null = null;
@@ -158,11 +168,7 @@ export function MouScoreForm({
           {state.error}
         </p>
       )}
-      {!state.error && state.savedAt && (
-        <p role="status" className="rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          บันทึกคะแนนไตรมาส {quarter} เรียบร้อยแล้ว
-        </p>
-      )}
+      <SuccessDialog state={dialogState} />
 
       <div className="flex flex-wrap items-center gap-3">
         <SaveButton />

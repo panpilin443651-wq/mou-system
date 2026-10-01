@@ -3,6 +3,7 @@
 import { useActionState, useRef } from "react";
 import { useFormStatus } from "react-dom";
 import type { FormState } from "@/actions/reports";
+import { SuccessDialog } from "@/components/success-dialog";
 
 // ปุ่ม "ตีกลับผล" ของส่วนกลาง สำหรับผลที่ส่งมาแล้วแต่ผิดพลาด
 // ถามเหตุผลก่อนเสมอ เหตุผลไปแสดงบนหน้ารายงานและในแจ้งเตือนของหัวหน้าส่วนงาน
@@ -42,6 +43,7 @@ export function ReturnButton({
     <form action={formAction}>
       <input ref={noteRef} type="hidden" name="returnNote" />
       <Button noteRef={noteRef} />
+      <SuccessDialog state={state} />
       {state.error && (
         <p role="alert" className="mt-1 text-xs text-red-700">
           {state.error}

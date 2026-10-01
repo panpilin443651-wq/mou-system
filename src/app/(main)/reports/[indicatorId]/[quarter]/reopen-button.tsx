@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import type { FormState } from "@/actions/reports";
+import { SuccessDialog } from "@/components/success-dialog";
 
 // ปุ่มดึงรายงานที่ส่งแล้วกลับมาเป็นร่างเพื่อแก้ไข
 // แยกเป็นปุ่มต่างหาก ไม่ให้แก้ทับของที่ส่งไปแล้วโดยไม่รู้ตัว
@@ -30,6 +31,7 @@ export function ReopenButton({
   return (
     <form action={formAction}>
       <Button />
+      <SuccessDialog state={state} />
       {state.error && (
         <p role="alert" className="mt-1 text-xs text-red-700">
           {state.error}

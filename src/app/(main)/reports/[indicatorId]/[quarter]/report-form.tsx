@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import type { ScoreDirection } from "@prisma/client";
 import type { FormState } from "@/actions/reports";
+import { SuccessDialog } from "@/components/success-dialog";
 import {
   calcProgressPct,
   calcScoreLevel,
@@ -262,14 +263,7 @@ export function ReportForm({
           {state.error}
         </p>
       )}
-      {state.success && (
-        <p
-          role="status"
-          className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-brand-ink"
-        >
-          บันทึกเรียบร้อยแล้ว
-        </p>
-      )}
+      <SuccessDialog state={state} />
 
       <Buttons isSubmitted={isSubmitted} pending={pending} canSend={canSend} />
     </div>

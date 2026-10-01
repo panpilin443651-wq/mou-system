@@ -25,7 +25,7 @@ import { getWindowStatus } from "@/lib/submission-window";
 // ไฟล์แนบจึงเป็นแค่หลักฐานประกอบ ตัวเลขต้องมาจากที่ส่วนงานกรอก
 // ============================================================================
 
-export type FormState = { error: string | null; success?: boolean };
+export type FormState = { error: string | null; success?: boolean; message?: string };
 
 /**
  * รายงานของไตรมาสล่าสุดก่อนหน้า `quarter` ที่มีการกรอกไว้
@@ -195,7 +195,13 @@ export async function saveReportAction(
   revalidatePath(`/reports/${indicatorId}/${quarter}`);
   revalidatePath(`/indicators/${indicatorId}`);
   revalidatePath("/dashboard");
-  return { error: null, success: true };
+  return {
+    error: null,
+    success: true,
+    message: submitting
+      ? `ส่งผลการดำเนินงานไตรมาส ${quarter} เรียบร้อยแล้ว`
+      : `บันทึกร่างผลการดำเนินงานไตรมาส ${quarter} เรียบร้อยแล้ว ยังแก้ไขต่อได้`,
+  };
 }
 
 /**
@@ -255,7 +261,11 @@ export async function reopenReportAction(
   revalidatePath("/reports");
   revalidatePath(`/reports/${indicatorId}/${quarter}`);
   revalidatePath("/dashboard");
-  return { error: null, success: true };
+  return {
+    error: null,
+    success: true,
+    message: `ดึงผลไตรมาส ${quarter} กลับมาเป็นร่างแล้ว แก้ไขแล้วกดส่งผลการดำเนินงานใหม่`,
+  };
 }
 
 /**
@@ -319,5 +329,9 @@ export async function returnReportAction(
   revalidatePath("/reports");
   revalidatePath(`/reports/${indicatorId}/${quarter}`);
   revalidatePath("/dashboard");
-  return { error: null, success: true };
+  return {
+    error: null,
+    success: true,
+    message: `ตีกลับผลไตรมาส ${quarter} แล้ว แจ้งเตือนหัวหน้าส่วนงานแล้ว`,
+  };
 }
