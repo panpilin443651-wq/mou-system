@@ -6,7 +6,8 @@ import type { DepartmentMouScores, MouScoreRow } from "@/lib/mou-scores";
 // ตารางคะแนนรายตัวชี้วัดของส่วนงานหนึ่ง
 // ============================================================================
 // วางคอลัมน์ให้เหมือนไฟล์ Excel ที่ส่วนกลางใช้กันมาก่อน
-// (แผน / ผล / คะแนน ของแต่ละไตรมาส แล้วตามด้วยคะแนนถ่วงน้ำหนักสะสม)
+// (แผน / คะแนน ของแต่ละไตรมาส แล้วตามด้วยคะแนนถ่วงน้ำหนักสะสม)
+// ไม่แสดงคอลัมน์ "ผล" รายไตรมาส (เอาออก 2 ต.ค. 2569) แต่ยังกรอกผลได้ที่ฟอร์มคะแนน
 // เพราะคนที่ต้องอ่านตารางนี้คุ้นกับไฟล์นั้นอยู่แล้ว ถ้าจัดใหม่จะต้องเรียนรู้ซ้ำ
 //
 // คอลัมน์สะสมระบบคำนวณเองจาก ผล x น้ำหนัก / 100 ไม่ได้เก็บไว้ในฐานข้อมูล
@@ -47,9 +48,9 @@ export function IndicatorScoreTable({
   const { rows, totals } = scores;
   const periods = totals.cumulative.map((c) => c.label);
 
-  // ข้อ + ตัวชี้วัด + น้ำหนัก + (แผน/ผล/คะแนน ต่อไตรมาส) + งวดสะสม
-  const columnCount = 3 + quarters.length * 3 + periods.length;
-  const minWidth = quarters.length >= 4 ? "min-w-[78rem]" : "min-w-[64rem]";
+  // ข้อ + ตัวชี้วัด + น้ำหนัก + (แผน/คะแนน ต่อไตรมาส) + งวดสะสม
+  const columnCount = 3 + quarters.length * 2 + periods.length;
+  const minWidth = quarters.length >= 4 ? "min-w-[68rem]" : "min-w-[56rem]";
 
   let lastDimension: string | null = null;
   let lastGroup: string | null = null;
@@ -72,7 +73,7 @@ export function IndicatorScoreTable({
             {quarters.map((q) => (
               <th
                 key={q}
-                colSpan={3}
+                colSpan={2}
                 className="border-l border-slate-200 px-3 py-2 text-center font-medium"
               >
                 ไตรมาส {q}
@@ -91,7 +92,6 @@ export function IndicatorScoreTable({
                 <th className="border-l border-slate-200 px-3 py-1.5 text-right font-medium">
                   แผน
                 </th>
-                <th className="px-3 py-1.5 text-right font-medium">ผล</th>
                 <th className="px-3 py-1.5 text-right font-medium">คะแนน</th>
               </Fragment>
             ))}
@@ -152,7 +152,7 @@ export function IndicatorScoreTable({
             <td className="px-3 py-2.5">คะแนนรวม</td>
             <td className="px-3 py-2.5 text-right tabular-nums">{totals.weight}%</td>
             {quarters.map((q) => (
-              <td key={q} colSpan={3} className="border-l border-slate-200" />
+              <td key={q} colSpan={2} className="border-l border-slate-200" />
             ))}
             {totals.cumulative.map((c) => (
               <td
@@ -199,9 +199,6 @@ function ScoreRowCells({ row, quarters }: { row: MouScoreRow; quarters: number[]
           <Fragment key={q.quarter}>
             <td className="whitespace-nowrap border-l border-slate-200 px-3 py-2.5 text-right align-top tabular-nums text-slate-600">
               <Num value={q.plan} />
-            </td>
-            <td className="whitespace-nowrap px-3 py-2.5 text-right align-top tabular-nums text-slate-600">
-              <Num value={q.actual} />
             </td>
             <td className="whitespace-nowrap px-1.5 py-2.5 text-right align-top tabular-nums">
               <span className={`inline-block rounded px-2 py-0.5 ${scoreTone(q.score)}`}>
