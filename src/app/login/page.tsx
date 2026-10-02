@@ -86,7 +86,7 @@ async function DemoLogin() {
   );
 }
 
-export const metadata = { title: "เข้าสู่ระบบ | ระบบรายงานผล MOU" };
+export const metadata = { title: "เข้าสู่ระบบ | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function LoginPage() {
   // ถ้า login อยู่แล้วก็ไม่ต้องเห็นหน้านี้อีก

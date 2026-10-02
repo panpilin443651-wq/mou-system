@@ -44,7 +44,7 @@ export async function GET(request: Request) {
   const data = await getDashboardData(user, quarter);
 
   const book = new ExcelJS.Workbook();
-  book.creator = "ระบบรายงานผล MOU - การยางแห่งประเทศไทย";
+  book.creator = "ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน - การยางแห่งประเทศไทย";
   book.created = new Date();
 
   // ---- แผ่นที่ 1: สรุปภาพรวม ----

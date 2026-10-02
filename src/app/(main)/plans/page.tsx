@@ -15,7 +15,7 @@ import { DepartmentFilters } from "../department-filters";
 import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผล MOU" };
+export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 // เมนู "แผนการดำเนินงาน" (ขั้นตอนที่ 1) แยกจากเมนู "รายงานผลการดำเนินงาน" (ขั้นตอนที่ 2)
 // ชั้นที่ 1 รายชื่อส่วนงาน + จำนวนตัวชี้วัดที่ส่งแผนแล้ว · ชั้นที่ 2 ตัวชี้วัดของส่วนงาน + สถานะแผน

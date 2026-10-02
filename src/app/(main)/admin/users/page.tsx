@@ -5,7 +5,7 @@ import { ROLE_LABEL } from "@/lib/permissions";
 import { formatThaiDateTime } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "จัดการผู้ใช้ | ระบบรายงานผล MOU" };
+export const metadata = { title: "จัดการผู้ใช้ | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function UsersPage({
   searchParams,

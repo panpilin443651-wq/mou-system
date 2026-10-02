@@ -15,7 +15,7 @@ import { defaultQuarter } from "@/lib/submission-window";
 import { isPlaceholderCriteria, targetLabel } from "@/lib/scoring";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "รายละเอียดตัวชี้วัด | ระบบรายงานผล MOU" };
+export const metadata = { title: "รายละเอียดตัวชี้วัด | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 const QUARTER_LABEL = ["ไตรมาส 1", "ไตรมาส 2", "ไตรมาส 3", "ไตรมาส 4"];
 

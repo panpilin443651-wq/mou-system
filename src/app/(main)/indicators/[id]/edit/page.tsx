@@ -8,7 +8,7 @@ import { isPlaceholderCriteria } from "@/lib/scoring";
 import { IndicatorForm } from "../../indicator-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "แก้ไขตัวชี้วัด | ระบบรายงานผล MOU" };
+export const metadata = { title: "แก้ไขตัวชี้วัด | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function EditIndicatorPage({
   params,

@@ -10,7 +10,7 @@ import { Logo } from "@/components/logo";
 import { PrintButton } from "./print-button";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "พิมพ์รายงานผล | ระบบรายงานผล MOU" };
+export const metadata = { title: "พิมพ์รายงานผล | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 // ============================================================================
 // หน้าสำหรับพิมพ์ / บันทึกเป็น PDF

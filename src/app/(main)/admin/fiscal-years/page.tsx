@@ -8,7 +8,7 @@ import { CopyIndicatorsForm } from "./copy-form";
 import { ActivateButton } from "./activate-button";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ปีบัญชี | ระบบรายงานผล MOU" };
+export const metadata = { title: "ปีบัญชี | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function FiscalYearsPage() {
   await requireAdmin();

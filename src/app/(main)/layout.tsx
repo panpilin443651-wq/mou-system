@@ -49,7 +49,10 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           <Link href={homePath(user)} className="flex min-w-0 flex-1 items-center gap-2.5">
             <Logo size={36} className="h-9 w-9 shrink-0" />
             <span className="min-w-0">
-              <span className="block truncate font-semibold text-brand-ink">ระบบรายงานผล MOU</span>
+              {/* ชื่อระบบยาว ให้ขึ้นบรรทัดใหม่ได้ไม่เกิน 2 บรรทัด แทนการตัดท้ายทิ้ง */}
+              <span className="line-clamp-2 text-sm font-semibold leading-snug text-brand-ink">
+                ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน
+              </span>
               <span className="block truncate text-xs text-slate-500">
                 {department ? `${department.code} ${department.name}` : ROLE_LABEL[user.role]}
               </span>

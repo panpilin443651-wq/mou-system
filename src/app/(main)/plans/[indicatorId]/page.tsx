@@ -9,7 +9,7 @@ import { planInclude, planTableProps } from "./plan-data";
 import { PLAN_COMMENT_QUARTER, loadComments } from "@/lib/review-comments";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผล MOU" };
+export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 // หน้าแผนการดำเนินงาน (ขั้นตอนที่ 1) แยกจากหน้ารายงานผลการดำเนินงาน (ขั้นตอนที่ 2)
 // กรอกส่วนหัว เป้าหมาย ขั้นตอน และแผนรายเดือน · บันทึกร่างแผนไว้ก่อนได้ · ส่งแผนแล้วจึงรายงานผลได้

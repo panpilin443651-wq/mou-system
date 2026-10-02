@@ -11,7 +11,7 @@ import {
 import { AddLineForm, AssignmentForm, LineRow } from "./line-forms";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "สายบังคับบัญชา | ระบบรายงานผล MOU" };
+export const metadata = { title: "สายบังคับบัญชา | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function CommandLinesPage() {
   await requireAdmin();

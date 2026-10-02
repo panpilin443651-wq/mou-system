@@ -8,7 +8,7 @@ import { UserForm } from "../user-form";
 import { ResetPasswordForm } from "./reset-password-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "แก้ไขผู้ใช้ | ระบบรายงานผล MOU" };
+export const metadata = { title: "แก้ไขผู้ใช้ | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function EditUserPage({
   params,

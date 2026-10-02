@@ -30,7 +30,7 @@ import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผล MOU" };
+export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function ReportPage({
   params,
