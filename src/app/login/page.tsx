@@ -123,7 +123,9 @@ export default async function LoginPage() {
               <h1 className="text-lg font-bold leading-relaxed sm:text-xl">
                 ระบบรายงานผลการดำเนินงาน
                 <br />
-                ตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน
+                ตามบันทึกข้อตกลงของส่วนงาน
+                <br />
+                และหน่วยงานที่ไม่สังกัดส่วนงาน
               </h1>
             </div>
 
