@@ -18,7 +18,7 @@ import { WindowCard, type Exception } from "./window-card";
 import { windowRange } from "@/lib/submission-window";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ช่วงเวลาเปิด-ปิดระบบ | ระบบรายงานผล MOU" };
+export const metadata = { title: "ช่วงเวลาเปิด-ปิดระบบ | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function WindowsPage({
   searchParams,

@@ -16,7 +16,7 @@ import {
 import { YearScoreChart } from "./year-score-chart";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ภาพรวม | ระบบรายงานผล MOU" };
+export const metadata = { title: "ภาพรวม | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function DashboardPage() {
   const user = await requireUser();

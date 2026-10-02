@@ -5,9 +5,10 @@ import { useFormStatus } from "react-dom";
 import type { FormState } from "@/actions/reports";
 import { SuccessDialog } from "@/components/success-dialog";
 import { hasAnyComment } from "../../../plans/[indicatorId]/plan-table";
+import { COMMENT_HEADING } from "@/lib/review-comments";
 
 // ปุ่ม "ตีกลับผล" ของส่วนกลาง สำหรับผลที่ส่งมาแล้วแต่ผิดพลาด
-// ความเห็นเขียนในกล่อง "ความเห็นส่วนกลาง" สีแดงใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
+// ข้อสังเกตเขียนในกล่อง "ข้อสังเกต" สีแดงใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
 // กล่องเหล่านั้นอยู่ในตารางแผน (คนละฟอร์ม) จึงผูกเข้าฟอร์มนี้ด้วย form={RETURN_FORM_ID}
 
 export const RETURN_FORM_ID = "report-return-form";
@@ -21,10 +22,10 @@ function Button({ disabled }: { disabled: boolean }) {
       onClick={(e) => {
         if (!hasAnyComment(e.currentTarget.form)) {
           e.preventDefault();
-          window.alert("กรุณาเขียนความเห็นในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
+          window.alert("กรุณาเขียนข้อสังเกตในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
           return;
         }
-        if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมความเห็นที่เขียนไว้?")) e.preventDefault();
+        if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมข้อสังเกตที่เขียนไว้?")) e.preventDefault();
       }}
       className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
     >
@@ -56,9 +57,9 @@ export function ReturnButton({
         ตีกลับผลการดำเนินงาน
       </h2>
       <p className="mt-1 text-sm text-red-900">
-        ผลไตรมาส {quarter} · เขียนความเห็นในกล่อง <strong>ความเห็นส่วนกลาง</strong> สีแดงใต้เป้าหมายตัวชี้วัด
+        ผลไตรมาส {quarter} · เขียนในกล่อง <strong>{COMMENT_HEADING.report}</strong> สีแดงใต้เป้าหมายตัวชี้วัด
         และใต้ค่าเกณฑ์ระดับที่ต้องแก้ (อย่างน้อย 1 กล่อง) แล้วกดตีกลับผล ·
-        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นใต้แต่ละส่วน
+        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นข้อสังเกตใต้แต่ละส่วน
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button disabled={!canReturnNow} />

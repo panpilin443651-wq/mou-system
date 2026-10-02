@@ -5,7 +5,7 @@ import { windowRange } from "@/lib/submission-window";
 import { formatThaiDate } from "@/lib/datetime";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "ตั้งค่าระบบ | ระบบรายงานผล MOU" };
+export const metadata = { title: "ตั้งค่าระบบ | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 // requireAdmin ตรวจสิทธิ์ที่ฝั่งเซิร์ฟเวอร์
 // ผู้ใช้ที่ไม่ใช่ ADMIN ต่อให้พิมพ์ URL เข้ามาตรงๆ ก็จะถูกส่งกลับหน้าภาพรวม

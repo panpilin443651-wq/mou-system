@@ -34,7 +34,7 @@ export async function generateMetadata() {
     isDepartmentRole(user.role)
       ? indicatorsMenuLabel(user)
       : "ส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน";
-  return { title: `${title} | ระบบรายงานผล MOU` };
+  return { title: `${title} | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน` };
 }
 
 export default async function IndicatorsPage({

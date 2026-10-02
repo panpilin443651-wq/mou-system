@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { PasswordForm } from "./password-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "บัญชีของฉัน | ระบบรายงานผล MOU" };
+export const metadata = { title: "บัญชีของฉัน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function AccountPage() {
   const user = await requireUser();

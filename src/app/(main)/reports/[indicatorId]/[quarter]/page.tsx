@@ -30,7 +30,7 @@ import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผล MOU" };
+export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function ReportPage({
   params,
@@ -79,7 +79,7 @@ export default async function ReportPage({
   const canEdit = hasPermission && window.canWrite && !needsPlan;
   const report = indicator.reports[0] ?? null;
   const isSubmitted = report?.status === "SUBMITTED";
-  // ความเห็นส่วนกลางใต้เป้าหมายตัวชี้วัด/ค่าเกณฑ์ ของผลไตรมาสนี้
+  // ข้อสังเกตใต้เป้าหมายตัวชี้วัด/ค่าเกณฑ์ ของผลไตรมาสนี้
   const comments = await loadComments(indicator.id, quarter);
 
   // ไตรมาสที่ยังไม่มีรายงาน ยกข้อมูลของไตรมาสล่าสุดก่อนหน้ามาเป็นค่าตั้งต้น
@@ -122,7 +122,7 @@ export default async function ReportPage({
           })}
         />
       )}
-      {/* ความเห็นส่วนกลาง + ตีกลับผล อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ
+      {/* ข้อสังเกต + ตีกลับผล อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ
           แสดงเสมอสำหรับส่วนกลาง ตีกลับได้เฉพาะผลที่ส่งแล้ว
           เป็นฟอร์มแยกของตัวเอง วางต่อจากฟอร์มตาราง (ไม่ซ้อนกัน) */}
       {canReturnSubmission(user) && (
@@ -450,7 +450,7 @@ export default async function ReportPage({
           <p className="font-semibold">
             ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {formatThaiDateTime(report.returnedAt)}
           </p>
-          <p className="mt-1 font-medium">ความเห็นจากส่วนกลาง:</p>
+          <p className="mt-1 font-medium">ข้อสังเกตเพื่อให้ผลมีความชัดเจน (จากส่วนกลาง):</p>
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {report.returnNote}
           </p>

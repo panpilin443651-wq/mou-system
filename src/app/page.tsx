@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { db } from "@/lib/db";
 
 // หน้านี้เปิดได้โดยไม่ต้อง login จึงแสดงแค่สถานะการติดตั้ง
@@ -101,8 +100,9 @@ export default async function HomePage() {
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 sm:py-16">
-      <ThemeToggle className="fixed right-4 top-4 z-10 bg-surface" />
-      <h1 className="text-2xl font-bold sm:text-3xl">ระบบรายงานผลการดำเนินงานตาม MOU</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">
+        ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน
+      </h1>
       <p className="mt-2 text-slate-600">การยางแห่งประเทศไทย</p>
 
       {missingEnv.length > 0 ? (

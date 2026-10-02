@@ -7,7 +7,7 @@ import { createIndicator } from "@/actions/indicators";
 import { IndicatorForm } from "../indicator-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "เพิ่มตัวชี้วัด | ระบบรายงานผล MOU" };
+export const metadata = { title: "เพิ่มตัวชี้วัด | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 export default async function NewIndicatorPage({
   searchParams,

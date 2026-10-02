@@ -7,7 +7,7 @@ import {
 } from "@/actions/notifications";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "แจ้งเตือน | ระบบรายงานผล MOU" };
+export const metadata = { title: "แจ้งเตือน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
 
 // หน้ารวมแจ้งเตือนของกระดิ่ง - ตอนนี้คือการตีกลับแผน/ผลจากส่วนกลาง
 // กดรายการแล้วถือว่าอ่าน และพาไปหน้าแผนหรือหน้ารายงานผลที่ต้องแก้
@@ -27,7 +27,7 @@ export default async function NotificationsPage() {
           <h1 className="text-xl font-bold sm:text-2xl">แจ้งเตือน</h1>
           <p className="mt-1 text-sm text-slate-600">
             {unread > 0 ? `ยังไม่อ่าน ${unread.toLocaleString("th-TH")} รายการ` : "อ่านครบทุกรายการแล้ว"}
-            {" · "}แจ้งเมื่อส่วนกลางตีกลับแผนหรือผลการดำเนินงาน กดรายการเพื่อดูความเห็นและแก้ไข
+            {" · "}แจ้งเมื่อส่วนกลางตีกลับแผนหรือผลการดำเนินงาน กดรายการเพื่อดูข้อสังเกตและแก้ไข
           </p>
         </div>
         {unread > 0 && (
