@@ -3,11 +3,14 @@ import { getCurrentUser } from "@/lib/session";
 import { canViewDepartment } from "@/lib/permissions";
 import { QUARTERS } from "@/lib/plan";
 import { getReportDocument, reportFileName } from "@/lib/report-document";
+import { addPlanSheet } from "@/lib/plan-sheet";
 
 // ============================================================================
 // ดาวน์โหลดรายงานผลเป็นไฟล์ Excel (.xlsx)
 // ============================================================================
-// เนื้อหาเดียวกับไฟล์ Word (ข้อมูลตัวชี้วัด ค่าเกณฑ์ 5 ระดับ เงื่อนไข สรุปผล)
+// เนื้อหาเดียวกับหน้ารายงานผลและไฟล์ Word
+//   ชีต 1: ข้อมูลตัวชี้วัด ค่าเกณฑ์ 5 ระดับ เงื่อนไข สรุปผล
+//   ชีต 2: ผลการดำเนินงานตามแผน (ตารางเดียวกับไฟล์ Excel แผนดำเนินงาน)
 // ดึงข้อมูลจาก getReportDocument ตัวเดียวกัน เอกสารทุกแบบจึงตรงกันเสมอ
 // ============================================================================
 
@@ -115,6 +118,8 @@ export async function GET(
     ],
     [1, 1, 1, 1, 1]
   );
+  tableRow(["ทิศทาง", "สถานะรายงาน", "ส่วนงาน/หน่วยงานที่รับผิดชอบ", "งบประมาณ (ถ้ามี)"], [1, 1, 2, 1], true);
+  tableRow([doc.directionText, doc.statusText, doc.owner || "-", doc.budget || "-"], [1, 1, 2, 1]);
   row += 1;
 
   // ---- ค่าเกณฑ์วัด 5 ระดับ ----
@@ -153,6 +158,22 @@ export async function GET(
   if (r?.scoreOverridden && r.scoreNote) {
     wide(`หมายเหตุ: คะแนนถูกปรับด้วยมือ — ${r.scoreNote}`);
   }
+  if (doc.returned) {
+    row += 1;
+    wide(`ส่วนกลางตีกลับผลไตรมาส ${quarter} เมื่อ ${doc.returned.label}`, {
+      bold: true,
+      color: { argb: "FFB91C1C" },
+    });
+    wide(`ข้อสังเกตเพื่อให้ผลมีความชัดเจน: ${doc.returned.note}`);
+  }
+  row += 1;
+  wide("ผลการดำเนินงานตามแผน (แผน/ผลรายเดือน สาเหตุ แนวทางแก้ไข หลักฐาน) อยู่ในชีตถัดไป", {
+    italic: true,
+    color: { argb: "FF64748B" },
+  });
+
+  // ---- ชีตที่ 2: ผลการดำเนินงานตามแผน ตามแบบฟอร์มเอกสารแนบ 4 ----
+  addPlanSheet(book, ind, doc.upto, "ผลการดำเนินงานตามแผน");
 
   const buffer = await book.xlsx.writeBuffer();
   const filename = reportFileName(doc, "xlsx");

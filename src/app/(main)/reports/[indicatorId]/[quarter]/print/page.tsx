@@ -1,10 +1,12 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { canViewDepartment } from "@/lib/permissions";
-import { QUARTERS } from "@/lib/plan";
+import { FISCAL_MONTHS, QUARTERS, formatPct, formatPlanNumber } from "@/lib/plan";
 import { isPlaceholderCriteria } from "@/lib/scoring";
 import {
   getReportDocument,
+  type PlanDocRow,
+  type PlanDocSection,
 } from "@/lib/report-document";
 import { Logo } from "@/components/logo";
 import { PrintButton } from "./print-button";
@@ -40,7 +42,7 @@ export default async function PrintReportPage({
   const { indicator: ind, report: r } = doc;
 
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-6xl">
       {/* แถบเครื่องมือนี้ไม่ถูกพิมพ์ลงกระดาษ (print:hidden) */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 print:hidden">
         <a
@@ -55,6 +57,12 @@ export default async function PrintReportPage({
             className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
           >
             ดาวน์โหลดเป็น Word
+          </a>
+          <a
+            href={`/api/export/report/${ind.id}/${quarter}/xlsx`}
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
+          >
+            ดาวน์โหลดเป็น Excel
           </a>
           <PrintButton />
         </div>
@@ -100,6 +108,20 @@ export default async function PrintReportPage({
                 <td className="border border-slate-300 px-2 py-1.5 tabular-nums">
                   {r?.actualValue ?? "-"}
                 </td>
+              </tr>
+              <tr className="bg-slate-50">
+                <th className="border border-slate-300 px-2 py-1.5 text-left font-medium">ทิศทาง</th>
+                <th className="border border-slate-300 px-2 py-1.5 text-left font-medium">สถานะรายงาน</th>
+                <th colSpan={2} className="border border-slate-300 px-2 py-1.5 text-left font-medium">
+                  ส่วนงาน/หน่วยงานที่รับผิดชอบ
+                </th>
+                <th className="border border-slate-300 px-2 py-1.5 text-left font-medium">งบประมาณ (ถ้ามี)</th>
+              </tr>
+              <tr>
+                <td className="border border-slate-300 px-2 py-1.5">{doc.directionText}</td>
+                <td className="border border-slate-300 px-2 py-1.5">{doc.statusText}</td>
+                <td colSpan={2} className="border border-slate-300 px-2 py-1.5">{doc.owner || "-"}</td>
+                <td className="border border-slate-300 px-2 py-1.5">{doc.budget || "-"}</td>
               </tr>
             </tbody>
           </table>
@@ -156,9 +178,156 @@ export default async function PrintReportPage({
           {r?.scoreOverridden && r.scoreNote && (
             <p className="mt-1 text-sm">หมายเหตุ: คะแนนถูกปรับด้วยมือ — {r.scoreNote}</p>
           )}
+          {doc.returned && (
+            <div className="mt-2 text-sm">
+              <p className="font-semibold text-red-700">
+                ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {doc.returned.label}
+              </p>
+              <p className="whitespace-pre-line">
+                ข้อสังเกตเพื่อให้ผลมีความชัดเจน: {doc.returned.note}
+              </p>
+            </div>
+          )}
         </section>
 
+        {/* ผลการดำเนินงานตามแผน - แผน/ผล 12 เดือนกว้างเกินกระดาษแนวตั้ง
+            จึงขึ้นหน้าใหม่เป็นแนวนอน (@page plan ด้านล่าง) */}
+        <section className="mt-8 print:mt-0 print:break-before-page [page:plan]">
+          <h2 className="text-base font-semibold">ผลการดำเนินงานตามแผน</h2>
+          <p className="mt-0.5 text-xs text-slate-600">
+            {doc.uptoText}
+            {!doc.planConfirmed && " · ยังไม่ได้ส่งแผนการดำเนินงาน"}
+          </p>
+          {doc.planSections.map((s) => (
+            <PlanSectionTable key={s.section} section={s} />
+          ))}
+        </section>
       </article>
+      <style>{`@page plan { size: A4 landscape; margin: 10mm; }`}</style>
     </div>
+  );
+}
+
+const td = "border border-slate-300 px-1 py-0.5";
+
+/** ตารางผลการดำเนินงานตามแผน 1 ตาราง (เป้าหมายตัวชี้วัด หรือ ขั้นตอนการดำเนินงาน) */
+function PlanSectionTable({ section: s }: { section: PlanDocSection }) {
+  return (
+    <div className="mt-3">
+      <h3 className="text-sm font-semibold">{s.title}</h3>
+      <table className="mt-1 w-full border-collapse text-[10px] leading-tight">
+        <thead>
+          <tr className="bg-slate-50 text-center">
+            <th className={`${td} w-8 font-medium`}>{s.indexLabel}</th>
+            <th className={`${td} font-medium`}>{s.itemLabel}</th>
+            <th className={`${td} w-14 font-medium`}>ค่าเป้าหมาย</th>
+            <th className={`${td} w-8 font-medium`}>แผน/ผล</th>
+            {FISCAL_MONTHS.map((m) => (
+              <th key={m} className={`${td} w-9 font-medium`}>
+                {m}
+              </th>
+            ))}
+            <th className={`${td} w-10 font-medium`}>สะสม</th>
+            <th className={`${td} w-14 font-medium`}>{s.cumLabel}</th>
+            <th className={`${td} w-10 font-medium`}>ทั้งปี</th>
+            <th className={`${td} w-14 font-medium`}>{s.yearLabel}</th>
+          </tr>
+        </thead>
+        {s.groups.map((g, gi) => (
+          <tbody key={gi} className="break-inside-avoid-page">
+            {g.heading && (
+              <tr className="bg-slate-50">
+                <td colSpan={PLAN_COLS} className={`${td} whitespace-pre-line font-semibold`}>
+                  {g.heading}
+                </td>
+              </tr>
+            )}
+            {g.rows.length === 0 && (
+              <tr>
+                <td colSpan={PLAN_COLS} className={`${td} text-slate-500`}>
+                  ไม่มีรายการ
+                </td>
+              </tr>
+            )}
+            {g.rows.map((row) => (
+              <PlanItemRows key={row.label} row={row} causeLabel={s.causeLabel} />
+            ))}
+            {g.levelReportLabel && (
+              <tr>
+                <td colSpan={PLAN_COLS} className={`${td} whitespace-pre-line`}>
+                  <span className="font-medium">{g.levelReportLabel}:</span> {g.levelReport || "-"}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        ))}
+        <tfoot>
+          <tr className="font-semibold">
+            <td colSpan={17} className={td}>
+              ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย
+            </td>
+            <td className={`${td} text-right tabular-nums`}>{formatPct(s.avgCumPct)}</td>
+            <td className={td} />
+            <td className={`${td} text-right tabular-nums`}>{formatPct(s.avgYearPct)}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  );
+}
+
+const PLAN_COLS = 20;
+
+function PlanItemRows({ row, causeLabel }: { row: PlanDocRow; causeLabel: string }) {
+  const num = (v: number | null, i: number) => (
+    <td key={i} className={`${td} text-right tabular-nums`}>
+      {formatPlanNumber(v)}
+    </td>
+  );
+  const hasNotes = row.cause || row.fix || row.evidence.length > 0;
+  return (
+    <>
+      <tr>
+        <td rowSpan={2} className={`${td} text-center`}>{row.label}</td>
+        <td rowSpan={2} className={td}>{row.title || "-"}</td>
+        <td rowSpan={2} className={`${td} text-center`}>
+          {[row.target, row.unit].filter(Boolean).join(" ") || "-"}
+        </td>
+        <td className={`${td} text-center`}>แผน</td>
+        {row.planMonths.map(num)}
+        {num(row.summary.planCum, -1)}
+        <td rowSpan={2} className={`${td} text-right tabular-nums`}>{formatPct(row.summary.cumPct)}</td>
+        {num(row.summary.planYear, -2)}
+        <td rowSpan={2} className={`${td} text-right tabular-nums`}>{formatPct(row.summary.yearPct)}</td>
+      </tr>
+      <tr>
+        <td className={`${td} text-center`}>ผล</td>
+        {row.actualMonths.map(num)}
+        {num(row.summary.actualCum, -1)}
+        {num(row.summary.actualYear, -2)}
+      </tr>
+      {hasNotes && (
+        <tr>
+          <td colSpan={PLAN_COLS} className={`${td} space-y-0.5`}>
+            {row.cause && (
+              <p className="whitespace-pre-line">
+                <span className="font-medium">{causeLabel}:</span> {row.cause}
+              </p>
+            )}
+            {row.fix && (
+              <p className="whitespace-pre-line">
+                <span className="font-medium">แนวทางการดำเนินการแก้ไข:</span> {row.fix}
+              </p>
+            )}
+            {row.evidence.length > 0 && (
+              <p>
+                <span className="font-medium">หลักฐานประกอบผลการดำเนินงาน:</span>{" "}
+                {row.evidence.join(", ")}
+              </p>
+            )}
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
