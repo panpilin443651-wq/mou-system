@@ -87,6 +87,7 @@ export function ReportForm({
   canSend,
   initial,
   planSection,
+  lockOverall = false,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   unit: string;
@@ -103,6 +104,11 @@ export function ReportForm({
     scoreOverride: string;
     scoreNote: string;
   };
+  /**
+   * ผลถูกตีกลับโดยไม่มีข้อสังเกตที่เป้าหมายตัวชี้วัด: ผลงานที่ทำได้จริงและคะแนนแก้ไม่ได้
+   * (เซิร์ฟเวอร์คงค่าเดิมเสมอ) ยังบันทึกร่าง/ส่งผลใหม่ได้ตามปกติ
+   */
+  lockOverall?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, {
     error: null,
@@ -146,11 +152,18 @@ export function ReportForm({
                 inputMode="decimal"
                 value={actual}
                 onChange={(e) => setActual(e.target.value)}
+                readOnly={lockOverall}
                 placeholder={targetValue === null ? "" : `เป้าหมาย ${targetValue}`}
-                className={`${inputClass} max-w-xs`}
+                className={`${inputClass} max-w-xs read-only:bg-slate-100 read-only:text-slate-500`}
               />
               <span className="text-sm text-slate-600">{unit}</span>
             </div>
+            {lockOverall && (
+              <p className="mt-1 text-xs font-medium text-red-800">
+                ผลถูกตีกลับ แก้ได้เฉพาะส่วนที่มีข้อสังเกต · ช่องนี้และคะแนนแก้ไม่ได้
+                เพราะไม่มีข้อสังเกตที่เป้าหมายตัวชี้วัด
+              </p>
+            )}
             <p className="mt-1 text-xs text-slate-500">
               ระบบอ่านตัวเลขจากไฟล์แนบเองไม่ได้ จึงต้องกรอกตัวเลขตรงนี้
               แล้วแนบไฟล์เป็นหลักฐานประกอบ
@@ -221,7 +234,8 @@ export function ReportForm({
               ref={overrideRef}
               value={override}
               onChange={(e) => setOverride(e.target.value)}
-              className={`${inputClass} bg-surface`}
+              disabled={lockOverall}
+              className={`${inputClass} bg-surface disabled:bg-slate-100 disabled:text-slate-500`}
             >
               <option value="">ใช้คะแนนที่ระบบคำนวณ</option>
               <option value="0">0 — ต่ำกว่าเกณฑ์ระดับ 1</option>
@@ -247,7 +261,7 @@ export function ReportForm({
               form={REPORT_FORM_ID}
               type="text"
               defaultValue={initial.scoreNote}
-              disabled={override === ""}
+              disabled={override === "" || lockOverall}
               placeholder="เช่น เกิดอุทกภัยในพื้นที่ ทำให้ดำเนินการไม่ได้"
               className={`${inputClass} disabled:bg-slate-100 disabled:text-slate-500`}
             />

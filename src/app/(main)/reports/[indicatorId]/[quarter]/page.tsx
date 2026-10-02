@@ -28,7 +28,13 @@ import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
-import { submittedLockMessage, submittedResultsLock } from "@/lib/report-lock";
+import {
+  returnedResultSections,
+  returnedResultSectionsNow,
+  submittedLockMessage,
+  submittedResultsLock,
+} from "@/lib/report-lock";
+import { commentSectionLabel } from "@/lib/review-comments";
 import { returnDueText } from "@/lib/return-due";
 import { DueBadge } from "@/components/return-due-input";
 
@@ -89,6 +95,12 @@ export default async function ReportPage({
     statuses,
     isAdmin,
   });
+  // ผลถูกตีกลับ: แก้ได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกต (เซิร์ฟเวอร์ตรวจแบบเดียวกัน)
+  // ตารางผลรายเดือนดูไตรมาสที่เปิดอยู่ · ผลงานที่ทำได้จริงของไตรมาสดูไตรมาสที่กำลังดู
+  const [tableSections, quarterSections] = await Promise.all([
+    returnedResultSectionsNow({ indicatorId: indicator.id, statuses, isAdmin }),
+    returnedResultSections(indicator.id, quarter, isAdmin),
+  ]);
   // ข้อสังเกตใต้เป้าหมายตัวชี้วัด/ค่าเกณฑ์ ของผลไตรมาสนี้
   const comments = await loadComments(indicator.id, quarter);
 
@@ -131,6 +143,7 @@ export default async function ReportPage({
             commentFormId: RETURN_FORM_ID,
             resultsLocked: resultsLockedQuarter !== null,
             quarter,
+            resultSections: tableSections ? [...tableSections] : null,
           })}
         />
       )}
@@ -479,6 +492,12 @@ export default async function ReportPage({
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {report.returnNote}
           </p>
+          {quarterSections && (
+            <p className="mt-1 font-semibold">
+              แก้ไขได้เฉพาะผลของส่วนที่มีข้อสังเกต:{" "}
+              {[...quarterSections].map(commentSectionLabel).join(" · ")} · ส่วนอื่นล็อกไว้ (ช่องสีเทา)
+            </p>
+          )}
           <p className="mt-1">
             ผู้รายงานแก้ไขแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งผลการดำเนินงานใหม่
           </p>
@@ -504,6 +523,8 @@ export default async function ReportPage({
             isSubmitted={isSubmitted}
             canSend={canSend}
             planSection={planSection}
+            // ผลถูกตีกลับโดยไม่มีข้อสังเกตที่เป้าหมายตัวชี้วัด: ผลงานที่ทำได้จริง/คะแนนแก้ไม่ได้
+            lockOverall={quarterSections !== null && !quarterSections.has("TARGET")}
             initial={{
               actualValue:
                 source?.actualValue === null || source === null
