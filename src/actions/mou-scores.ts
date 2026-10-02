@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
+import { getViewFiscalYear } from "@/lib/view-year";
 import { requireUser } from "@/lib/session";
 import { canManageMouScores } from "@/lib/permissions";
 import { writeAudit } from "@/lib/audit";
@@ -60,7 +61,8 @@ export async function saveMouScores(
     return { error: "ไตรมาสไม่ถูกต้อง" };
   }
 
-  const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
+  // บันทึกลงปีที่กำลังดูอยู่ (ตรงกับตารางที่เห็นบนจอ) ไม่ได้เลือก = ปีบัญชีที่ใช้งานอยู่
+  const fiscalYear = await getViewFiscalYear();
   if (!fiscalYear) return { error: "ยังไม่ได้ตั้งปีบัญชีที่ใช้งานอยู่" };
 
   // ดึงตัวชี้วัดของส่วนงานนี้มาก่อน แล้วรับเฉพาะ id ที่อยู่ในรายการนี้เท่านั้น

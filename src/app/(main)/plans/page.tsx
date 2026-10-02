@@ -3,6 +3,7 @@ import type { Prisma } from "@prisma/client";
 import { requireUser } from "@/lib/session";
 import { departmentScope } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { getViewFiscalYear } from "@/lib/view-year";
 import { formatPlanNumber } from "@/lib/plan";
 import { formatThaiDateTime } from "@/lib/datetime";
 import { compareCode } from "@/lib/mou-scores";
@@ -32,7 +33,7 @@ export default async function PlansPage({
   const user = await requireUser();
   const sp = await searchParams;
 
-  const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
+  const fiscalYear = await getViewFiscalYear();
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
 
   const departments = await visibleDepartments(user);
