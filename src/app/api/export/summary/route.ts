@@ -21,7 +21,7 @@ import { formatThaiDateTime } from "@/lib/datetime";
 export const dynamic = "force-dynamic";
 
 // สีหัวข้อของระบบ ใช้ให้ตรงกับหน้าเว็บ ไฟล์ Word และไฟล์ Excel ของแผนดำเนินงาน
-const HEADER_FILL = "FF1B3B6F";
+const HEADER_FILL = "FF165C3D";
 
 function styleHeader(row: ExcelJS.Row) {
   row.font = { bold: true, color: { argb: "FFFFFFFF" } };
