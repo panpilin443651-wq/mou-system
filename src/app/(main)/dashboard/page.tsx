@@ -175,20 +175,18 @@ export default async function DashboardPage() {
         </section>
       ) : (
         <>
-        {/* กราฟเปรียบเทียบคะแนนปีระหว่างส่วนงาน ข้อมูลชุดเดียวกับตารางข้างล่าง
+        {/* กราฟ "ผลการประเมินคะแนนแต่ละส่วนงาน (เทียบปี)" ตามแบบของส่วนกลาง
+            ข้อมูลชุดเดียวกับตารางข้างล่าง - หัวข้ออยู่ในตัวกราฟแล้ว
             ซ่อนเมื่อเห็นได้ส่วนงานเดียว เพราะกราฟแท่งเดียวไม่มีอะไรให้เปรียบเทียบ */}
         {visibleScores.length > 1 && (
           <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
-            <div className={SECTION_HEAD}>
-              <h2 className="font-semibold">เปรียบเทียบคะแนนปีของแต่ละส่วนงาน</h2>
-              <p className="mt-0.5 text-sm text-slate-600">
-                ปีบัญชี {scores.fiscalYear} · สะสมถึงไตรมาส {scores.latestQuarter} ·
-                เรียงจากคะแนนมากไปน้อย
-              </p>
-            </div>
-            <div className={SECTION_BODY}>
+            <div className={`${SECTION_BODY} pt-6`}>
               <YearScoreChart rows={visibleScores} myCode={myCode} />
             </div>
+            <p className={SECTION_FOOT}>
+              ปีบัญชี {scores.fiscalYear} · สะสมถึงไตรมาส {scores.latestQuarter} ·
+              เรียงจากคะแนนมากไปน้อย · คะแนนเต็ม 5
+            </p>
           </section>
         )}
 
