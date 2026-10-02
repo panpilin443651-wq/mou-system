@@ -88,14 +88,15 @@ export async function saveMouScores(
 
   for (const ind of indicators) {
     const plan = readNumber(formData.get(`plan-${ind.id}`));
-    const actual = readNumber(formData.get(`actual-${ind.id}`));
     const score = readNumber(formData.get(`score-${ind.id}`));
 
-    const firstError = plan.error ?? actual.error ?? score.error;
+    const firstError = plan.error ?? score.error;
     if (firstError) return { error: `ข้อ ${ind.code} ${ind.name}: ${firstError}` };
 
     const note = String(formData.get(`note-${ind.id}`) ?? "").trim() || null;
     const old = before.get(ind.id);
+    // ฟอร์มไม่มีช่อง "ผล" แล้ว (2 ต.ค. 2569) คงค่าเดิมในฐานข้อมูลไว้ ไม่ล้างทิ้ง
+    const actual = { value: old?.actual ?? null };
 
     const unchanged =
       old !== undefined &&

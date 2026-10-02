@@ -88,14 +88,13 @@ export function MouScoreForm({
       <input type="hidden" name="quarter" value={quarter} />
 
       <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
-        <table className="w-full min-w-[54rem] text-sm">
+        <table className="w-full min-w-[46rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-600">
               <th className="px-4 py-2.5 font-medium">ข้อ</th>
               <th className="px-3 py-2.5 font-medium">ตัวชี้วัด</th>
               <th className="px-3 py-2.5 text-right font-medium">น้ำหนัก</th>
               <th className="px-3 py-2.5 text-right font-medium">แผน</th>
-              <th className="px-3 py-2.5 text-right font-medium">ผล</th>
               <th className="px-3 py-2.5 text-right font-medium">คะแนน</th>
               <th className="px-4 py-2.5 font-medium">หมายเหตุ</th>
             </tr>
@@ -131,13 +130,6 @@ export function MouScoreForm({
                       name={`plan-${row.indicatorId}`}
                       defaultValue={cell?.plan ?? null}
                       label={`แผน ข้อ ${row.code}`}
-                    />
-                  </td>
-                  <td className="px-3 py-2 text-right align-top">
-                    <ScoreInput
-                      name={`actual-${row.indicatorId}`}
-                      defaultValue={cell?.actual ?? null}
-                      label={`ผล ข้อ ${row.code}`}
                     />
                   </td>
                   <td className="px-3 py-2 text-right align-top">
@@ -182,7 +174,7 @@ export function MouScoreForm({
 
       <p className="text-xs text-slate-500">
         เว้นช่องว่างไว้ = ยังไม่ประเมิน ซึ่งต่างจากการกรอก 0 ที่แปลว่าได้ศูนย์คะแนนจริง ·
-        คะแนนถ่วงน้ำหนักสะสมระบบคำนวณให้เองจากช่อง &quot;ผล&quot; คูณน้ำหนัก ไม่ต้องกรอก
+        คะแนนถ่วงน้ำหนักสะสมระบบคำนวณให้เองจากช่อง &quot;คะแนน&quot; คูณน้ำหนัก ไม่ต้องกรอก
       </p>
     </form>
   );
