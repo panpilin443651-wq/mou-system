@@ -189,6 +189,12 @@ export default async function ReportPage({
           >
             ดาวน์โหลดเป็น Word
           </a>
+          <a
+            href={`/api/export/report/${indicator.id}/${quarter}/xlsx`}
+            className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-surface px-4 text-sm font-medium transition hover:bg-slate-50"
+          >
+            ดาวน์โหลดเป็น Excel
+          </a>
         </div>
       </div>
 
