@@ -42,7 +42,7 @@ export type MouScoreRow = {
   groupName: string | null;
   weight: number;
   quarters: QuarterCell[];
-  /** คะแนนถ่วงน้ำหนักสะสม คำนวณจาก ผล x น้ำหนัก / 100 ไม่ได้เก็บไว้ในฐานข้อมูล */
+  /** คะแนนถ่วงน้ำหนักสะสม คำนวณจาก คะแนน x น้ำหนัก / 100 ไม่ได้เก็บไว้ในฐานข้อมูล */
   cumulative: { label: string; value: number | null }[];
 };
 
@@ -72,9 +72,12 @@ function sumOrNull(values: (number | null)[]): number | null {
   return round(present.reduce((a, b) => a + b, 0));
 }
 
-/** คะแนนถ่วงน้ำหนักของตัวชี้วัดหนึ่งข้อ ในงวดสะสมหนึ่งงวด */
-function weighted(actual: number | null, weight: number): number | null {
-  return actual === null ? null : round((actual * weight) / 100);
+/**
+ * คะแนนถ่วงน้ำหนักของตัวชี้วัดหนึ่งข้อ ในงวดสะสมหนึ่งงวด = คะแนน × น้ำหนัก ÷ 100
+ * (เดิมคิดจากช่อง "ผล" - เปลี่ยนเป็น "คะแนน" 2 ต.ค. 2569 เมื่อเอาช่องผลออกจากฟอร์ม)
+ */
+function weighted(score: number | null, weight: number): number | null {
+  return score === null ? null : round((score * weight) / 100);
 }
 
 /** คะแนนรายตัวชี้วัดทั้งหมดของส่วนงานหนึ่ง ในปีบัญชีหนึ่ง */
@@ -138,7 +141,7 @@ export async function departmentMouScores(
       }),
       cumulative: CUMULATIVE_PERIODS.map((p) => ({
         label: p.label,
-        value: weighted(byQuarter.get(p.quarter)?.actual ?? null, ind.weight),
+        value: weighted(byQuarter.get(p.quarter)?.score ?? null, ind.weight),
       })),
     };
   });
@@ -192,14 +195,14 @@ export async function latestTotalsByDepartment(
     select: {
       departmentId: true,
       weight: true,
-      mouScores: { select: { quarter: true, actual: true } },
+      mouScores: { select: { quarter: true, score: true } },
     },
   });
 
   // รวมคะแนนถ่วงน้ำหนักแยกตาม (ส่วนงาน, งวด)
   const totals = new Map<string, Map<string, number>>();
   for (const ind of indicators) {
-    const byQuarter = new Map(ind.mouScores.map((s) => [s.quarter, s.actual]));
+    const byQuarter = new Map(ind.mouScores.map((s) => [s.quarter, s.score]));
     for (const p of CUMULATIVE_PERIODS) {
       const value = weighted(byQuarter.get(p.quarter) ?? null, ind.weight);
       if (value === null) continue;
