@@ -4,7 +4,6 @@ import { ROLE_LABEL, homePath, indicatorsMenuLabel, visibleMenus } from "@/lib/p
 import { db } from "@/lib/db";
 import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { unreadCount } from "@/lib/notifications";
 
@@ -87,8 +86,6 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               </span>
             )}
           </Link>
-
-          <ThemeToggle />
 
           <form action={logoutAction}>
             <button

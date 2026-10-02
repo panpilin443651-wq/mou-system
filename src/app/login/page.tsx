@@ -5,7 +5,6 @@ import { isDemoLoginEnabled } from "@/auth";
 import { demoLoginAction } from "@/actions/auth";
 import { db } from "@/lib/db";
 import { Logo } from "@/components/logo";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { LoginForm } from "./login-form";
 
 // ต้องอ่านสวิตช์โหมดจำลองสิทธิ์และรายชื่อผู้ใช้ใหม่ทุกครั้ง ห้ามเก็บหน้าไว้ล่วงหน้า
@@ -38,7 +37,6 @@ async function DemoLogin() {
 
   return (
     <div className="flex min-h-screen justify-center px-4 py-8 sm:py-12">
-      <ThemeToggle className="fixed right-4 top-4 z-10 bg-surface" />
       <div className="w-full max-w-3xl">
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-surface shadow-sm">
           <div className="border-b border-slate-200 bg-brand-50 px-5 py-3">
@@ -112,7 +110,6 @@ export default async function LoginPage() {
             <p className="truncate text-sm font-semibold text-brand-ink">การยางแห่งประเทศไทย</p>
             <p className="truncate text-xs text-slate-500">Rubber Authority of Thailand</p>
           </div>
-          <ThemeToggle className="ml-auto shrink-0" />
         </div>
       </header>
 
@@ -126,7 +123,7 @@ export default async function LoginPage() {
               <h1 className="text-lg font-bold leading-relaxed sm:text-xl">
                 ระบบรายงานผลการดำเนินงาน
                 <br />
-                ตามบันทึกข้อตกลง (MOU)
+                ตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน
               </h1>
             </div>
 
