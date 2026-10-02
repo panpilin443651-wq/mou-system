@@ -28,6 +28,7 @@ import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
+import { submittedLockMessage, submittedResultsLock } from "@/lib/report-lock";
 import { returnDueText } from "@/lib/return-due";
 import { DueBadge } from "@/components/return-due-input";
 
@@ -78,9 +79,16 @@ export default async function ReportPage({
   const planReady = confirmedAt !== null;
   const needsPlan = hasPermission && !isAdmin && !planReady;
 
-  const canEdit = hasPermission && window.canWrite && !needsPlan;
   const report = indicator.reports[0] ?? null;
   const isSubmitted = report?.status === "SUBMITTED";
+  // ส่งผลแล้ว หัวหน้าส่วนงานและผู้รายงานแก้ไม่ได้ จนกว่าส่วนกลางจะตีกลับ (ส่วนกลางแก้ได้เสมอ)
+  const canEdit = hasPermission && window.canWrite && !needsPlan && !(isSubmitted && !isAdmin);
+  // ผลรายเดือนในตารางแผนล็อกตามไตรมาสที่เปิดอยู่ (เซิร์ฟเวอร์ตรวจแบบเดียวกัน)
+  const resultsLockedQuarter = await submittedResultsLock({
+    indicatorId: indicator.id,
+    statuses,
+    isAdmin,
+  });
   // ข้อสังเกตใต้เป้าหมายตัวชี้วัด/ค่าเกณฑ์ ของผลไตรมาสนี้
   const comments = await loadComments(indicator.id, quarter);
 
@@ -121,6 +129,8 @@ export default async function ReportPage({
             mode: "report",
             comments,
             commentFormId: RETURN_FORM_ID,
+            resultsLocked: resultsLockedQuarter !== null,
+            quarter,
           })}
         />
       )}
@@ -437,9 +447,15 @@ export default async function ReportPage({
                 {scoreLabel(report.scoreLevel)}
               </span>
             </p>
+            {hasPermission && !isAdmin && (
+              <p className="mt-1 font-medium">
+                🔒 ผลถูกล็อกแล้ว แก้ไขไม่ได้ · ถ้าต้องแก้ติดต่อส่วนกลางให้ตีกลับผล
+              </p>
+            )}
           </div>
           <div className="flex flex-wrap gap-2">
-            {canEdit && canSend && (
+            {/* ดึงกลับมาแก้ = ส่วนกลางเท่านั้น (ส่วนงานต้องให้ส่วนกลางตีกลับ) */}
+            {canEdit && isAdmin && (
               <ReopenButton
                 action={reopenReportAction.bind(null, indicator.id, quarter)}
               />
@@ -505,6 +521,8 @@ export default async function ReportPage({
               <p className="text-sm text-slate-600">
                 {needsPlan
                   ? "ยังรายงานผลไม่ได้ ต้องกรอกแผนการดำเนินงานและกดส่งแผนก่อน"
+                  : hasPermission && isSubmitted && !isAdmin
+                  ? submittedLockMessage(quarter)
                   : hasPermission
                   ? `ตอนนี้แก้ไขไม่ได้ — ${window.message} ข้อมูลที่เคยบันทึกไว้ยังอยู่ครบ`
                   : `คุณเปิดดูรายงานนี้ได้อย่างเดียว การกรอกผลทำได้โดยผู้รับผิดชอบส่วนงาน ${indicator.department.code} และส่วนกลาง`}

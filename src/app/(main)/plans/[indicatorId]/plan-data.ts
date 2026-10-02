@@ -38,6 +38,8 @@ export function planTableProps({
   mode,
   comments,
   commentFormId,
+  resultsLocked = false,
+  quarter,
 }: {
   indicator: IndicatorWithPlan;
   user: CurrentUser;
@@ -47,10 +49,14 @@ export function planTableProps({
   comments: Record<string, string>;
   /** หน้ารายงานผล: กล่องข้อสังเกตผูกกับฟอร์มตีกลับผล */
   commentFormId?: string;
+  /** หน้ารายงานผล: ส่งผลแล้ว ผลแก้ไม่ได้จนกว่าส่วนกลางจะตีกลับ (lib/report-lock.ts) */
+  resultsLocked?: boolean;
+  /** หน้ารายงานผล: ไตรมาสที่กำลังดู - ยอดสะสมตั้งต้นคิดถึงสิ้นไตรมาสนี้ */
+  quarter?: number;
 }): React.ComponentProps<typeof PlanTable> {
   const isAdmin = user.role === "ADMIN";
   const confirmedAt = indicator.planHeader?.confirmedAt ?? null;
-  const canEdit = canManagePlan(user, indicator.departmentId);
+  const canEdit = canManagePlan(user, indicator.departmentId) && !(mode === "report" && resultsLocked);
 
   return {
     mode,
@@ -110,7 +116,13 @@ export function planTableProps({
               : null,
           }
         : null,
-    monthsElapsed: currentFiscalMonthIndex(indicator.fiscalYear.year),
+    // หน้ารายงานผลรายไตรมาส: คิดยอดสะสมถึงสิ้นไตรมาสนั้น (ไตรมาส 1 = ต.ค.-ธ.ค.)
+    // ผลที่กรอกทุกเดือนของไตรมาสจึงรวมเข้ายอดสะสมทันที - เดิมคิดถึงเดือนปัจจุบัน
+    // ทำให้กรอกผลเดือนท้ายไตรมาสแล้วยอดสะสมไม่ขยับ
+    monthsElapsed:
+      mode === "report" && quarter
+        ? quarter * 3
+        : currentFiscalMonthIndex(indicator.fiscalYear.year),
     fiscalYear: indicator.fiscalYear.year,
     indicatorId: indicator.id,
   };
