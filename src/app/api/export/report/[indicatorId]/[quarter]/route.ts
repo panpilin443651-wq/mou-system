@@ -195,7 +195,7 @@ function planTable(s: PlanDocSection) {
   rows.push(
     new TableRow({
       children: [
-        cell("ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย", { size: SMALL, bold: true, span: 17 }),
+        cell(s.avgLabel, { size: SMALL, bold: true, span: 17 }),
         cell(formatPct(s.avgCumPct), { size: SMALL, bold: true, align: AlignmentType.RIGHT }),
         cell("", { size: SMALL }),
         cell(formatPct(s.avgYearPct), { size: SMALL, bold: true, align: AlignmentType.RIGHT }),
@@ -327,6 +327,9 @@ export async function GET(
             bold: true,
             color: "B91C1C",
           }),
+          ...(doc.returned.due
+            ? [body(`! ${doc.returned.due}`, 0, { bold: true, color: "B91C1C" })]
+            : []),
           body(`ข้อสังเกตเพื่อให้ผลมีความชัดเจน: ${doc.returned.note}`),
         ]
       : []),

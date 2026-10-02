@@ -6,6 +6,7 @@ import {
   FISCAL_MONTHS,
   PLAN_SECTIONS,
   PLAN_SECTION_CAUSE_LABEL,
+  PLAN_SECTION_AVG_LABEL,
   PLAN_SECTION_CUM_LABEL,
   PLAN_SECTION_INDEX_LABEL,
   PLAN_SECTION_ITEM_LABEL,
@@ -21,6 +22,7 @@ import {
   type PlanRowSummary,
 } from "@/lib/plan";
 import { planSheetInclude } from "@/lib/plan-sheet";
+import { returnDueText } from "@/lib/return-due";
 
 // ============================================================================
 // รวบรวมข้อมูลของรายงานหนึ่งฉบับ ตามแบบฟอร์มรายงานผลของ กยท. (เอกสารแนบ 3)
@@ -64,6 +66,7 @@ export type PlanDocSection = {
   title: string;
   indexLabel: string;
   itemLabel: string;
+  avgLabel: string;
   cumLabel: string;
   yearLabel: string;
   causeLabel: string;
@@ -112,7 +115,11 @@ export async function getReportDocument(indicatorId: string, quarter: number) {
     /** ผลถูกตีกลับและยังไม่ได้ส่งใหม่ - แสดงข้อสังเกตจากส่วนกลาง */
     returned:
       report && report.status !== "SUBMITTED" && report.returnNote && report.returnedAt
-        ? { label: formatThaiDateTime(report.returnedAt), note: report.returnNote }
+        ? {
+            label: formatThaiDateTime(report.returnedAt),
+            note: report.returnNote,
+            due: report.returnDueAt ? returnDueText(report.returnDueAt) : null,
+          }
         : null,
     owner: indicator.planHeader?.owner ?? "",
     budget: indicator.planHeader?.budget ?? "",
@@ -214,6 +221,7 @@ function buildPlanSections(
       title: PLAN_SECTION_TITLE[section],
       indexLabel: PLAN_SECTION_INDEX_LABEL[section],
       itemLabel: PLAN_SECTION_ITEM_LABEL[section],
+      avgLabel: PLAN_SECTION_AVG_LABEL[section],
       cumLabel: PLAN_SECTION_CUM_LABEL[section],
       yearLabel: PLAN_SECTION_YEAR_LABEL[section],
       causeLabel: PLAN_SECTION_CAUSE_LABEL[section],

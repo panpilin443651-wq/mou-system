@@ -183,6 +183,9 @@ export default async function PrintReportPage({
               <p className="font-semibold text-red-700">
                 ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {doc.returned.label}
               </p>
+              {doc.returned.due && (
+                <p className="font-semibold text-red-700">! {doc.returned.due}</p>
+              )}
               <p className="whitespace-pre-line">
                 ข้อสังเกตเพื่อให้ผลมีความชัดเจน: {doc.returned.note}
               </p>
@@ -264,7 +267,7 @@ function PlanSectionTable({ section: s }: { section: PlanDocSection }) {
         <tfoot>
           <tr className="font-semibold">
             <td colSpan={17} className={td}>
-              ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย
+              {s.avgLabel}
             </td>
             <td className={`${td} text-right tabular-nums`}>{formatPct(s.avgCumPct)}</td>
             <td className={td} />

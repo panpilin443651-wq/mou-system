@@ -28,6 +28,8 @@ import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
+import { returnDueText } from "@/lib/return-due";
+import { DueBadge } from "@/components/return-due-input";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "กรอกผลการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
@@ -456,6 +458,7 @@ export default async function ReportPage({
           <p className="font-semibold">
             ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {formatThaiDateTime(report.returnedAt)}
           </p>
+          {report.returnDueAt && <DueBadge text={returnDueText(report.returnDueAt)} />}
           <p className="mt-1 font-medium">ข้อสังเกตเพื่อให้ผลมีความชัดเจน (จากส่วนกลาง):</p>
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {report.returnNote}
