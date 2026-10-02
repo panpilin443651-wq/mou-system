@@ -23,7 +23,7 @@ import {
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
 import { SuccessDialog } from "@/components/success-dialog";
-import { COMMENT_MAX_LENGTH, levelCommentKey } from "@/lib/review-comments";
+import { COMMENT_HEADING, COMMENT_MAX_LENGTH, levelCommentKey } from "@/lib/review-comments";
 import {
   FISCAL_MONTHS,
   MONTH_COUNT,
@@ -165,9 +165,9 @@ function ConfirmButton() {
 }
 
 // ----------------------------------------------------------------------------
-// ความเห็นส่วนกลาง: กล่องสีแดงใต้เป้าหมายตัวชี้วัด และใต้ค่าเกณฑ์แต่ละระดับ
+// ข้อสังเกต: กล่องสีแดงใต้เป้าหมายตัวชี้วัด และใต้ค่าเกณฑ์แต่ละระดับ
 // ----------------------------------------------------------------------------
-// ส่วนกลางเขียนได้ (ช่องชื่อ comment_<section>) ส่วนงานเห็นแบบอ่านอย่างเดียวเมื่อมีความเห็น
+// ส่วนกลางเขียนได้ (ช่องชื่อ comment_<section>) ส่วนงานเห็นแบบอ่านอย่างเดียวเมื่อมีข้อสังเกต
 // หน้ารายงานผล กล่องผูกกับฟอร์มตีกลับผลด้วย formId (ไม่ถูกส่งไปกับฟอร์มบันทึกผล)
 
 export type PlanComments = {
@@ -175,13 +175,19 @@ export type PlanComments = {
   values: Record<string, string>;
   /** ส่วนกลาง = เขียนได้ · คนอื่น = อ่านอย่างเดียว */
   editable: boolean;
-  /** id ของฟอร์มที่กล่องความเห็นผูกอยู่ (หน้ารายงานผล) - ไม่ระบุ = ฟอร์มตารางแผนเอง */
+  /** id ของฟอร์มที่กล่องข้อสังเกตผูกอยู่ (หน้ารายงานผล) - ไม่ระบุ = ฟอร์มตารางแผนเอง */
   formId?: string;
+  /** หัวกล่อง เช่น "ข้อสังเกตเพื่อให้แผนมีความชัดเจน" (COMMENT_HEADING) */
+  heading: string;
 };
 
-const CommentContext = createContext<PlanComments>({ values: {}, editable: false });
+const CommentContext = createContext<PlanComments>({
+  values: {},
+  editable: false,
+  heading: COMMENT_HEADING.plan,
+});
 
-/** ในฟอร์มนี้มีกล่องความเห็นที่เขียนแล้วอย่างน้อย 1 กล่องหรือไม่ */
+/** ในฟอร์มนี้มีกล่องข้อสังเกตที่เขียนแล้วอย่างน้อย 1 กล่องหรือไม่ */
 export function hasAnyComment(form: HTMLFormElement | null): boolean {
   if (!form) return false;
   return Array.from(form.elements).some(
@@ -192,9 +198,9 @@ export function hasAnyComment(form: HTMLFormElement | null): boolean {
   );
 }
 
-/** กล่องความเห็นส่วนกลางของส่วนหนึ่ง - ไม่มีความเห็นและแก้ไม่ได้ = ไม่แสดงอะไร */
+/** กล่องข้อสังเกตของส่วนหนึ่ง - ไม่มีข้อสังเกตและแก้ไม่ได้ = ไม่แสดงอะไร */
 function CommentBox({ section, title }: { section: string; title: string }) {
-  const { values, editable, formId } = useContext(CommentContext);
+  const { values, editable, formId, heading } = useContext(CommentContext);
   const text = values[section] ?? "";
   if (!editable && text === "") return null;
 
@@ -206,7 +212,7 @@ function CommentBox({ section, title }: { section: string; title: string }) {
         className="flex items-center gap-2 text-sm font-semibold text-red-800"
       >
         <span className="h-2 w-2 rounded-full bg-red-600" aria-hidden="true" />
-        ความเห็นส่วนกลาง
+        {heading}
         <span className="font-normal text-red-700">· {title}</span>
       </label>
       {editable ? (
@@ -217,7 +223,7 @@ function CommentBox({ section, title }: { section: string; title: string }) {
           defaultValue={text}
           rows={2}
           maxLength={COMMENT_MAX_LENGTH}
-          placeholder={`ความเห็น/สิ่งที่ต้องแก้ของ${title} (เว้นว่างได้ถ้าไม่มี)`}
+          placeholder={`ข้อสังเกต/สิ่งที่ต้องแก้ของ${title} (เว้นว่างได้ถ้าไม่มี)`}
           className="mt-1.5 w-full resize-y rounded-lg border border-red-300 bg-surface px-3 py-2 text-sm outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600"
         />
       ) : (
@@ -230,8 +236,8 @@ function CommentBox({ section, title }: { section: string; title: string }) {
 }
 
 /**
- * ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) - ความเห็นมาจากกล่องใต้แต่ละส่วน (comment_<section>)
- * เซิร์ฟเวอร์ปลดล็อกแผน เก็บความเห็น และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
+ * ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) - ข้อสังเกตมาจากกล่องใต้แต่ละส่วน (comment_<section>)
+ * เซิร์ฟเวอร์ปลดล็อกแผน เก็บข้อสังเกต และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
  */
 function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
   const { pending } = useFormStatus();
@@ -242,9 +248,9 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
         ตีกลับแผนการดำเนินงาน
       </h2>
       <p className="mt-1 text-sm text-red-900">
-        เขียนความเห็นในกล่อง <strong>ความเห็นส่วนกลาง</strong> สีแดงใต้เป้าหมายตัวชี้วัด
+        เขียนในกล่อง <strong>{COMMENT_HEADING.plan}</strong> สีแดงใต้เป้าหมายตัวชี้วัด
         และใต้ค่าเกณฑ์ระดับที่ต้องแก้ (อย่างน้อย 1 กล่อง) แล้วกดตีกลับแผน ·
-        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นความเห็นใต้แต่ละส่วน
+        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นข้อสังเกตใต้แต่ละส่วน
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <button
@@ -255,10 +261,10 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
           onClick={(e) => {
             if (!hasAnyComment(e.currentTarget.form)) {
               e.preventDefault();
-              window.alert("กรุณาเขียนความเห็นในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
+              window.alert("กรุณาเขียนข้อสังเกตในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
               return;
             }
-            if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมความเห็นที่เขียนไว้?")) e.preventDefault();
+            if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมข้อสังเกตที่เขียนไว้?")) e.preventDefault();
           }}
           className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -313,13 +319,13 @@ export function PlanTable({
   structureLocked: boolean;
   /** แสดงปุ่มปลดล็อกแผน (ส่วนกลาง) */
   canUnlock: boolean;
-  /** เป็นส่วนกลาง (แสดงช่องความเห็น/ตีกลับ) - ตีกลับได้จริงเมื่อ canUnlock */
+  /** เป็นส่วนกลาง (แสดงช่องข้อสังเกต/ตีกลับ) - ตีกลับได้จริงเมื่อ canUnlock */
   canReturn: boolean;
   /** กดส่งแผนได้ (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - ผู้รายงานบันทึกร่างได้อย่างเดียว */
   canSend: boolean;
   /** ส่วนกลางตีกลับแผนล่าสุด (แสดงจนกว่าจะส่งแผนใหม่) - null = ไม่ได้ถูกตีกลับ */
   returned: { label: string; note: string } | null;
-  /** ความเห็นส่วนกลางใต้แต่ละส่วน */
+  /** ข้อสังเกตใต้แต่ละส่วน */
   comments: PlanComments;
 }) {
   // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
@@ -417,7 +423,7 @@ export function PlanTable({
           className="scroll-mt-4 rounded-xl border-2 border-red-400 bg-red-50 px-4 py-3 text-sm text-red-900"
         >
           <p className="font-semibold">ส่วนกลางตีกลับแผนการดำเนินงาน เมื่อ {returned.label}</p>
-          <p className="mt-1 font-medium">ความเห็นจากส่วนกลาง:</p>
+          <p className="mt-1 font-medium">ข้อสังเกตเพื่อให้แผนมีความชัดเจน (จากส่วนกลาง):</p>
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {returned.note}
           </p>
@@ -560,8 +566,8 @@ export function PlanTable({
         />
       ))}
 
-      {/* ---- ความเห็นส่วนกลาง + ตีกลับแผน (เฉพาะส่วนกลาง หน้าแผน)
-          อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ ส่วนกลางอ่านแผนครบแล้วค่อยเขียนความเห็น ---- */}
+      {/* ---- ข้อสังเกต + ตีกลับแผน (เฉพาะส่วนกลาง หน้าแผน)
+          อยู่ใต้ตารางเป้าหมายตัวชี้วัดและค่าเกณฑ์ทุกระดับ ส่วนกลางอ่านแผนครบแล้วค่อยเขียนข้อสังเกต ---- */}
       {isPlan && canReturn && <ReturnPanel canReturnNow={canUnlock} />}
 
       {canEdit && (
@@ -936,13 +942,13 @@ function LevelGroup({
         </tr>
       )}
 
-      {/* ความเห็นส่วนกลางของระดับนี้ (ใต้ค่าเกณฑ์) */}
+      {/* ข้อสังเกตของระดับนี้ (ใต้ค่าเกณฑ์) */}
       <CommentRow cols={cols} section={levelCommentKey(criterion.level)} title={criterion.title} />
     </>
   );
 }
 
-/** แถวกินเต็มความกว้างของตาราง ใส่กล่องความเห็นส่วนกลาง - ไม่มีอะไรให้แสดงก็ไม่มีแถว */
+/** แถวกินเต็มความกว้างของตาราง ใส่กล่องข้อสังเกต - ไม่มีอะไรให้แสดงก็ไม่มีแถว */
 function CommentRow({ cols, section, title }: { cols: number; section: string; title: string }) {
   const { values, editable } = useContext(CommentContext);
   if (!editable && !values[section]) return null;

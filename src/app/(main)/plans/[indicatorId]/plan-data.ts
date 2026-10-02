@@ -5,6 +5,7 @@ import { currentFiscalMonthIndex, planLevelGroups, toMonths } from "@/lib/plan";
 import { monthLocks, type WindowStatus } from "@/lib/submission-window";
 import { formatThaiDateTime } from "@/lib/datetime";
 import { savePlanAction } from "@/actions/plans";
+import { COMMENT_HEADING } from "@/lib/review-comments";
 import type { PlanTable } from "./plan-table";
 
 // ข้อมูลของตารางแผน ใช้ร่วมกันสองหน้า: หน้าแผนดำเนินงาน และหน้ารายงานผล
@@ -41,9 +42,9 @@ export function planTableProps({
   user: CurrentUser;
   statuses: WindowStatus[];
   mode: "plan" | "report";
-  /** ความเห็นส่วนกลางใต้แต่ละส่วน (loadComments) - หน้าแผนใช้ไตรมาส 0 หน้ารายงานผลใช้ไตรมาสนั้น */
+  /** ข้อสังเกตใต้แต่ละส่วน (loadComments) - หน้าแผนใช้ไตรมาส 0 หน้ารายงานผลใช้ไตรมาสนั้น */
   comments: Record<string, string>;
-  /** หน้ารายงานผล: กล่องความเห็นผูกกับฟอร์มตีกลับผล */
+  /** หน้ารายงานผล: กล่องข้อสังเกตผูกกับฟอร์มตีกลับผล */
   commentFormId?: string;
 }): React.ComponentProps<typeof PlanTable> {
   const isAdmin = user.role === "ADMIN";
@@ -85,6 +86,7 @@ export function planTableProps({
       values: comments,
       editable: canReturnSubmission(user),
       formId: commentFormId,
+      heading: COMMENT_HEADING[mode],
     },
     canSend: canSendForDepartment(user, indicator.departmentId),
     returned:
