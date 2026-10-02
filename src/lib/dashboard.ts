@@ -1,5 +1,6 @@
 import type { Prisma } from "@prisma/client";
-import { db } from "@/lib/db";
+import { db } from "@/lib/db";
+import { getViewFiscalYear } from "@/lib/view-year";
 import type { Actor } from "@/lib/permissions";
 import { departmentScope } from "@/lib/permissions";
 import { weightedScore } from "@/lib/scoring";
@@ -69,10 +70,8 @@ export async function getDashboardData(
   actor: Actor,
   quarter: QuarterFilter = "latest"
 ): Promise<DashboardData> {
-  const fiscalYear = await db.fiscalYear.findFirst({
-    where: { isActive: true },
-    select: { id: true, year: true },
-  });
+  // ปีที่ผู้ใช้เลือกดู (ไม่ได้เลือก = ปีบัญชีที่ใช้งานอยู่)
+  const fiscalYear = await getViewFiscalYear();
 
   const where: Prisma.IndicatorWhereInput = {
     ...(fiscalYear ? { fiscalYearId: fiscalYear.id } : {}),

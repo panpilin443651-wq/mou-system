@@ -9,6 +9,7 @@ import {
   isDepartmentRole,
 } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { getViewFiscalYear } from "@/lib/view-year";
 import {
   visibleDepartments,
   filterDepartments,
@@ -45,7 +46,7 @@ export default async function IndicatorsPage({
   const user = await requireUser();
   const sp = await searchParams;
 
-  const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
+  const fiscalYear = await getViewFiscalYear();
   const canManage = canManageIndicators(user);
 
   const departments = await visibleDepartments(user);

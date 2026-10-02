@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/session";
 import { canManageIndicators } from "@/lib/permissions";
 import { db } from "@/lib/db";
+import { getViewFiscalYear } from "@/lib/view-year";
 import { createIndicator } from "@/actions/indicators";
 import { IndicatorForm } from "../indicator-form";
 
@@ -34,7 +35,8 @@ export default async function NewIndicatorPage({
     }),
   ]);
 
-  const activeYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
+  // ค่าตั้งต้นของปีบัญชีในฟอร์ม = ปีที่กำลังดูอยู่ (ไม่ได้เลือก = ปีบัญชีที่ใช้งานอยู่)
+  const activeYear = await getViewFiscalYear();
 
   return (
     <div className="space-y-4">

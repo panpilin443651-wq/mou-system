@@ -6,6 +6,8 @@ import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
 import { MobileNav } from "./mobile-nav";
 import { unreadCount } from "@/lib/notifications";
+import { getViewFiscalYear } from "@/lib/view-year";
+import { YearPicker } from "./year-picker";
 
 // โฟลเดอร์ (main) ที่มีวงเล็บ = จัดกลุ่มไฟล์โดยไม่กลายเป็นส่วนหนึ่งของ URL
 // ทุกหน้าในกลุ่มนี้จะได้แถบเมนูนี้ และต้อง login ก่อนเสมอ
@@ -24,6 +26,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   // กระดิ่ง: แจ้งเตือนที่ยังไม่อ่าน (เช่น ส่วนกลางตีกลับแผน/ผล) - มีแล้วกระดิ่งเป็นสีแดง
   const unread = await unreadCount(user.id);
+
+  // แถบเลือกปีบัญชีที่จะดู (ทุกสิทธิ์) - ดู lib/view-year.ts
+  const [years, viewYear] = await Promise.all([
+    db.fiscalYear.findMany({ select: { year: true, isActive: true }, orderBy: { year: "desc" } }),
+    getViewFiscalYear(),
+  ]);
+  const activeYear = years.find((y) => y.isActive)?.year ?? null;
 
   const links = [
     { href: "/dashboard", label: "ภาพรวม", show: menus.dashboard },
@@ -100,6 +109,24 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           </form>
         </div>
       </header>
+
+      {viewYear && years.length > 0 && (
+        <div
+          className={`border-b print:hidden ${
+            viewYear.isActive ? "border-slate-200 bg-slate-50" : "border-amber-200 bg-amber-50"
+          }`}
+        >
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5">
+            <YearPicker years={years} current={viewYear.year} />
+            {!viewYear.isActive && (
+              <p className="text-sm text-amber-900">
+                กำลังดูข้อมูลปีบัญชี {viewYear.year}
+                {activeYear !== null && ` · ปีปัจจุบันของระบบคือ ${activeYear}`}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto max-w-6xl px-4 py-6 print:max-w-none print:p-0">{children}</main>
     </div>
