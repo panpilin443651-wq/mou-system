@@ -181,7 +181,14 @@ export default async function DashboardPage() {
         {visibleScores.length > 1 && (
           <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
             <div className={`${SECTION_BODY} pt-6`}>
-              <YearScoreChart rows={visibleScores} myCode={myCode} />
+              <YearScoreChart
+                rows={visibleScores}
+                myCode={myCode}
+                hrefFor={(code) => {
+                  const id = departmentIdByCode.get(code);
+                  return id ? `/reports?dept=${id}` : null;
+                }}
+              />
             </div>
             <p className={SECTION_FOOT}>
               ปีบัญชี {scores.fiscalYear} · สะสมถึงไตรมาส {scores.latestQuarter} ·

@@ -90,6 +90,16 @@ export function planTableProps({
       heading: COMMENT_HEADING[mode],
     },
     canSend: canSendForDepartment(user, indicator.departmentId),
+    // ตีกลับแผนแล้ว: ผู้รับผิดชอบส่วนงานแก้ได้เฉพาะส่วนที่มีข้อสังเกต (ตรงกับที่ savePlanAction บังคับ)
+    // ไม่มีข้อสังเกตรายส่วนเลย (ตีกลับก่อนมีกล่องรายส่วน) = ไม่จำกัด
+    editableSections:
+      mode === "plan" &&
+      !isAdmin &&
+      confirmedAt === null &&
+      indicator.planHeader?.returnedAt &&
+      Object.keys(comments).length > 0
+        ? Object.keys(comments)
+        : null,
     returned:
       indicator.planHeader?.returnedAt && indicator.planHeader.returnNote
         ? {

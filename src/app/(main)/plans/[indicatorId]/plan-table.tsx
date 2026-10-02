@@ -24,7 +24,12 @@ import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/de
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
 import { SuccessDialog } from "@/components/success-dialog";
 import { DueBadge, ReturnDueInput, hasReturnDueDate } from "@/components/return-due-input";
-import { COMMENT_HEADING, COMMENT_MAX_LENGTH, levelCommentKey } from "@/lib/review-comments";
+import {
+  COMMENT_HEADING,
+  COMMENT_MAX_LENGTH,
+  commentSectionLabel,
+  levelCommentKey,
+} from "@/lib/review-comments";
 import {
   FISCAL_MONTHS,
   MONTH_COUNT,
@@ -305,6 +310,7 @@ export function PlanTable({
   canSend,
   returned,
   comments,
+  editableSections = null,
 }: {
   /** plan = หน้าแผนดำเนินงาน · report = หน้ารายงานผล */
   mode: PlanTableMode;
@@ -340,11 +346,20 @@ export function PlanTable({
   } | null;
   /** ข้อสังเกตใต้แต่ละส่วน */
   comments: PlanComments;
+  /**
+   * แผนถูกตีกลับ: ส่วนที่ผู้รับผิดชอบส่วนงานยังแก้ได้ (ส่วนที่มีข้อสังเกต เช่น "TARGET", "L3")
+   * null = ไม่จำกัด - เซิร์ฟเวอร์บังคับซ้ำใน savePlanAction
+   */
+  editableSections?: string[] | null;
 }) {
   // โครงแผน = ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน และการเพิ่ม/ลบบรรทัด
   // ส่งแผนแล้วล็อกทั้งหมด แต่ยังกรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน และรายงานรายระดับได้
   const isPlan = mode === "plan";
   const editStructure = isPlan && canEdit && !structureLocked;
+  const restricted = editStructure && editableSections !== null;
+  /** แก้โครงแผนของส่วนนี้ได้ไหม (ส่วน = "TARGET" หรือ "L<ระดับ>") */
+  const canEditSection = (key: string) =>
+    editStructure && (editableSections === null || editableSections.includes(key));
   // หน้าแผนไม่กรอกผล หน้ารายงานผลไม่แก้แผน
   const editResults = !isPlan && canEdit;
   const [state, formAction] = useActionState(action, {
@@ -401,6 +416,9 @@ export function PlanTable({
     if (submitter?.value === "unlock") return;
 
     const problems = data
+      .filter((r) =>
+        canEditSection(r.section === "TARGET" ? "TARGET" : levelCommentKey(r.criteriaLevel ?? -1)),
+      )
       .filter((r) => targetMismatch(toNum(r.target), r.plan.map(toNum)))
       .map(
         (r) =>
@@ -441,6 +459,12 @@ export function PlanTable({
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {returned.note}
           </p>
+          {editableSections && (
+            <p className="mt-1 font-semibold">
+              แก้ไขได้เฉพาะส่วนที่มีข้อสังเกต: {editableSections.map(commentSectionLabel).join(" · ")} ·
+              ส่วนอื่นล็อกไว้ (ช่องสีเทา)
+            </p>
+          )}
           <p className="mt-1">
             ผู้รายงานแก้ไขแผนแล้วบันทึกร่าง จากนั้นหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผนการดำเนินงานใหม่
           </p>
@@ -486,7 +510,7 @@ export function PlanTable({
               id="owner"
               name={isPlan ? "owner" : undefined}
               defaultValue={header.owner}
-              readOnly={!isPlan || !canEdit}
+              readOnly={!isPlan || !canEdit || restricted}
               placeholder={isPlan ? "เช่น การยางแห่งประเทศไทยเขตภาคเหนือ/กองแผนและวิชาการ" : ""}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none read-only:bg-slate-50 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
             />
@@ -502,7 +526,7 @@ export function PlanTable({
               id="budget"
               name={isPlan ? "budget" : undefined}
               defaultValue={header.budget}
-              readOnly={!isPlan || !canEdit}
+              readOnly={!isPlan || !canEdit || restricted}
               placeholder={isPlan ? "เช่น 71,000 บาท · ไม่มีงบประมาณเว้นว่างได้" : ""}
               className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-base outline-none read-only:bg-slate-50 focus:border-brand-600 focus:ring-1 focus:ring-brand-600"
             />
@@ -551,13 +575,15 @@ export function PlanTable({
 
       {canEdit &&
         (isPlan
-          ? structureLocked || locks.plan.some(Boolean)
+          ? structureLocked || restricted || locks.plan.some(Boolean)
           : locks.actual.some(Boolean)) && (
         <p className="flex items-start gap-2 rounded-xl border border-slate-200 bg-surface px-4 py-3 text-sm text-slate-600 shadow-sm">
           <span className="mt-0.5 inline-block h-4 w-6 shrink-0 rounded border border-slate-200 bg-slate-100" aria-hidden="true" />
           <span>
             {isPlan
-              ? "ช่องสีเทาแก้ไขไม่ได้ · แผนของไตรมาสที่ผ่านไปแล้วล็อกไว้ แก้ย้อนหลังไม่ได้"
+              ? restricted
+                ? "ช่องสีเทาแก้ไขไม่ได้ · แผนที่ถูกตีกลับแก้ได้เฉพาะส่วนที่มีข้อสังเกต และแผนของไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้"
+                : "ช่องสีเทาแก้ไขไม่ได้ · แผนของไตรมาสที่ผ่านไปแล้วล็อกไว้ แก้ย้อนหลังไม่ได้"
               : "ช่องสีเทาแก้ไขไม่ได้ · ช่อง \"ผล\" กรอกได้เฉพาะเดือนในไตรมาสที่เปิดรายงานอยู่ · ช่อง \"แผน\" แก้ที่หน้าแผนดำเนินงาน"}
           </span>
         </p>
@@ -570,6 +596,7 @@ export function PlanTable({
           section={section}
           editResults={editResults}
           editStructure={editStructure}
+          canEditSection={canEditSection}
           rows={data.filter((r) => r.section === section)}
           upto={upto}
           onCell={setCell}
@@ -622,6 +649,7 @@ function SectionTable({
   section,
   editResults,
   editStructure,
+  canEditSection,
   rows,
   upto,
   onCell,
@@ -636,6 +664,8 @@ function SectionTable({
   editResults: boolean;
   /** แก้โครงแผนได้ (ชื่อรายการ ค่าเป้าหมาย หน่วยนับ แผนรายเดือน เพิ่ม/ลบบรรทัด) */
   editStructure: boolean;
+  /** แก้โครงแผนของส่วนนี้ได้ไหม - แผนถูกตีกลับแก้ได้เฉพาะส่วนที่มีข้อสังเกต */
+  canEditSection: (key: string) => boolean;
   rows: RowState[];
   upto: number;
   onCell: OnCell;
@@ -670,9 +700,11 @@ function SectionTable({
     upto,
   );
   const summaryById = new Map(ordered.map((r, i) => [r.id, summary.rows[i]]));
-  const cols = columnCount(mode, editStructure);
 
-  const renderRows = (list: RowState[], prefix: string) =>
+  const editTarget = canEditSection("TARGET");
+  // แถวเก่าที่ไม่ระบุระดับไม่มีกล่องข้อสังเกต แก้ได้เฉพาะตอนไม่ถูกจำกัด
+  const editOrphans = canEditSection("__none__");
+  const renderRows = (list: RowState[], prefix: string, editRows: boolean) =>
     list.map((row, index) => {
       const rowSummary = summaryById.get(row.id)!;
       const props = {
@@ -683,7 +715,7 @@ function SectionTable({
         locks,
       };
       return isPlan ? (
-        <PlanRow key={row.id} {...props} editStructure={editStructure} />
+        <PlanRow key={row.id} {...props} editStructure={editRows} />
       ) : (
         <RowPair
           key={row.id}
@@ -737,12 +769,12 @@ function SectionTable({
       ) : !isStep ? (
         // ตารางเป้าหมายมักสั้น จำกัดความสูงไว้ให้แถบเลื่อนแนวนอนอยู่ในจอเสมอ
         // และหัวตารางลอยค้างด้านบนกรอบ
-        <TableFrame mode={mode} editStructure={editStructure} className="max-h-[70vh] overflow-auto">
+        <TableFrame mode={mode} editStructure={editTarget} className="max-h-[70vh] overflow-auto">
           <thead className="sticky top-0 z-10">
-            <HeaderRow section={section} mode={mode} editStructure={editStructure} />
+            <HeaderRow section={section} mode={mode} editStructure={editTarget} />
           </thead>
           <tbody>
-            {renderRows(rows, "")}
+            {renderRows(rows, "", editTarget)}
             {averageRow}
           </tbody>
         </TableFrame>
@@ -753,20 +785,21 @@ function SectionTable({
         <div className="space-y-5 p-3 sm:p-4">
           {criteria.map((c) => {
             const steps = rows.filter((r) => r.criteriaLevel === c.level);
+            const editLevel = canEditSection(levelCommentKey(c.level));
             return (
-              <TableFrame key={c.level} mode={mode} editStructure={editStructure} className="overflow-x-auto">
+              <TableFrame key={c.level} mode={mode} editStructure={editLevel} className="overflow-x-auto">
                 <tbody>
                   <LevelGroup
                     section={section}
                     criterion={c}
-                    cols={cols}
+                    cols={columnCount(mode, editLevel)}
                     mode={mode}
                     editResults={editResults}
-                    editStructure={editStructure}
+                    editStructure={editLevel}
                     stepCount={steps.length}
                     report={levelReports[c.level] ?? ""}
                   >
-                    {renderRows(steps, `${c.level}.`)}
+                    {renderRows(steps, `${c.level}.`, editLevel)}
                   </LevelGroup>
                 </tbody>
               </TableFrame>
@@ -774,11 +807,11 @@ function SectionTable({
           })}
 
           {orphans.length > 0 && (
-            <TableFrame mode={mode} editStructure={editStructure} className="overflow-x-auto">
+            <TableFrame mode={mode} editStructure={editOrphans} className="overflow-x-auto">
               <tbody>
                 <tr className="bg-amber-50">
                   <td
-                    colSpan={cols}
+                    colSpan={columnCount(mode, editOrphans)}
                     className="border border-slate-200 px-3 py-2 text-sm font-medium text-amber-900"
                   >
                     <span className="sticky left-3">
@@ -786,8 +819,8 @@ function SectionTable({
                     </span>
                   </td>
                 </tr>
-                <HeaderRow section={section} mode={mode} editStructure={editStructure} />
-                {renderRows(orphans, "")}
+                <HeaderRow section={section} mode={mode} editStructure={editOrphans} />
+                {renderRows(orphans, "", editOrphans)}
               </tbody>
             </TableFrame>
           )}
@@ -834,7 +867,7 @@ function SectionTable({
       )}
 
       <div className="space-y-3 border-t border-slate-200 p-4 sm:p-5">
-        {editStructure && !isStep && (
+        {editTarget && !isStep && (
           <button
             type="submit"
             name="intent"

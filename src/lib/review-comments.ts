@@ -77,6 +77,22 @@ export function clearComments(indicatorId: string, quarter: number) {
   return db.reviewComment.deleteMany({ where: { indicatorId, quarter } });
 }
 
+/**
+ * ส่วนที่ผู้รับผิดชอบส่วนงานแก้ได้ระหว่างแผนถูกตีกลับ = ส่วนที่มีข้อสังเกตของแผน
+ * (เช่น "TARGET", "L3") คืน null = ไม่จำกัด
+ *
+ * restricted = false (ส่วนกลาง หรือแผนไม่ได้อยู่ในสถานะถูกตีกลับ) ไม่จำกัด
+ * ตีกลับแล้วแต่ไม่มีข้อสังเกตรายส่วนเลย (ตีกลับก่อนมีกล่องรายส่วน) ไม่จำกัด ไม่งั้นจะแก้อะไรไม่ได้เลย
+ */
+export async function returnedEditableSections(
+  indicatorId: string,
+  restricted: boolean,
+): Promise<Set<string> | null> {
+  if (!restricted) return null;
+  const keys = Object.keys(await loadComments(indicatorId, PLAN_COMMENT_QUARTER));
+  return keys.length === 0 ? null : new Set(keys);
+}
+
 /** ข้อสังเกตของตัวชี้วัด/ไตรมาสนี้ เป็น map section -> ข้อความ */
 export async function loadComments(
   indicatorId: string,
