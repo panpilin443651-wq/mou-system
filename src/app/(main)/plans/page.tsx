@@ -13,6 +13,7 @@ import {
 } from "@/lib/department-picker";
 import { DepartmentFilters } from "../department-filters";
 import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
+import { ReturnedLink } from "@/components/returned-link";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
@@ -154,7 +155,9 @@ async function PlanList({
       where,
       include: {
         plans: { select: { section: true } },
-        planHeader: { select: { budget: true, confirmedAt: true } },
+        planHeader: {
+          select: { budget: true, confirmedAt: true, returnedAt: true, returnDueAt: true },
+        },
       },
       orderBy: { code: "asc" },
       skip: (page - 1) * PAGE_SIZE,
@@ -215,6 +218,14 @@ async function PlanList({
                         >
                           {ind.name}
                         </Link>
+                        {/* ตีกลับแล้วยังไม่ส่งใหม่ (ส่งใหม่แล้ว returnedAt ถูกล้าง) */}
+                        {!confirmedAt && ind.planHeader?.returnedAt && (
+                          <ReturnedLink
+                            href={`/plans/${ind.id}`}
+                            label="แผนถูกตีกลับ"
+                            dueAt={ind.planHeader.returnDueAt}
+                          />
+                        )}
                       </td>
                       <td className="px-3 py-2.5 text-center tabular-nums">
                         {formatPlanNumber(targets)}
@@ -232,6 +243,10 @@ async function PlanList({
                             title={`ยืนยันเมื่อ ${formatThaiDateTime(confirmedAt)}`}
                           >
                             ✓ ส่งแผนแล้ว
+                          </span>
+                        ) : ind.planHeader?.returnedAt ? (
+                          <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800">
+                            ถูกตีกลับ · แก้แล้วส่งใหม่
                           </span>
                         ) : ind.plans.length === 0 ? (
                           <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">

@@ -1,23 +1,44 @@
 "use client";
 
-import { RETURN_DUE_FIELD, todayBangkokInput } from "@/lib/return-due";
+import {
+  DEFAULT_RETURN_DUE_TIME,
+  RETURN_DUE_FIELD,
+  RETURN_DUE_TIME_FIELD,
+  todayBangkokInput,
+} from "@/lib/return-due";
 
-// ช่องเลือก "ต้องแก้ไขให้เสร็จภายในวันที่" ข้างปุ่มตีกลับแผน/ผล (เฉพาะส่วนกลาง)
+// ช่องเลือก "ต้องแก้ไขให้เสร็จภายในวันที่ ... เวลา ..." ข้างปุ่มตีกลับแผน/ผล (เฉพาะส่วนกลาง)
 // ไม่ใส่ required เพราะช่องหน้าแผนอยู่ในฟอร์มเดียวกับปุ่มบันทึกร่าง
 // ถ้าใส่ จะบันทึกแผนไม่ได้จนกว่าจะเลือกวันที่ - ตรวจตอนกดตีกลับแทน (hasReturnDueDate)
 
+const inputClass =
+  "min-h-11 rounded-lg border border-red-300 bg-surface px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500";
+
 export function ReturnDueInput({ form }: { form?: string }) {
   return (
-    <label className="flex flex-wrap items-center gap-2 text-sm font-medium text-red-900">
-      ต้องแก้ไขให้เสร็จภายในวันที่
-      <input
-        type="date"
-        name={RETURN_DUE_FIELD}
-        form={form}
-        min={todayBangkokInput()}
-        className="min-h-11 rounded-lg border border-red-300 bg-surface px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
-      />
-    </label>
+    <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-red-900">
+      <label className="flex flex-wrap items-center gap-2">
+        ต้องแก้ไขให้เสร็จภายในวันที่
+        <input
+          type="date"
+          name={RETURN_DUE_FIELD}
+          form={form}
+          min={todayBangkokInput()}
+          className={inputClass}
+        />
+      </label>
+      <label className="flex items-center gap-2">
+        เวลา
+        <input
+          type="time"
+          name={RETURN_DUE_TIME_FIELD}
+          form={form}
+          defaultValue={DEFAULT_RETURN_DUE_TIME}
+          className={inputClass}
+        />
+        น.
+      </label>
+    </div>
   );
 }
 
