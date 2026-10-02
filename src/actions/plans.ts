@@ -41,7 +41,11 @@ import {
   toMonths,
 } from "@/lib/plan";
 import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
-import { submittedLockMessage, submittedResultsLock } from "@/lib/report-lock";
+import {
+  returnedResultSectionsNow,
+  submittedLockMessage,
+  submittedResultsLock,
+} from "@/lib/report-lock";
 import { writeAudit } from "@/lib/audit";
 
 // ============================================================================
@@ -243,6 +247,11 @@ export async function savePlanAction(
     const lockedQuarter = await submittedResultsLock({ indicatorId, statuses, isAdmin });
     if (lockedQuarter !== null) return { error: submittedLockMessage(lockedQuarter) };
   }
+  // ผลถูกตีกลับ: แก้ได้เฉพาะผลของส่วนที่ส่วนกลางเขียนข้อสังเกตไว้ (null = ไม่จำกัด)
+  const resultSections = isReportMode
+    ? await returnedResultSectionsNow({ indicatorId, statuses, isAdmin })
+    : null;
+  const canEditResultKey = (key: string) => resultSections === null || resultSections.has(key);
 
   /** แถวที่อยู่กลุ่มเดียวกัน (ตารางเดียวกันและระดับเดียวกัน) ใช้ไล่เลขลำดับ */
   const sameGroup =
@@ -257,7 +266,8 @@ export async function savePlanAction(
   for (const row of rows) {
     // โครงแผนส่งมาจากหน้าแผน ผลส่งมาจากหน้ารายงานผล ส่วนที่ไม่ถูกส่งมาปล่อยไว้ตามเดิม
     const hasStructure = formData.has(`title_${row.id}`) && !structureLocked && canEditRow(row);
-    const hasResult = formData.has(`a0_${row.id}`) && !resultsLocked;
+    const hasResult =
+      formData.has(`a0_${row.id}`) && !resultsLocked && canEditResultKey(sectionKey(row));
     if (!hasStructure && !hasResult) continue;
 
     const label = PLAN_SECTION_ITEM_LABEL[row.section];
@@ -321,6 +331,7 @@ export async function savePlanAction(
   // ---- รายงานผลการดำเนินงานของแต่ละระดับ (เฉพาะหน้ารายงานผล) ----
   // ไล่จากระดับที่ตัวชี้วัดมีจริง ไม่เชื่อว่าฟอร์มส่งระดับอะไรมา
   for (const level of resultsLocked ? [] : levels) {
+    if (!canEditResultKey(levelCommentKey(level))) continue;
     const raw = formData.get(`levelReport_${level}`);
     if (raw === null) continue;
     const parsed = planLevelReportText.safeParse(raw);

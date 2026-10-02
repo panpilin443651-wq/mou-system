@@ -21,7 +21,7 @@ import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
 import { getWindowStatus } from "@/lib/submission-window";
-import { submittedLockMessage } from "@/lib/report-lock";
+import { returnedResultSections, submittedLockMessage } from "@/lib/report-lock";
 
 // ============================================================================
 // Server Action สำหรับรายงานผลรายไตรมาส (ข้อ 4, 5)
@@ -100,6 +100,21 @@ export async function saveReportAction(
   });
   if (!parsed.success) return { error: firstError(parsed.error) };
   const input = parsed.data;
+
+  // ผลถูกตีกลับ และส่วนกลางไม่ได้เขียนข้อสังเกตที่ "เป้าหมายตัวชี้วัด":
+  // ผลงานที่ทำได้จริงและคะแนนของไตรมาสคงค่าเดิม (ค่าที่ฟอร์มส่งมาถูกทิ้ง) แต่ยังบันทึก/ส่งผลใหม่ได้
+  const returnedSections = await returnedResultSections(indicatorId, quarter, user.role === "ADMIN");
+  if (returnedSections && !returnedSections.has("TARGET")) {
+    const before = await db.quarterlyReport.findUnique({
+      where: { indicatorId_quarter: { indicatorId, quarter } },
+      select: { actualValue: true, scoreLevel: true, scoreOverridden: true, scoreNote: true },
+    });
+    if (before) {
+      input.actualValue = before.actualValue;
+      input.scoreOverride = before.scoreOverridden ? before.scoreLevel : null;
+      input.scoreNote = before.scoreNote;
+    }
+  }
 
   // คำนวณจากตัวเลขที่กรอก โดยดู "ทิศทาง" ของตัวชี้วัดเสมอ
   const progressPct = calcProgressPct(

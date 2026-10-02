@@ -357,11 +357,16 @@ export function PlanTable({
   const isPlan = mode === "plan";
   const editStructure = isPlan && canEdit && !structureLocked;
   const restricted = editStructure && editableSections !== null;
-  /** แก้โครงแผนของส่วนนี้ได้ไหม (ส่วน = "TARGET" หรือ "L<ระดับ>") */
-  const canEditSection = (key: string) =>
-    editStructure && (editableSections === null || editableSections.includes(key));
   // หน้าแผนไม่กรอกผล หน้ารายงานผลไม่แก้แผน
   const editResults = !isPlan && canEdit;
+  /**
+   * แก้ส่วนนี้ได้ไหม (ส่วน = "TARGET" หรือ "L<ระดับ>")
+   * หน้าแผน = แก้โครงแผน · หน้ารายงานผล = กรอกผล สาเหตุ แนวทางแก้ไข หลักฐาน รายงานรายระดับ
+   * ถูกตีกลับ (editableSections) แก้ได้เฉพาะส่วนที่มีข้อสังเกต
+   */
+  const canEditSection = (key: string) =>
+    (isPlan ? editStructure : editResults) &&
+    (editableSections === null || editableSections.includes(key));
   const [state, formAction] = useActionState(action, {
     error: null,
   } as FormState);
@@ -701,6 +706,7 @@ function SectionTable({
   );
   const summaryById = new Map(ordered.map((r, i) => [r.id, summary.rows[i]]));
 
+  // แก้ได้รายส่วน: หน้าแผน = โครงแผน หน้ารายงานผล = ผล (ดู canEditSection ใน PlanTable)
   const editTarget = canEditSection("TARGET");
   // แถวเก่าที่ไม่ระบุระดับไม่มีกล่องข้อสังเกต แก้ได้เฉพาะตอนไม่ถูกจำกัด
   const editOrphans = canEditSection("__none__");
@@ -720,7 +726,7 @@ function SectionTable({
         <RowPair
           key={row.id}
           {...props}
-          canEdit={editResults}
+          canEdit={editResults && editRows}
           files={filesByRow.get(row.id) ?? []}
         />
       );
@@ -794,8 +800,8 @@ function SectionTable({
                     criterion={c}
                     cols={columnCount(mode, editLevel)}
                     mode={mode}
-                    editResults={editResults}
-                    editStructure={editLevel}
+                    editResults={editResults && editLevel}
+                    editStructure={isPlan && editLevel}
                     stepCount={steps.length}
                     report={levelReports[c.level] ?? ""}
                   >
@@ -867,7 +873,7 @@ function SectionTable({
       )}
 
       <div className="space-y-3 border-t border-slate-200 p-4 sm:p-5">
-        {editTarget && !isStep && (
+        {isPlan && editTarget && !isStep && (
           <button
             type="submit"
             name="intent"

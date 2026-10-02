@@ -40,6 +40,7 @@ export function planTableProps({
   commentFormId,
   resultsLocked = false,
   quarter,
+  resultSections = null,
 }: {
   indicator: IndicatorWithPlan;
   user: CurrentUser;
@@ -53,6 +54,8 @@ export function planTableProps({
   resultsLocked?: boolean;
   /** หน้ารายงานผล: ไตรมาสที่กำลังดู - ยอดสะสมตั้งต้นคิดถึงสิ้นไตรมาสนี้ */
   quarter?: number;
+  /** หน้ารายงานผล: ผลถูกตีกลับ แก้ได้เฉพาะส่วนเหล่านี้ (lib/report-lock.ts) - null = ไม่จำกัด */
+  resultSections?: string[] | null;
 }): React.ComponentProps<typeof PlanTable> {
   const isAdmin = user.role === "ADMIN";
   const confirmedAt = indicator.planHeader?.confirmedAt ?? null;
@@ -98,7 +101,8 @@ export function planTableProps({
     canSend: canSendForDepartment(user, indicator.departmentId),
     // ตีกลับแผนแล้ว: ผู้รับผิดชอบส่วนงานแก้ได้เฉพาะส่วนที่มีข้อสังเกต (ตรงกับที่ savePlanAction บังคับ)
     // ไม่มีข้อสังเกตรายส่วนเลย (ตีกลับก่อนมีกล่องรายส่วน) = ไม่จำกัด
-    editableSections:
+    // หน้ารายงานผล: ผลถูกตีกลับ แก้ได้เฉพาะผลของส่วนที่มีข้อสังเกตของไตรมาสนั้น
+    editableSections: mode === "report" ? resultSections :
       mode === "plan" &&
       !isAdmin &&
       confirmedAt === null &&

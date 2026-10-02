@@ -13,7 +13,13 @@ import {
   MAX_PLAN_FILES_PER_ROW,
 } from "@/lib/attachments";
 import { writeAudit } from "@/lib/audit";
-import { submittedLockMessage, submittedResultsLockFor } from "@/lib/report-lock";
+import {
+  RETURNED_RESULT_MESSAGE,
+  planRowSectionKey,
+  returnedResultSectionsFor,
+  submittedLockMessage,
+  submittedResultsLockFor,
+} from "@/lib/report-lock";
 
 // ============================================================================
 // ไฟล์ "หลักฐานประกอบผลการดำเนินงาน" ของบรรทัดในแผนดำเนินงาน
@@ -45,6 +51,8 @@ export async function recordPlanAttachmentAction(
     where: { id: actionPlanId },
     select: {
       id: true,
+      section: true,
+      criteriaLevel: true,
       _count: { select: { attachments: true } },
       indicator: {
         select: {
@@ -77,6 +85,12 @@ export async function recordPlanAttachmentAction(
   if (lockedQuarter !== null) {
     await del(blobUrl).catch(() => {});
     return { error: submittedLockMessage(lockedQuarter) };
+  }
+  // ผลถูกตีกลับ: แนบหลักฐานได้เฉพาะบรรทัดในส่วนที่มีข้อสังเกต
+  const returnedSections = await returnedResultSectionsFor(plan.indicator, user);
+  if (returnedSections && !returnedSections.has(planRowSectionKey(plan))) {
+    await del(blobUrl).catch(() => {});
+    return { error: RETURNED_RESULT_MESSAGE };
   }
 
   // ตรวจซ้ำตอนบันทึก เพราะอัปโหลดสองไฟล์พร้อมกันจะผ่านด่านออกบัตรผ่านไปได้ทั้งคู่
@@ -141,6 +155,8 @@ export async function deletePlanAttachmentAction(
     include: {
       actionPlan: {
         select: {
+          section: true,
+          criteriaLevel: true,
           indicator: { select: { id: true, code: true, departmentId: true, fiscalYearId: true } },
         },
       },
@@ -154,6 +170,10 @@ export async function deletePlanAttachmentAction(
   }
   const lockedQuarter = await submittedResultsLockFor(indicator, user);
   if (lockedQuarter !== null) return { error: submittedLockMessage(lockedQuarter) };
+  const returnedSections = await returnedResultSectionsFor(indicator, user);
+  if (returnedSections && !returnedSections.has(planRowSectionKey(attachment.actionPlan))) {
+    return { error: RETURNED_RESULT_MESSAGE };
+  }
 
   // ลบข้อมูลก่อน แล้วค่อยลบไฟล์จริง ถ้าลบไฟล์ไม่สำเร็จจะไม่ค้างรายการที่กดแล้วเปิดไม่ได้
   await db.planAttachment.delete({ where: { id: attachmentId } });
