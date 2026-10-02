@@ -97,18 +97,17 @@ export default async function LoginPage() {
 
   return (
     <div className="min-h-screen">
-      {/* เส้นทองด้านบนสุด สีเดียวกับหยดน้ำยางในตราสัญลักษณ์
-          เป็นสีเน้นของระบบ ใช้เฉพาะเส้นบางๆ แบบนี้ ไม่ใช้เป็นพื้นกว้าง */}
-      <div className="h-1 bg-accent-400" aria-hidden="true" />
-
       {/* แถบหัวเว็บ บอกว่าเป็นระบบของหน่วยงานไหนตั้งแต่ก่อนเข้าสู่ระบบ
+          เขียวไล่เฉด ตัวหนังสือขาว เหมือนหน้าหลังเข้าสู่ระบบ
           ใช้ตราแบบไม่มีตัวหนังสือ เพราะขนาดเล็กเกินกว่าจะอ่านชื่อในตราออก */}
-      <header className="border-b border-slate-200 bg-surface">
+      <header className="bg-gradient-to-r from-header-from to-header-to text-white shadow-md">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Logo size={40} className="h-10 w-10 shrink-0" />
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-white/70">
+            <Logo size={40} className="h-10 w-10" />
+          </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-brand-ink">การยางแห่งประเทศไทย</p>
-            <p className="truncate text-xs text-slate-500">Rubber Authority of Thailand</p>
+            <p className="truncate text-sm font-semibold text-white">การยางแห่งประเทศไทย</p>
+            <p className="truncate text-xs text-white/80">Rubber Authority of Thailand</p>
           </div>
         </div>
       </header>

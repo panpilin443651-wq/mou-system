@@ -46,23 +46,23 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="min-h-screen">
-      {/* เส้นเหลืองบางๆ ด้านบน เป็นสีเน้นของธีม ใช้เฉพาะจุดแบบนี้
-          ไม่ใช้เป็นพื้นกว้าง เพราะตัวหนังสือบนพื้นเหลืองอ่านยาก */}
-      <div className="h-1 bg-accent-400 print:hidden" aria-hidden="true" />
-
-      <header className="border-b border-slate-200 bg-surface shadow-sm print:hidden">
+      {/* แถบหัวเว็บเขียวไล่เฉด ตัวหนังสือขาว ตามแบบระบบอื่นของ กยท. */}
+      <header className="bg-gradient-to-r from-header-from to-header-to text-white shadow-md print:hidden">
         {/* relative จำเป็นสำหรับให้เมนูมือถือเลื่อนลงมาวางตำแหน่งถูกต้อง */}
         <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
           <MobileNav links={links} />
 
           <Link href={homePath(user)} className="flex min-w-0 flex-1 items-center gap-2.5">
-            <Logo size={36} className="h-9 w-9 shrink-0" />
+            {/* ตรารองพื้นวงกลมสีขาว ให้เห็นชัดบนแถบเขียว */}
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-white/70">
+              <Logo size={36} className="h-9 w-9" />
+            </span>
             <span className="min-w-0">
               {/* ชื่อระบบยาว ให้ขึ้นบรรทัดใหม่ได้ไม่เกิน 2 บรรทัด แทนการตัดท้ายทิ้ง */}
-              <span className="line-clamp-2 text-sm font-semibold leading-snug text-brand-ink">
+              <span className="line-clamp-2 text-sm font-semibold leading-snug text-white">
                 ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน
               </span>
-              <span className="block truncate text-xs text-slate-500">
+              <span className="block truncate text-xs text-white/80">
                 {department ? `${department.code} ${department.name}` : ROLE_LABEL[user.role]}
               </span>
             </span>
@@ -74,7 +74,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               <Link
                 key={link.href}
                 href={link.href}
-                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-white transition hover:bg-white/15"
               >
                 {link.label}
               </Link>
@@ -86,14 +86,14 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             aria-label={unread > 0 ? `แจ้งเตือน ยังไม่อ่าน ${unread} รายการ` : "แจ้งเตือน"}
             title={unread > 0 ? `มีแจ้งเตือนใหม่ ${unread} รายการ` : "แจ้งเตือน"}
             className={`relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg transition ${
-              unread > 0 ? "text-red-600 hover:bg-red-50" : "text-slate-500 hover:bg-slate-100"
+              unread > 0 ? "text-accent-300 hover:bg-white/15" : "text-white hover:bg-white/15"
             }`}
           >
             <svg viewBox="0 0 24 24" fill={unread > 0 ? "currentColor" : "none"} stroke="currentColor" strokeWidth={1.8} className="h-6 w-6" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
             </svg>
             {unread > 0 && (
-              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-surface">
+              <span className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold leading-none text-white ring-2 ring-white">
                 {unread > 99 ? "99+" : unread}
               </span>
             )}
@@ -102,7 +102,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
           <form action={logoutAction}>
             <button
               type="submit"
-              className="min-h-11 rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium transition hover:bg-slate-50"
+              className="min-h-11 rounded-lg border border-white/60 px-3 py-2 text-sm font-medium text-white transition hover:bg-white/15"
             >
               ออกจากระบบ
             </button>
