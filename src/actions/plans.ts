@@ -41,6 +41,7 @@ import {
   toMonths,
 } from "@/lib/plan";
 import { getQuarterStatuses, monthLocks } from "@/lib/submission-window";
+import { submittedLockMessage, submittedResultsLock } from "@/lib/report-lock";
 import { writeAudit } from "@/lib/audit";
 
 // ============================================================================
@@ -230,13 +231,18 @@ export async function savePlanAction(
   // เดือนของไตรมาสที่ผ่านไปแล้ว (และช่องผลของไตรมาสข้างหน้า) ล็อกไว้
   // ค่าที่ฟอร์มส่งมาสำหรับเดือนที่ล็อกถูกทิ้ง แล้วใช้ค่าเดิมในฐานข้อมูลแทนเสมอ
   // กันคนที่แก้ readOnly ในเบราว์เซอร์ออกแล้วส่งค่ามาเอง
-  const locks = monthLocks(
-    await getQuarterStatuses({
-      fiscalYearId: indicator.fiscalYearId,
-      departmentId: indicator.departmentId,
-      actor: user,
-    }),
-  );
+  const statuses = await getQuarterStatuses({
+    fiscalYearId: indicator.fiscalYearId,
+    departmentId: indicator.departmentId,
+    actor: user,
+  });
+  const locks = monthLocks(statuses);
+
+  // ส่งผลไตรมาสที่เปิดอยู่แล้ว ผลทั้งหมดล็อกจนกว่าส่วนกลางจะตีกลับ (ส่วนกลางแก้ได้เสมอ)
+  if (isReportMode) {
+    const lockedQuarter = await submittedResultsLock({ indicatorId, statuses, isAdmin });
+    if (lockedQuarter !== null) return { error: submittedLockMessage(lockedQuarter) };
+  }
 
   /** แถวที่อยู่กลุ่มเดียวกัน (ตารางเดียวกันและระดับเดียวกัน) ใช้ไล่เลขลำดับ */
   const sameGroup =

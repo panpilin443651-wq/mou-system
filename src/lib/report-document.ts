@@ -13,7 +13,6 @@ import {
   PLAN_SECTION_TITLE,
   PLAN_SECTION_YEAR_LABEL,
   QUARTER_MONTHS,
-  currentFiscalMonthIndex,
   planLevelGroups,
   summarizeRow,
   summarizeSection,
@@ -90,8 +89,8 @@ export async function getReportDocument(indicatorId: string, quarter: number) {
 
   const report = indicator.reports[0] ?? null;
 
-  // ยอดสะสมคิดถึงเดือนปัจจุบันของปีบัญชี เหมือนตารางบนหน้ารายงานผล
-  const upto = currentFiscalMonthIndex(indicator.fiscalYear.year);
+  // ยอดสะสมคิดถึงสิ้นไตรมาสของรายงาน (ไตรมาส 1 = ต.ค.-ธ.ค.) ตรงกับตารางบนหน้ารายงานผล
+  const upto = quarter * 3;
 
   return {
     indicator,

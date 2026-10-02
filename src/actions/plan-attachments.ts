@@ -13,6 +13,7 @@ import {
   MAX_PLAN_FILES_PER_ROW,
 } from "@/lib/attachments";
 import { writeAudit } from "@/lib/audit";
+import { submittedLockMessage, submittedResultsLockFor } from "@/lib/report-lock";
 
 // ============================================================================
 // ไฟล์ "หลักฐานประกอบผลการดำเนินงาน" ของบรรทัดในแผนดำเนินงาน
@@ -50,6 +51,7 @@ export async function recordPlanAttachmentAction(
           id: true,
           code: true,
           departmentId: true,
+          fiscalYearId: true,
           planHeader: { select: { confirmedAt: true } },
         },
       },
@@ -68,6 +70,13 @@ export async function recordPlanAttachmentAction(
   if (user.role !== "ADMIN" && !plan.indicator.planHeader?.confirmedAt) {
     await del(blobUrl).catch(() => {});
     return { error: "ต้องส่งแผนการดำเนินงานก่อน จึงแนบหลักฐานได้" };
+  }
+
+  // ส่งผลแล้ว หลักฐานล็อกจนกว่าส่วนกลางจะตีกลับ
+  const lockedQuarter = await submittedResultsLockFor(plan.indicator, user);
+  if (lockedQuarter !== null) {
+    await del(blobUrl).catch(() => {});
+    return { error: submittedLockMessage(lockedQuarter) };
   }
 
   // ตรวจซ้ำตอนบันทึก เพราะอัปโหลดสองไฟล์พร้อมกันจะผ่านด่านออกบัตรผ่านไปได้ทั้งคู่
@@ -132,7 +141,7 @@ export async function deletePlanAttachmentAction(
     include: {
       actionPlan: {
         select: {
-          indicator: { select: { id: true, code: true, departmentId: true } },
+          indicator: { select: { id: true, code: true, departmentId: true, fiscalYearId: true } },
         },
       },
     },
@@ -143,6 +152,8 @@ export async function deletePlanAttachmentAction(
   if (!canManagePlan(user, indicator.departmentId)) {
     return { error: "คุณไม่มีสิทธิ์ลบไฟล์ในแผนของส่วนงานนี้" };
   }
+  const lockedQuarter = await submittedResultsLockFor(indicator, user);
+  if (lockedQuarter !== null) return { error: submittedLockMessage(lockedQuarter) };
 
   // ลบข้อมูลก่อน แล้วค่อยลบไฟล์จริง ถ้าลบไฟล์ไม่สำเร็จจะไม่ค้างรายการที่กดแล้วเปิดไม่ได้
   await db.planAttachment.delete({ where: { id: attachmentId } });

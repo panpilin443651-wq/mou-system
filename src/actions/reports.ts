@@ -21,6 +21,7 @@ import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
 import { writeAudit, diffFields } from "@/lib/audit";
 import { getWindowStatus } from "@/lib/submission-window";
+import { submittedLockMessage } from "@/lib/report-lock";
 
 // ============================================================================
 // Server Action สำหรับรายงานผลรายไตรมาส (ข้อ 4, 5)
@@ -117,14 +118,9 @@ export async function saveReportAction(
   });
 
   const submitting = input.intent === "submit";
-  // ผู้รายงานบันทึกร่างทับผลที่หัวหน้าส่งแล้วไม่ได้ ไม่งั้นจะเท่ากับยกเลิกการส่งโดยไม่ตั้งใจ
-  if (
-    existing?.status === "SUBMITTED" &&
-    !canSendForDepartment(user, indicator.departmentId)
-  ) {
-    return {
-      error: "ผลไตรมาสนี้ส่งแล้ว ถ้าต้องแก้ให้หัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดดึงกลับมาแก้ไขก่อน",
-    };
+  // ส่งผลแล้ว หัวหน้าส่วนงานและผู้รายงานแก้ไม่ได้ จนกว่าส่วนกลางจะตีกลับ (ส่วนกลางแก้ได้เสมอ)
+  if (existing?.status === "SUBMITTED" && user.role !== "ADMIN") {
+    return { error: submittedLockMessage(quarter) };
   }
   // ส่งผล = หัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง) เท่านั้น ผู้รายงานบันทึกร่างได้อย่างเดียว
   if (submitting && !canSendForDepartment(user, indicator.departmentId)) {
@@ -234,9 +230,10 @@ export async function reopenReportAction(
   });
   if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
 
-  // ดึงกลับมาแก้ = ยกเลิกการส่ง จึงเป็นสิทธิ์ของผู้กดส่ง (หัวหน้าส่วนงาน/ส่วนกลาง)
-  if (!canSendForDepartment(user, indicator.departmentId)) {
-    return { error: "ผู้ดึงผลที่ส่งแล้วกลับมาแก้ต้องเป็นหัวหน้าส่วนงาน/หัวหน้าหน่วยงาน" };
+  // ดึงผลที่ส่งแล้วกลับมาแก้ = ส่วนกลางเท่านั้น
+  // ส่วนงาน (หัวหน้า/ผู้รายงาน) ต้องให้ส่วนกลางตีกลับผล จึงแก้ได้ (2 ต.ค. 2569)
+  if (user.role !== "ADMIN") {
+    return { error: "ส่งผลแล้ว ดึงกลับมาแก้ไม่ได้ · ถ้าต้องแก้ติดต่อส่วนกลางให้ตีกลับผล" };
   }
 
   const window = await getWindowStatus({
