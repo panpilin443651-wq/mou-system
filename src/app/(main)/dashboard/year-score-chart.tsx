@@ -1,17 +1,37 @@
 import type { DepartmentScoreRow } from "@/lib/department-scores";
 
 // ============================================================================
-// กราฟแท่งแนวตั้งเปรียบเทียบคะแนนปีของแต่ละส่วนงาน
+// กราฟแท่งแนวนอน "ผลการประเมินคะแนนแต่ละส่วนงาน (เทียบปี)"
 // ============================================================================
-// สีเดียวทุกแท่ง (ความสูงบอกคะแนนอยู่แล้ว) ยกเว้นส่วนงานของผู้ใช้ที่เน้นด้วยสีทอง
-// ตัวเลขแสดงเฉพาะสูงสุด ต่ำสุด และส่วนงานของผู้ใช้ ที่เหลือชี้เมาส์ดู หรืออ่านจากตารางข้างล่าง
-// ชื่อส่วนงาน 30 หน่วยวางแนวนอนไม่พอ จึงเอียง 45 องศา
-// จอแคบให้เลื่อนกราฟแนวนอนในกรอบของตัวเอง แทนการบีบแท่งจนอ่านไม่ออก
+// ตามแบบที่ส่วนกลางกำหนด (2 ต.ค. 2569): ตารางลำดับ + ส่วนงานด้านซ้าย แท่งคะแนนด้านขวา
+// เรียงจากคะแนนมากไปน้อย ตัวเลขคะแนน 4 ตำแหน่งท้ายแท่ง แกน 0-5 มีเส้นประทุก 1 คะแนน
+// สีแท่งตามช่วงคะแนนในคำอธิบายสีด้านล่าง (SCORE_BANDS)
 // เรนเดอร์ฝั่งเซิร์ฟเวอร์ล้วน ไม่ต้องโหลดไลบรารีกราฟ
 // ============================================================================
 
 const MAX = 5;
 const TICKS = [0, 1, 2, 3, 4, 5];
+
+/** ช่วงคะแนนและสี ตามคำอธิบายสีของแบบ - ค่าบนสุดของแต่ละช่วงนับรวมในช่วงนั้น */
+const SCORE_BANDS = [
+  { max: 1, label: "0.0 – 1.0", name: "สีแดง", bar: "bg-[#e5383b]" },
+  { max: 2, label: "1.1 – 2.0", name: "สีส้ม", bar: "bg-[#f97a42]" },
+  { max: 3, label: "2.1 – 3.0", name: "สีเหลือง", bar: "bg-[#fbd347]" },
+  { max: 4, label: "3.1 – 4.0", name: "สีเขียวอ่อน", bar: "bg-[#93cb67]" },
+  { max: 5, label: "4.1 – 5.0", name: "สีเขียวเข้ม", bar: "bg-[#0e9f6e]" },
+] as const;
+
+function bandOf(score: number) {
+  return SCORE_BANDS.find((b) => score <= b.max) ?? SCORE_BANDS[SCORE_BANDS.length - 1];
+}
+
+const pct = (v: number) => `${(Math.min(MAX, Math.max(0, v)) / MAX) * 100}%`;
+
+// คอลัมน์ซ้าย (ลำดับ + ส่วนงาน) และที่ว่างขวาสุดไว้ให้ตัวเลขของแท่งที่ยาวเกือบเต็ม
+// ใช้ค่าเดียวกันทั้งแถวข้อมูล เส้นประ และแกนล่าง ให้ตรงแนวกันพอดี
+const COLS = "grid-cols-[3.5rem_9.5rem_1fr]";
+const PLOT_LEFT = "left-[13rem]";
+const PLOT_RIGHT = "right-[4.5rem]";
 
 export function YearScoreChart({
   rows,
@@ -25,125 +45,101 @@ export function YearScoreChart({
     .sort((a, b) => b.yearScore - a.yearScore);
   if (scored.length === 0) return null;
 
-  const average = scored.reduce((sum, d) => sum + d.yearScore, 0) / scored.length;
-  const highest = scored[0].code;
-  const lowest = scored[scored.length - 1].code;
-  const pct = (v: number) => `${(Math.min(MAX, Math.max(0, v)) / MAX) * 100}%`;
-
   return (
     <figure>
+      {/* !text-white: กฎสีหัวข้อ h3 ใน globals.css อยู่นอก layer จึงชนะคลาสปกติ */}
+      <h3 className="mx-auto mb-5 w-fit max-w-full rounded-full bg-gradient-to-r from-[#0b5d4b] via-[#0e7a5f] to-[#0b5d4b] px-8 py-2.5 text-center text-lg font-bold !text-white shadow-sm sm:text-xl">
+        ผลการประเมินคะแนนแต่ละส่วนงาน (เทียบปี)
+      </h3>
+
       <div className="overflow-x-auto pb-1">
-        <div className="grid min-w-[46rem] grid-cols-[2rem_1fr] pt-6">
-          {/* แกนคะแนน */}
-          <div className="relative h-72 text-xs tabular-nums text-slate-500">
+        <div className="min-w-[44rem]">
+          {/* หัวตารางด้านซ้าย */}
+          <div className={`grid ${COLS} text-sm font-semibold text-white`}>
+            <div className="rounded-tl-lg bg-[#0b5d4b] px-2 py-1.5 text-center">ลำดับ</div>
+            <div className="rounded-tr-lg border-l border-white/30 bg-[#0b5d4b] px-2 py-1.5 text-center">
+              ส่วนงาน
+            </div>
+            <div />
+          </div>
+
+          <div className="relative">
+            {/* เส้นแกน 0 (ทึบ) และเส้นประทุก 1 คะแนน อยู่หลังแท่ง */}
+            <div aria-hidden className={`pointer-events-none absolute inset-y-0 ${PLOT_LEFT} ${PLOT_RIGHT}`}>
+              <span className="absolute inset-y-0 left-0 w-px bg-slate-500" />
+              {TICKS.slice(1).map((t) => (
+                <span
+                  key={t}
+                  className="absolute inset-y-0 border-l border-dashed border-slate-400"
+                  style={{ left: pct(t) }}
+                />
+              ))}
+            </div>
+
+            {scored.map((d, i) => {
+              const isMine = d.code === myCode;
+              const band = bandOf(d.yearScore);
+              const stripe = isMine ? "bg-accent-100" : i % 2 === 1 ? "bg-slate-100/70" : "";
+              return (
+                <div key={d.code} className={`group grid ${COLS} items-center text-sm`}>
+                  <div className={`py-1 text-center tabular-nums text-slate-700 ${stripe}`}>{i + 1}</div>
+                  <div
+                    className={`truncate px-2 py-1 ${stripe} ${isMine ? "font-semibold text-slate-900" : "text-slate-800"}`}
+                    title={d.line ? `${d.sourceName} · ${d.line}` : d.sourceName}
+                  >
+                    {d.sourceName}
+                    {isMine && <span className="ml-1 text-xs font-normal text-accent-900">(คุณ)</span>}
+                  </div>
+                  <div className="relative mr-[4.5rem] h-7">
+                    <div
+                      className={`absolute inset-y-1 left-0 ${band.bar} shadow-sm transition-opacity group-hover:opacity-85 ${
+                        isMine ? "ring-2 ring-accent-500 ring-offset-1" : ""
+                      }`}
+                      style={{ width: pct(d.yearScore) }}
+                      role="img"
+                      aria-label={`ลำดับ ${i + 1} ${d.sourceName} คะแนนเทียบปี ${d.yearScore.toFixed(4)}`}
+                    />
+                    <span
+                      className="absolute top-1/2 -translate-y-1/2 pl-1.5 text-sm tabular-nums text-slate-800"
+                      style={{ left: pct(d.yearScore) }}
+                    >
+                      {d.yearScore.toFixed(4)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* แกนคะแนนด้านล่าง */}
+          <div className="relative h-7 border-t border-slate-500" style={{ marginLeft: "13rem", marginRight: "4.5rem" }}>
             {TICKS.map((t) => (
               <span
                 key={t}
-                className="absolute right-2 translate-y-1/2"
-                style={{ bottom: pct(t) }}
+                className="absolute top-1 -translate-x-1/2 text-sm font-semibold tabular-nums text-slate-800"
+                style={{ left: pct(t) }}
               >
                 {t}
               </span>
             ))}
           </div>
-
-          {/* พื้นที่กราฟ */}
-          <div className="relative h-72 border-b border-slate-400">
-            {/* เส้นกริดแนวนอน จางๆ ไม่แย่งสายตาจากแท่ง */}
-            {TICKS.slice(1).map((t) => (
-              <span
-                key={t}
-                aria-hidden
-                className="absolute inset-x-0 h-px bg-slate-100"
-                style={{ bottom: pct(t) }}
-              />
-            ))}
-
-            {/* เส้นค่าเฉลี่ย */}
-            <span
-              aria-hidden
-              className="absolute inset-x-0 z-[1] h-0 border-t border-dashed border-slate-500"
-              style={{ bottom: pct(average) }}
-            />
-            <span
-              className="absolute right-0 z-[1] translate-y-[-120%] rounded bg-tooltip px-1.5 py-0.5 text-[11px] text-white"
-              style={{ bottom: pct(average) }}
-            >
-              เฉลี่ย {average.toFixed(3)}
-            </span>
-
-            <div className="absolute inset-0 flex">
-              {scored.map((d, i) => {
-                const isMine = d.code === myCode;
-                const showValue = isMine || d.code === highest || d.code === lowest;
-                return (
-                  // พื้นที่ชี้เมาส์คือทั้งช่อง กว้างและสูงกว่าตัวแท่ง
-                  <div key={d.code} className="group relative flex flex-1 justify-center">
-                    {/* แท่งกว้างไม่เกิน 24px ปลายบนมน 4px โคนติดเส้นฐาน */}
-                    <div
-                      className={`absolute bottom-0 w-[60%] max-w-6 rounded-t transition-opacity group-hover:opacity-80 ${
-                        isMine ? "bg-accent-400" : "bg-brand-600"
-                      }`}
-                      style={{ height: pct(d.yearScore) }}
-                      role="img"
-                      aria-label={`${d.sourceName} คะแนนปี ${d.yearScore.toFixed(3)}`}
-                    />
-                    {showValue && (
-                      <span
-                        className="absolute mb-1 text-[11px] font-medium tabular-nums text-slate-700"
-                        style={{ bottom: pct(d.yearScore) }}
-                      >
-                        {d.yearScore.toFixed(2)}
-                      </span>
-                    )}
-
-                    {/* ป้ายคะแนนตอนชี้เมาส์ ครึ่งขวาให้ป้ายยื่นไปทางซ้าย จะได้ไม่ล้นขอบกราฟ */}
-                    <span
-                      className={`pointer-events-none absolute z-10 mb-6 hidden ${i < scored.length / 2 ? "left-1/2" : "right-1/2"} whitespace-nowrap rounded-md bg-tooltip px-2 py-1 text-xs text-white shadow group-hover:block`}
-                      style={{ bottom: pct(d.yearScore) }}
-                    >
-                      {d.sourceName} · คะแนนปี{" "}
-                      <span className="font-semibold tabular-nums">{d.yearScore.toFixed(3)}</span>
-                      {d.line ? ` · ${d.line}` : ""}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* ชื่อส่วนงาน เอียง 45 องศา ปลายข้อความชี้เข้ากลางแท่ง */}
-          <div />
-          <div className="flex h-20">
-            {scored.map((d) => (
-              <div key={d.code} className="relative flex-1">
-                <span
-                  className={`absolute right-1/2 top-2 origin-top-right -rotate-45 whitespace-nowrap text-xs ${
-                    d.code === myCode ? "font-semibold text-slate-900" : "text-slate-700"
-                  }`}
-                >
-                  {d.sourceName}
-                </span>
-              </div>
-            ))}
-          </div>
+          <p className="text-center text-sm font-semibold text-brand-ink" style={{ paddingLeft: "13rem", paddingRight: "4.5rem" }}>
+            คะแนนเทียบปี
+          </p>
         </div>
       </div>
 
-      <figcaption className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-slate-600">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2.5 w-4 rounded-sm bg-brand-600" aria-hidden /> คะแนนปี (เต็ม 5)
-        </span>
-        {myCode && scored.some((d) => d.code === myCode) && (
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-4 rounded-sm bg-accent-400" aria-hidden /> ส่วนงานของคุณ
+      {/* คำอธิบายสี */}
+      <figcaption className="mx-auto mt-5 flex w-fit max-w-full flex-wrap justify-center gap-x-8 gap-y-3 rounded-xl border border-teal-200 bg-teal-50/60 px-6 py-3">
+        {SCORE_BANDS.map((b) => (
+          <span key={b.label} className="inline-flex items-center gap-2.5 text-sm text-slate-800">
+            <span className={`h-8 w-9 rounded-md ${b.bar}`} aria-hidden />
+            <span className="leading-tight">
+              <span className="block font-semibold tabular-nums">{b.label}</span>
+              <span className="block">({b.name})</span>
+            </span>
           </span>
-        )}
-        <span className="inline-flex items-center gap-1.5">
-          <span className="w-4 border-t border-dashed border-slate-500" aria-hidden />
-          ค่าเฉลี่ยทุกส่วนงาน
-        </span>
-        <span className="text-slate-500">ชี้ที่แท่งเพื่อดูคะแนน</span>
+        ))}
       </figcaption>
     </figure>
   );
