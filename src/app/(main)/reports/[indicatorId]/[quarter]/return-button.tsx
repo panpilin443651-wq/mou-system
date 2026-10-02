@@ -6,6 +6,7 @@ import type { FormState } from "@/actions/reports";
 import { SuccessDialog } from "@/components/success-dialog";
 import { hasAnyComment } from "../../../plans/[indicatorId]/plan-table";
 import { COMMENT_HEADING } from "@/lib/review-comments";
+import { ReturnDueInput, hasReturnDueDate } from "@/components/return-due-input";
 
 // ปุ่ม "ตีกลับผล" ของส่วนกลาง สำหรับผลที่ส่งมาแล้วแต่ผิดพลาด
 // ข้อสังเกตเขียนในกล่อง "ข้อสังเกต" สีแดงใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
@@ -23,6 +24,11 @@ function Button({ disabled }: { disabled: boolean }) {
         if (!hasAnyComment(e.currentTarget.form)) {
           e.preventDefault();
           window.alert("กรุณาเขียนข้อสังเกตในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
+          return;
+        }
+        if (!hasReturnDueDate(e.currentTarget.form)) {
+          e.preventDefault();
+          window.alert("กรุณาเลือกวันที่ที่ต้องแก้ไขให้เสร็จก่อนตีกลับ");
           return;
         }
         if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมข้อสังเกตที่เขียนไว้?")) e.preventDefault();
@@ -62,6 +68,7 @@ export function ReturnButton({
         ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นข้อสังเกตใต้แต่ละส่วน
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
+        <ReturnDueInput />
         <Button disabled={!canReturnNow} />
         {!canReturnNow && (
           <span className="text-sm text-red-800">ผลไตรมาสนี้ยังไม่ได้ส่ง จึงยังตีกลับไม่ได้</span>

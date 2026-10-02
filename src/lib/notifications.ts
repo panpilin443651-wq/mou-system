@@ -13,7 +13,7 @@ import { db } from "@/lib/db";
  */
 export async function notifyDepartmentUsers(
   departmentId: string,
-  message: { title: string; body?: string | null; link?: string | null },
+  message: { title: string; body?: string | null; link?: string | null; dueAt?: Date | null },
 ): Promise<number> {
   const heads = await db.user.findMany({
     where: { departmentId, role: { in: ["DEPT_USER", "DEPT_HEAD"] }, isActive: true },
@@ -27,6 +27,7 @@ export async function notifyDepartmentUsers(
       title: message.title,
       body: message.body ?? null,
       link: message.link ?? null,
+      dueAt: message.dueAt ?? null,
     })),
   });
   return heads.length;

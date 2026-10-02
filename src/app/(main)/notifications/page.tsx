@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/session";
 import { db } from "@/lib/db";
 import { formatThaiDateTime } from "@/lib/datetime";
+import { returnDueText } from "@/lib/return-due";
+import { DueBadge } from "@/components/return-due-input";
 import {
   markAllNotificationsReadAction,
   openNotificationAction,
@@ -70,6 +72,7 @@ export default async function NotificationsPage() {
                       {n.title}
                       {n.readAt === null && <span className="sr-only"> (ยังไม่อ่าน)</span>}
                     </span>
+                    {n.dueAt && <DueBadge text={returnDueText(n.dueAt)} />}
                     {n.body && (
                       <span className="mt-0.5 block whitespace-pre-line text-sm text-slate-700">
                         {n.body}

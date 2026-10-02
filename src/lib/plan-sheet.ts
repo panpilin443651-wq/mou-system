@@ -4,6 +4,7 @@ import {
   FISCAL_MONTHS,
   MONTH_COUNT,
   PLAN_SECTIONS,
+  PLAN_SECTION_AVG_LABEL,
   PLAN_SECTION_CAUSE_LABEL,
   PLAN_SECTION_CUM_LABEL,
   PLAN_SECTION_GUIDE,
@@ -402,7 +403,7 @@ export function addPlanSheet(
     // ---- บรรทัดค่าเฉลี่ยท้ายตาราง ----
     sheet.mergeCells(r, COL_INDEX, r, COL_MONTH_FIRST + MONTH_COUNT);
     const avgLabel = sheet.getCell(r, COL_INDEX);
-    avgLabel.value = "ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย";
+    avgLabel.value = PLAN_SECTION_AVG_LABEL[section];
     avgLabel.font = { bold: true };
 
     for (const col of [COL_CUM_PCT, COL_YEAR_PCT]) {

@@ -23,12 +23,14 @@ import {
 import { DeleteAttachmentButton } from "../../reports/[indicatorId]/[quarter]/delete-attachment-button";
 import { PlanEvidenceUpload } from "./plan-evidence-upload";
 import { SuccessDialog } from "@/components/success-dialog";
+import { DueBadge, ReturnDueInput, hasReturnDueDate } from "@/components/return-due-input";
 import { COMMENT_HEADING, COMMENT_MAX_LENGTH, levelCommentKey } from "@/lib/review-comments";
 import {
   FISCAL_MONTHS,
   MONTH_COUNT,
   PLAN_SECTIONS,
   PLAN_SECTION_CAUSE_LABEL,
+  PLAN_SECTION_AVG_LABEL,
   PLAN_SECTION_CUM_LABEL,
   PLAN_SECTION_GUIDE,
   PLAN_SECTION_INDEX_LABEL,
@@ -253,6 +255,7 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
         ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นข้อสังเกตใต้แต่ละส่วน
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
+        <ReturnDueInput />
         <button
           type="submit"
           name="intent"
@@ -262,6 +265,11 @@ function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
             if (!hasAnyComment(e.currentTarget.form)) {
               e.preventDefault();
               window.alert("กรุณาเขียนข้อสังเกตในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
+              return;
+            }
+            if (!hasReturnDueDate(e.currentTarget.form)) {
+              e.preventDefault();
+              window.alert("กรุณาเลือกวันที่ที่ต้องแก้ไขให้เสร็จก่อนตีกลับ");
               return;
             }
             if (!window.confirm("ตีกลับแผนการดำเนินงานพร้อมข้อสังเกตที่เขียนไว้?")) e.preventDefault();
@@ -324,7 +332,12 @@ export function PlanTable({
   /** กดส่งแผนได้ (หัวหน้าส่วนงาน/หน่วยงาน หรือส่วนกลาง) - ผู้รายงานบันทึกร่างได้อย่างเดียว */
   canSend: boolean;
   /** ส่วนกลางตีกลับแผนล่าสุด (แสดงจนกว่าจะส่งแผนใหม่) - null = ไม่ได้ถูกตีกลับ */
-  returned: { label: string; note: string } | null;
+  returned: {
+    label: string;
+    note: string;
+    /** "ต้องแก้ไขให้เสร็จภายในวันที่ ..." - null = ไม่มีกำหนด (ตีกลับก่อนมีช่องนี้) */
+    due: string | null;
+  } | null;
   /** ข้อสังเกตใต้แต่ละส่วน */
   comments: PlanComments;
 }) {
@@ -423,6 +436,7 @@ export function PlanTable({
           className="scroll-mt-4 rounded-xl border-2 border-red-400 bg-red-50 px-4 py-3 text-sm text-red-900"
         >
           <p className="font-semibold">ส่วนกลางตีกลับแผนการดำเนินงาน เมื่อ {returned.label}</p>
+          {returned.due && <DueBadge text={returned.due} />}
           <p className="mt-1 font-medium">ข้อสังเกตเพื่อให้แผนมีความชัดเจน (จากส่วนกลาง):</p>
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {returned.note}
@@ -684,7 +698,7 @@ function SectionTable({
   const averageRow = isPlan ? null : (
     <tr className="bg-slate-50 font-medium">
       <td colSpan={5 + MONTH_COUNT + 1} className="border border-slate-200 px-3 py-2.5">
-        <span className="sticky left-3">ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย</span>
+        <span className="sticky left-3">{PLAN_SECTION_AVG_LABEL[section]}</span>
       </td>
       <td className="border border-slate-200 px-2 py-2.5 text-right tabular-nums text-brand-ink">
         {formatPct(summary.avgCumPct)}
@@ -784,7 +798,7 @@ function SectionTable({
           {!isPlan && (
           <div className="rounded-lg border border-brand-200 bg-brand-50 p-4">
             <h3 className="font-semibold text-brand-900">
-              ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย
+              {PLAN_SECTION_AVG_LABEL[section]}
             </h3>
             <p className="mt-0.5 text-xs text-slate-600">
               เฉลี่ยจากทุกขั้นตอนการดำเนินงาน {ordered.length.toLocaleString("th-TH")} ขั้นตอน

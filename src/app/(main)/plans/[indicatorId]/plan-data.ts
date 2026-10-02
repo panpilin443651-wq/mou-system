@@ -6,6 +6,7 @@ import { monthLocks, type WindowStatus } from "@/lib/submission-window";
 import { formatThaiDateTime } from "@/lib/datetime";
 import { savePlanAction } from "@/actions/plans";
 import { COMMENT_HEADING } from "@/lib/review-comments";
+import { returnDueText } from "@/lib/return-due";
 import type { PlanTable } from "./plan-table";
 
 // ข้อมูลของตารางแผน ใช้ร่วมกันสองหน้า: หน้าแผนดำเนินงาน และหน้ารายงานผล
@@ -94,6 +95,9 @@ export function planTableProps({
         ? {
             label: formatThaiDateTime(indicator.planHeader.returnedAt),
             note: indicator.planHeader.returnNote,
+            due: indicator.planHeader.returnDueAt
+              ? returnDueText(indicator.planHeader.returnDueAt)
+              : null,
           }
         : null,
     monthsElapsed: currentFiscalMonthIndex(indicator.fiscalYear.year),

@@ -11,6 +11,7 @@ import {
   canSendForDepartment,
 } from "@/lib/permissions";
 import { notifyDepartmentUsers } from "@/lib/notifications";
+import { readReturnDueDate } from "@/lib/return-due";
 import {
   PLAN_COMMENT_QUARTER,
   clearComments,
@@ -162,6 +163,9 @@ export async function savePlanAction(
       return { error: "กรุณาเขียนข้อสังเกตในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
     }
   }
+  const due = intent === "unlock" ? readReturnDueDate(formData) : null;
+  if (due?.error) return { error: due.error };
+  const returnDueAt = due?.dueAt ?? null;
 
   // หน้าแผน (mode=plan) ส่งเฉพาะส่วนหัวและโครงแผน
   // หน้ารายงานผล (mode=report) ส่งเฉพาะผลรายเดือน สาเหตุ แนวทางแก้ไข และรายงานรายระดับ
@@ -435,7 +439,13 @@ export async function savePlanAction(
     await db.$transaction([
       db.planHeader.update({
         where: { indicatorId },
-        data: { confirmedAt: new Date(), confirmedById: user.id, returnedAt: null, returnNote: null },
+        data: {
+          confirmedAt: new Date(),
+          confirmedById: user.id,
+          returnedAt: null,
+          returnNote: null,
+          returnDueAt: null,
+        },
       }),
       clearComments(indicatorId, PLAN_COMMENT_QUARTER),
     ]);
@@ -448,7 +458,13 @@ export async function savePlanAction(
     await db.$transaction([
       db.planHeader.update({
         where: { indicatorId },
-        data: { confirmedAt: null, confirmedById: null, returnedAt: new Date(), returnNote },
+        data: {
+          confirmedAt: null,
+          confirmedById: null,
+          returnedAt: new Date(),
+          returnNote,
+          returnDueAt,
+        },
       }),
       ...replaceCommentsOps(indicatorId, PLAN_COMMENT_QUARTER, comments),
     ]);
@@ -458,6 +474,7 @@ export async function savePlanAction(
 ข้อสังเกตเพื่อให้แผนมีความชัดเจน:
 ${returnNote}`,
       link: `/plans/${indicatorId}#return`,
+      dueAt: returnDueAt,
     });
     message =
       notified > 0
@@ -475,7 +492,7 @@ ${returnNote}`,
       indicatorCode: indicator.code,
       intent,
       rows: updates.length,
-      ...(intent === "unlock" ? { returnNote } : {}),
+      ...(intent === "unlock" ? { returnNote, returnDueAt } : {}),
     },
   });
 

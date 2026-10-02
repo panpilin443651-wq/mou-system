@@ -290,6 +290,8 @@ model PlanHeader {
   /// ล้างทั้งสองช่องเมื่อหัวหน้าส่วนงานกดส่งแผนใหม่
   returnedAt DateTime?
   returnNote String?
+  /// วันที่ส่วนกลางกำหนดให้แก้ให้เสร็จ (สิ้นวันตามเวลาไทย) - ล้างพร้อม returnedAt
+  returnDueAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -466,6 +468,8 @@ model QuarterlyReport {
   /// ล้างทั้งสองช่องเมื่อหัวหน้าส่วนงานกดส่งผลใหม่
   returnedAt DateTime?
   returnNote String?
+  /// วันที่ส่วนกลางกำหนดให้แก้ให้เสร็จ (สิ้นวันตามเวลาไทย) - ล้างพร้อม returnedAt
+  returnDueAt DateTime?
 
   attachments      Attachment[]
   /// 4. รายงานผลการดำเนินงาน แยกเป็นแต่ละค่าเกณฑ์
@@ -650,6 +654,9 @@ model Notification {
   body  String?
   /// หน้าที่กดแล้วพาไป เช่น /plans/<id>
   link  String?
+
+  /// ต้องแก้ไขให้เสร็จภายในวันที่ (ตีกลับแผน/ผล) - null = ไม่มีกำหนด
+  dueAt DateTime?
 
   /// null = ยังไม่อ่าน (กระดิ่งเป็นสีแดง)
   readAt    DateTime?

@@ -164,6 +164,9 @@ export async function GET(
       bold: true,
       color: { argb: "FFB91C1C" },
     });
+    if (doc.returned.due) {
+      wide(`! ${doc.returned.due}`, { bold: true, color: { argb: "FFB91C1C" } });
+    }
     wide(`ข้อสังเกตเพื่อให้ผลมีความชัดเจน: ${doc.returned.note}`);
   }
   row += 1;

@@ -279,6 +279,12 @@ export const PLAN_SECTION_YEAR_LABEL: Record<PlanSection, string> = {
   STEP: "ความก้าวหน้าเทียบแผนทั้งปี",
 };
 
+/** หัวบรรทัดค่าเฉลี่ยท้ายตาราง - ตารางเป้าหมายเทียบผลกับเป้าหมาย ตารางขั้นตอนเทียบความก้าวหน้ากับแผน */
+export const PLAN_SECTION_AVG_LABEL: Record<PlanSection, string> = {
+  TARGET: "ค่าเฉลี่ยร้อยละผลการดำเนินงานตามเป้าหมาย",
+  STEP: "ค่าเฉลี่ยร้อยละความก้าวหน้าตามแผนการดำเนินงาน",
+};
+
 export const PLAN_SECTION_CAUSE_LABEL: Record<PlanSection, string> = {
   TARGET: "สาเหตุที่ไม่สามารถดำเนินการได้ตามเป้าหมาย",
   STEP: "สาเหตุที่ไม่สามารถดำเนินการได้ตามแผน",

@@ -9,6 +9,7 @@ import {
   canSubmitReport,
 } from "@/lib/permissions";
 import { notifyDepartmentUsers } from "@/lib/notifications";
+import { readReturnDueDate } from "@/lib/return-due";
 import {
   clearComments,
   combineComments,
@@ -142,7 +143,7 @@ export async function saveReportAction(
     submittedAt: submitting ? new Date() : null,
     submittedById: submitting ? user.id : null,
     // ส่งใหม่หลังถูกตีกลับ ล้างเหตุผลที่ตีกลับทิ้ง (บันทึกร่างยังเก็บไว้ให้เห็นว่าต้องแก้อะไร)
-    ...(submitting ? { returnedAt: null, returnNote: null } : {}),
+    ...(submitting ? { returnedAt: null, returnNote: null, returnDueAt: null } : {}),
   };
 
   // ช่องปัญหาอุปสรรค ปัจจัย และผลรายค่าเกณฑ์ ถูกเอาออกจากฟอร์มแล้ว (17 ก.ย. 2569)
@@ -312,6 +313,9 @@ export async function returnReportAction(
     return { error: "กรุณาเขียนข้อสังเกตในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
   }
   const returnNote = combineComments(comments);
+  const due = readReturnDueDate(formData);
+  if (due.error) return { error: due.error };
+  const returnDueAt = due.dueAt;
 
   const existing = await db.quarterlyReport.findUnique({
     where: { indicatorId_quarter: { indicatorId, quarter } },
@@ -329,6 +333,7 @@ export async function returnReportAction(
         submittedById: null,
         returnedAt: new Date(),
         returnNote,
+        returnDueAt,
       },
     }),
     ...replaceCommentsOps(indicatorId, quarter, comments),
@@ -340,6 +345,7 @@ export async function returnReportAction(
 ข้อสังเกตเพื่อให้ผลมีความชัดเจน:
 ${returnNote}`,
     link: `/reports/${indicatorId}/${quarter}#return`,
+    dueAt: returnDueAt,
   });
 
   await writeAudit({
@@ -347,7 +353,7 @@ ${returnNote}`,
     action: "REPORT_RETURN",
     entity: "QuarterlyReport",
     entityId: existing.id,
-    detail: { indicatorCode: indicator.code, quarter, returnNote },
+    detail: { indicatorCode: indicator.code, quarter, returnNote, returnDueAt },
   });
 
   revalidatePath("/reports");
