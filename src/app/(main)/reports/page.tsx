@@ -14,6 +14,7 @@ import {
 } from "@/lib/department-picker";
 import { DepartmentFilters } from "../department-filters";
 import { DepartmentList, BackToDepartments, type DepartmentRow } from "../department-list";
+import { ReturnedLink } from "@/components/returned-link";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "รายงานผลการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
@@ -159,8 +160,16 @@ async function ReportTable({
     db.indicator.findMany({
       where,
       include: {
-        reports: { select: { quarter: true, status: true, scoreLevel: true } },
-        planHeader: { select: { confirmedAt: true } },
+        reports: {
+          select: {
+            quarter: true,
+            status: true,
+            scoreLevel: true,
+            returnedAt: true,
+            returnDueAt: true,
+          },
+        },
+        planHeader: { select: { confirmedAt: true, returnedAt: true, returnDueAt: true } },
       },
       orderBy: { code: "asc" },
       skip: (page - 1) * PAGE_SIZE,
@@ -230,14 +239,33 @@ async function ReportTable({
                           {ind.name}
                         </Link>
                         {/* รายงานผลได้หลังส่งแผน จึงบอกไว้ตรงนี้และพาไปกรอกแผน */}
-                        {!ind.planHeader?.confirmedAt && (
-                          <Link
-                            href={`/plans/${ind.id}`}
-                            className="mt-0.5 inline-block rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800 hover:underline"
-                          >
-                            ยังไม่ส่งแผน · ไปกรอกแผน
-                          </Link>
-                        )}
+                        {!ind.planHeader?.confirmedAt &&
+                          (ind.planHeader?.returnedAt ? (
+                            <ReturnedLink
+                              href={`/plans/${ind.id}`}
+                              label="แผนถูกตีกลับ"
+                              dueAt={ind.planHeader.returnDueAt}
+                            />
+                          ) : (
+                            <Link
+                              href={`/plans/${ind.id}`}
+                              className="mt-0.5 inline-block rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-800 hover:underline"
+                            >
+                              ยังไม่ส่งแผน · ไปกรอกแผน
+                            </Link>
+                          ))}
+                        {/* ผลที่ถูกตีกลับและยังไม่ได้ส่งใหม่ (ส่งใหม่แล้ว returnedAt ถูกล้าง) */}
+                        {ind.reports
+                          .filter((r) => r.status === "DRAFT" && r.returnedAt)
+                          .sort((a, b) => a.quarter - b.quarter)
+                          .map((r) => (
+                            <ReturnedLink
+                              key={r.quarter}
+                              href={`/reports/${ind.id}/${r.quarter}`}
+                              label={`ผลไตรมาส ${r.quarter} ถูกตีกลับ`}
+                              dueAt={r.returnDueAt}
+                            />
+                          ))}
                       </td>
 
                       {QUARTERS.map((q) => {
@@ -251,6 +279,10 @@ async function ReportTable({
                             >
                               {r === undefined ? (
                                 <span className="text-slate-300">–</span>
+                              ) : r.status === "DRAFT" && r.returnedAt ? (
+                                <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800 ring-1 ring-red-300">
+                                  ตีกลับ
+                                </span>
                               ) : r.status === "DRAFT" ? (
                                 <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">
                                   ร่าง
@@ -284,6 +316,7 @@ async function ReportTable({
           <p className="text-xs text-slate-500">
             ต้องกรอกแผนและกดส่งแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
             ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
+            &quot;ตีกลับ&quot; คือส่วนกลางตีกลับให้แก้ไขแล้วส่งใหม่ ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>
 
