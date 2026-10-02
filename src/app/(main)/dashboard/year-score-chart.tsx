@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { DepartmentScoreRow } from "@/lib/department-scores";
 
 // ============================================================================
@@ -36,9 +37,12 @@ const PLOT_RIGHT = "right-[4.5rem]";
 export function YearScoreChart({
   rows,
   myCode,
+  hrefFor = () => null,
 }: {
   rows: DepartmentScoreRow[];
   myCode: string | null;
+  /** ลิงก์ของชื่อส่วนงาน (หน้ารายงานผลการดำเนินงาน) - null = ไม่มีในระบบ กดไม่ได้ */
+  hrefFor?: (code: string) => string | null;
 }) {
   const scored = rows
     .filter((d): d is DepartmentScoreRow & { yearScore: number } => d.yearScore !== null)
@@ -80,14 +84,25 @@ export function YearScoreChart({
               const isMine = d.code === myCode;
               const band = bandOf(d.yearScore);
               const stripe = isMine ? "bg-accent-100" : i % 2 === 1 ? "bg-slate-100/70" : "";
+              const href = hrefFor(d.code);
+              const tip = d.line ? `${d.sourceName} · ${d.line}` : d.sourceName;
               return (
                 <div key={d.code} className={`group grid ${COLS} items-center text-sm`}>
                   <div className={`py-1 text-center tabular-nums text-slate-700 ${stripe}`}>{i + 1}</div>
-                  <div
-                    className={`truncate px-2 py-1 ${stripe} ${isMine ? "font-semibold text-slate-900" : "text-slate-800"}`}
-                    title={d.line ? `${d.sourceName} · ${d.line}` : d.sourceName}
-                  >
-                    {d.sourceName}
+                  <div className={`truncate px-2 py-1 ${stripe} ${isMine ? "font-semibold" : ""}`}>
+                    {href ? (
+                      <Link
+                        href={href}
+                        title={`ดูรายงานผลการดำเนินงานของ ${tip}`}
+                        className="text-brand-ink underline decoration-brand-200 underline-offset-4 transition hover:text-brand-900 hover:decoration-brand-700"
+                      >
+                        {d.sourceName}
+                      </Link>
+                    ) : (
+                      <span className="text-slate-800" title={tip}>
+                        {d.sourceName}
+                      </span>
+                    )}
                     {isMine && <span className="ml-1 text-xs font-normal text-accent-900">(คุณ)</span>}
                   </div>
                   <div className="relative mr-[4.5rem] h-7">

@@ -238,24 +238,22 @@ async function PlanList({
                         {ind.planHeader?.budget || <span className="text-slate-300">–</span>}
                       </td>
                       <td className="whitespace-nowrap px-4 py-2.5 text-xs font-medium">
+                        {/* สถานะแผน 3 แบบ: ยังไม่จัดทำ (แดง) · ร่างแล้ว (เหลือง) · ส่งแล้ว (เขียว)
+                            แผนที่ถูกตีกลับนับเป็นร่าง (กลับไปแก้ได้) ป้ายตีกลับแสดงใต้ชื่อตัวชี้วัดแล้ว */}
                         {confirmedAt ? (
                           <span
-                            className="rounded bg-brand-50 px-1.5 py-0.5 text-brand-ink"
-                            title={`ยืนยันเมื่อ ${formatThaiDateTime(confirmedAt)}`}
+                            className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-800 ring-1 ring-emerald-300"
+                            title={`ส่งเมื่อ ${formatThaiDateTime(confirmedAt)}`}
                           >
                             ✓ ส่งแผนแล้ว
                           </span>
-                        ) : ind.planHeader?.returnedAt ? (
-                          <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800">
-                            ถูกตีกลับ · แก้แล้วส่งใหม่
-                          </span>
                         ) : ind.plans.length === 0 ? (
-                          <span className="rounded bg-amber-50 px-1.5 py-0.5 text-amber-800">
-                            ยังไม่วางแผน
+                          <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-800 ring-1 ring-red-300">
+                            ยังไม่จัดทำแผน
                           </span>
                         ) : (
-                          <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">
-                            ร่างแผน (ยังไม่ยืนยัน)
+                          <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-yellow-900 ring-1 ring-yellow-300">
+                            ร่างแผนแล้ว
                           </span>
                         )}
                       </td>

@@ -17,8 +17,10 @@ import {
   clearComments,
   combineComments,
   commentSections,
+  levelCommentKey,
   readComments,
   replaceCommentsOps,
+  returnedEditableSections,
 } from "@/lib/review-comments";
 import {
   planHeaderSchema,
@@ -135,13 +137,25 @@ export async function savePlanAction(
 
   const planHeader = await db.planHeader.findUnique({
     where: { indicatorId },
-    select: { confirmedAt: true },
+    select: { confirmedAt: true, returnedAt: true },
   });
   // ส่งแผนแล้ว โครงแผนล็อกสำหรับผู้รับผิดชอบส่วนงาน (ส่วนกลางแก้ได้เสมอ)
   const structureLocked = planHeader?.confirmedAt != null && !isAdmin;
   if (structureLocked && (intent.startsWith("add:") || intent.startsWith("delete:"))) {
     return { error: "ส่งแผนแล้ว เพิ่มหรือลบบรรทัดไม่ได้ ติดต่อส่วนกลางหากต้องแก้แผน" };
   }
+  // ตีกลับแผนแล้ว (ยังไม่ส่งใหม่): ผู้รับผิดชอบส่วนงานแก้ได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้
+  // null = ไม่จำกัด (ส่วนกลาง, ไม่ได้ถูกตีกลับ หรือตีกลับก่อนมีข้อสังเกตรายส่วน)
+  const editableSections = await returnedEditableSections(
+    indicatorId,
+    !isAdmin && planHeader?.confirmedAt == null && planHeader?.returnedAt != null,
+  );
+  const sectionKey = (r: { section: PlanSection; criteriaLevel: number | null }) =>
+    r.section === "TARGET" ? "TARGET" : levelCommentKey(r.criteriaLevel ?? -1);
+  const canEditRow = (r: { section: PlanSection; criteriaLevel: number | null }) =>
+    editableSections === null || editableSections.has(sectionKey(r));
+  const RESTRICTED_MESSAGE =
+    "แผนถูกตีกลับ แก้ไขได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้เท่านั้น";
   // ส่งแผน = หัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง) เท่านั้น ผู้รายงานบันทึกร่างได้อย่างเดียว
   if (intent === "confirm" && !canSendForDepartment(user, indicator.departmentId)) {
     return {
@@ -179,7 +193,8 @@ export async function savePlanAction(
   }
 
   // ---- ส่วนหัวของแบบฟอร์ม (เฉพาะหน้าแผน) ----
-  const hasHeader = formData.has("owner");
+  // ส่วนหัวไม่มีกล่องข้อสังเกต จึงแก้ไม่ได้ระหว่างถูกตีกลับ
+  const hasHeader = formData.has("owner") && editableSections === null;
   const header = planHeaderSchema.safeParse({
     owner: formData.get("owner") ?? "",
     budget: formData.get("budget") ?? "",
@@ -235,7 +250,7 @@ export async function savePlanAction(
 
   for (const row of rows) {
     // โครงแผนส่งมาจากหน้าแผน ผลส่งมาจากหน้ารายงานผล ส่วนที่ไม่ถูกส่งมาปล่อยไว้ตามเดิม
-    const hasStructure = formData.has(`title_${row.id}`) && !structureLocked;
+    const hasStructure = formData.has(`title_${row.id}`) && !structureLocked && canEditRow(row);
     const hasResult = formData.has(`a0_${row.id}`) && !resultsLocked;
     if (!hasStructure && !hasResult) continue;
 
@@ -345,6 +360,9 @@ export async function savePlanAction(
     } else if (section !== "TARGET") {
       return { error: "ไม่รู้จักตารางที่จะเพิ่มบรรทัด" };
     }
+    if (!canEditRow({ section: section as PlanSection, criteriaLevel })) {
+      return { error: `${RESTRICTED_MESSAGE} (บันทึกส่วนที่แก้ไว้แล้ว)` };
+    }
 
     const last = rows
       .filter(sameGroup({ section: section as PlanSection, criteriaLevel }))
@@ -371,6 +389,7 @@ export async function savePlanAction(
     const rowId = intent.slice(7);
     const target = rows.find((r) => r.id === rowId);
     if (!target) return { error: "ไม่พบบรรทัดที่จะลบ" };
+    if (!canEditRow(target)) return { error: `${RESTRICTED_MESSAGE} (บันทึกส่วนที่แก้ไว้แล้ว)` };
 
     // ลบบรรทัดที่มีตัวเลขอยู่ในเดือนที่ล็อกไม่ได้ ไม่งั้นจะเท่ากับแก้ผลย้อนหลังด้วยการลบทิ้ง
     const hasLockedData = (months: unknown, locked: boolean[]) =>
