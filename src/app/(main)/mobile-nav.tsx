@@ -18,7 +18,7 @@ export function MobileNav({ links }: { links: NavLink[] }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="เปิดเมนู"
-        className="flex h-11 w-11 items-center justify-center rounded-lg border border-slate-300 transition hover:bg-slate-50"
+        className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/60 text-white transition hover:bg-white/15"
       >
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
           <path

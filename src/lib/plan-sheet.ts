@@ -67,8 +67,8 @@ const COL_FIX = COL_CUM + 5;
 const COL_EVIDENCE = COL_CUM + 6;
 const COL_LAST = COL_EVIDENCE;
 
-const HEADING = "FF165C3D"; // สีหัวข้อของระบบ ใช้ให้ตรงกับหน้าเว็บและไฟล์ Word
-const HEADER_BG = "FFEEF7F1"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
+const HEADING = "FF156532"; // สีหัวข้อของระบบ ใช้ให้ตรงกับหน้าเว็บและไฟล์ Word
+const HEADER_BG = "FFEDF8F0"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
 
 /** แปลงเลขคอลัมน์เป็นตัวอักษร (A, B, ... AA) สำหรับเขียนสูตรใน Excel */
 function colLetter(index: number): string {

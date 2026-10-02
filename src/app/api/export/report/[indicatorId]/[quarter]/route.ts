@@ -38,7 +38,7 @@ import {
 export const dynamic = "force-dynamic";
 
 const FONT = "TH SarabunPSK";
-const HEADER_BG = "EEF7F1"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
+const HEADER_BG = "EDF8F0"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
 
 function heading(text: string) {
   return new Paragraph({
@@ -339,7 +339,7 @@ export async function GET(
     new Paragraph({
       spacing: { after: 80 },
       children: [
-        new TextRun({ text: "ผลการดำเนินงานตามแผน", bold: true, font: FONT, size: 32, color: "165C3D" }),
+        new TextRun({ text: "ผลการดำเนินงานตามแผน", bold: true, font: FONT, size: 32, color: "156532" }),
       ],
     }),
     body(`${doc.uptoText}${doc.planConfirmed ? "" : " · ยังไม่ได้ส่งแผนการดำเนินงาน"}`),
@@ -352,7 +352,7 @@ export async function GET(
     styles: {
       default: {
         document: { run: { font: FONT, size: 30 } },
-        heading2: { run: { font: FONT, size: 32, bold: true, color: "165C3D" } },
+        heading2: { run: { font: FONT, size: 32, bold: true, color: "156532" } },
       },
     },
     sections: [

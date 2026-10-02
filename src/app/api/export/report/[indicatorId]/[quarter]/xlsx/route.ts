@@ -16,8 +16,8 @@ import { addPlanSheet } from "@/lib/plan-sheet";
 
 export const dynamic = "force-dynamic";
 
-const HEADING = "FF165C3D"; // สีหัวข้อของระบบ ตรงกับหน้าเว็บและไฟล์ Word
-const HEADER_BG = "FFEEF7F1"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
+const HEADING = "FF156532"; // สีหัวข้อของระบบ ตรงกับหน้าเว็บและไฟล์ Word
+const HEADER_BG = "FFEDF8F0"; // เขียวจาง ตรงกับ brand-50 บนหน้าเว็บ
 const COL_LAST = 5;
 
 function box(cell: ExcelJS.Cell) {
