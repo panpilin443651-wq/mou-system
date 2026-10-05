@@ -10,7 +10,7 @@ import {
   canReturnSubmission,
   canSendForDepartment,
 } from "@/lib/permissions";
-import { notifyDepartmentUsers } from "@/lib/notifications";
+import { notifyAdmins, notifyDepartmentUsers } from "@/lib/notifications";
 import { readReturnDueDate } from "@/lib/return-due";
 import {
   PLAN_COMMENT_QUARTER,
@@ -128,6 +128,7 @@ export async function savePlanAction(
       fiscalYearId: true,
       code: true,
       name: true,
+      department: { select: { code: true, name: true } },
       criteria: { select: { level: true }, orderBy: { level: "asc" } },
     },
   });
@@ -485,6 +486,18 @@ export async function savePlanAction(
       }),
       clearComments(indicatorId, PLAN_COMMENT_QUARTER),
     ]);
+    // แจ้งส่วนกลางว่ามีแผนส่งเข้ามา (ส่งปกติ หรือส่งแก้ไขหลังถูกตีกลับ)
+    const resubmitted = planHeader?.returnedAt != null;
+    await notifyAdmins(
+      {
+        title: `${indicator.department.code} ${
+          resubmitted ? "ส่งแผนการดำเนินงานที่แก้ไขแล้ว (หลังตีกลับ)" : "ส่งแผนการดำเนินงาน"
+        } ข้อ ${indicator.code}`,
+        body: `${indicator.department.name}\n${indicator.name}`,
+        link: `/plans/${indicatorId}`,
+      },
+      user.id,
+    );
     message = "ส่งแผนการดำเนินงานเรียบร้อยแล้ว แผนถูกล็อก และรายงานผลการดำเนินงานได้แล้ว";
   }
 
