@@ -3,8 +3,10 @@ import { db } from "@/lib/db";
 // ============================================================================
 // การแจ้งเตือน (กระดิ่งบนแถบเมนู)
 // ============================================================================
-// ตอนนี้ใช้กับเรื่องเดียว: ส่วนกลางตีกลับแผน/ผลการดำเนินงาน
-// ผู้รับคือทุกคนของส่วนงาน: ผู้รายงาน (เป็นคนแก้) และหัวหน้าส่วนงาน/หน่วยงาน (เป็นคนกดส่งใหม่)
+// 1) ส่วนกลางตีกลับแผน/ผลการดำเนินงาน
+//    ผู้รับคือทุกคนของส่วนงาน: ผู้รายงาน (เป็นคนแก้) และหัวหน้าส่วนงาน/หน่วยงาน (เป็นคนกดส่งใหม่)
+// 2) หัวหน้าส่วนงานส่งแผน/ผลการดำเนินงาน (ส่งปกติ หรือส่งแก้ไขหลังถูกตีกลับ)
+//    ผู้รับคือส่วนกลาง (ADMIN) ทุกคน
 // ============================================================================
 
 /**
@@ -31,6 +33,35 @@ export async function notifyDepartmentUsers(
     })),
   });
   return heads.length;
+}
+
+/**
+ * ส่งแจ้งเตือนถึงส่วนกลาง (ADMIN) ทุกคนที่ยังเปิดใช้งาน
+ * ไม่ส่งถึงตัวผู้กดเอง (กรณีส่วนกลางกดส่งแทนส่วนงาน)
+ */
+export async function notifyAdmins(
+  message: { title: string; body?: string | null; link?: string | null },
+  exceptUserId?: string,
+): Promise<number> {
+  const admins = await db.user.findMany({
+    where: {
+      role: "ADMIN",
+      isActive: true,
+      ...(exceptUserId ? { id: { not: exceptUserId } } : {}),
+    },
+    select: { id: true },
+  });
+  if (admins.length === 0) return 0;
+
+  await db.notification.createMany({
+    data: admins.map((a) => ({
+      userId: a.id,
+      title: message.title,
+      body: message.body ?? null,
+      link: message.link ?? null,
+    })),
+  });
+  return admins.length;
 }
 
 /** จำนวนแจ้งเตือนที่ยังไม่อ่าน - ใช้แต้มตัวเลขบนกระดิ่ง */

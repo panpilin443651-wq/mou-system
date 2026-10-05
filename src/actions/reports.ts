@@ -8,7 +8,7 @@ import {
   canSendForDepartment,
   canSubmitReport,
 } from "@/lib/permissions";
-import { notifyDepartmentUsers } from "@/lib/notifications";
+import { notifyAdmins, notifyDepartmentUsers } from "@/lib/notifications";
 import { readReturnDueDate } from "@/lib/return-due";
 import {
   clearComments,
@@ -60,7 +60,10 @@ export async function saveReportAction(
 
   const indicator = await db.indicator.findUnique({
     where: { id: indicatorId },
-    include: { criteria: { orderBy: { level: "asc" } } },
+    include: {
+      criteria: { orderBy: { level: "asc" } },
+      department: { select: { code: true, name: true } },
+    },
   });
   if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
 
@@ -188,6 +191,21 @@ export async function saveReportAction(
           : {}),
       },
     });
+  }
+
+  // แจ้งส่วนกลางว่ามีผลส่งเข้ามา (ส่งปกติ หรือส่งแก้ไขหลังถูกตีกลับ)
+  if (submitting) {
+    const resubmitted = existing?.returnedAt != null;
+    await notifyAdmins(
+      {
+        title: `${indicator.department.code} ${
+          resubmitted ? "ส่งผลการดำเนินงานที่แก้ไขแล้ว (หลังตีกลับ)" : "ส่งผลการดำเนินงาน"
+        } ข้อ ${indicator.code} ไตรมาส ${quarter}`,
+        body: `${indicator.department.name}\n${indicator.name}`,
+        link: `/reports/${indicatorId}/${quarter}`,
+      },
+      user.id,
+    );
   }
 
   await writeAudit({
