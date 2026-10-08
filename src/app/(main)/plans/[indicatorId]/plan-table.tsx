@@ -8,6 +8,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { useFormStatus } from "react-dom";
 import type { PlanSection } from "@prisma/client";
@@ -246,6 +247,19 @@ function CommentBox({ section, title }: { section: string; title: string }) {
  * ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) - ข้อสังเกตมาจากกล่องใต้แต่ละส่วน (comment_<section>)
  * เซิร์ฟเวอร์ปลดล็อกแผน เก็บข้อสังเกต และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
  */
+/** หัวข้อของแต่ละส่วนในแบบฟอร์ม: แถบพื้นเขียวอ่อน มีขีดเขียวด้านหน้า ให้แยกส่วนได้ชัดเมื่อเลื่อนดู */
+function SectionHeader({ title, children }: { title: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="rounded-t-xl border-b border-brand-200 bg-brand-50 px-4 py-3 sm:px-5">
+      <h2 className="flex items-center gap-2.5 text-lg font-bold text-brand-ink">
+        <span className="h-6 w-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden="true" />
+        {title}
+      </h2>
+      {children}
+    </div>
+  );
+}
+
 function ReturnPanel({ canReturnNow }: { canReturnNow: boolean }) {
   const { pending } = useFormStatus();
   return (
@@ -504,9 +518,9 @@ export function PlanTable({
 
       {/* ---- ส่วนหัวของแบบฟอร์ม ----
           กรอกที่หน้าแผน หน้ารายงานผลแสดงอย่างเดียว (ไม่มี name จึงไม่ถูกส่งไปบันทึกทับ) */}
-      <section className="rounded-xl border border-slate-200 bg-surface p-4 shadow-sm sm:p-5">
-        <h2 className="font-semibold">ข้อมูลหัวแบบฟอร์ม</h2>
-        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
+        <SectionHeader title="ข้อมูลหัวแบบฟอร์ม" />
+        <div className="grid gap-3 p-4 sm:grid-cols-2 sm:p-5">
           <div>
             <label htmlFor="owner" className="mb-1.5 block text-sm font-medium">
               ส่วนงาน/หน่วยงานที่รับผิดชอบตัวชี้วัด
@@ -754,17 +768,16 @@ function SectionTable({
 
   return (
     <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
-      <div className="border-b border-slate-200 px-4 py-3 sm:px-5">
-        <h2 className="font-semibold">{PLAN_SECTION_TITLE[section]}</h2>
+      <SectionHeader title={PLAN_SECTION_TITLE[section]}>
         {isStep && (
-          <p className="mt-0.5 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-slate-600">
             ค่าเกณฑ์ระดับ 1-5 และคำอธิบายมาจาก MOU แก้ไขที่นี่ไม่ได้ ·{" "}
             {isPlan
               ? "เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ (และเงื่อนไขอื่นๆ ถ้ามี) พร้อมแผนรายเดือน"
               : `กรอกผลรายเดือนของแต่ละขั้นตอน แนบหลักฐานได้ขั้นตอนละไม่เกิน ${MAX_PLAN_FILES_PER_ROW} ไฟล์ และรายงานผลการดำเนินงานของแต่ละระดับ`}
           </p>
         )}
-      </div>
+      </SectionHeader>
 
       {!showTable ? (
         <p className="px-4 py-5 text-sm text-slate-600 sm:px-5">
