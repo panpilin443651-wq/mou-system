@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { getViewFiscalYear } from "@/lib/view-year";
 import { QUARTERS } from "@/lib/plan";
 import { defaultQuarter } from "@/lib/submission-window";
-import { scoreClass, weightedScore } from "@/lib/scoring";
+import { weightedScore } from "@/lib/scoring";
 import { compareCode } from "@/lib/mou-scores";
 import {
   visibleDepartments,
@@ -278,21 +278,24 @@ async function ReportTable({
                               className="-my-2.5 inline-flex min-h-11 min-w-11 items-center justify-center rounded text-xs font-medium transition hover:ring-1 hover:ring-brand-600"
                               title={`กรอกผลไตรมาส ${q}`}
                             >
-                              {r === undefined ? (
-                                <span className="text-slate-300">–</span>
-                              ) : r.status === "DRAFT" && r.returnedAt ? (
-                                <span className="rounded bg-red-50 px-1.5 py-0.5 text-red-800 ring-1 ring-red-300">
-                                  ตีกลับ
+                              {/* แสดงสถานะการรายงานผลแทนคะแนน · ไตรมาสที่ยังไม่ถึงแสดงขีด */}
+                              {r?.status === "SUBMITTED" ? (
+                                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-emerald-800 ring-1 ring-emerald-300">
+                                  ✓ รายงานผลแล้ว
                                 </span>
-                              ) : r.status === "DRAFT" ? (
-                                <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600">
-                                  ร่าง
+                              ) : r?.returnedAt ? (
+                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-800 ring-1 ring-red-300">
+                                  ถูกตีกลับ
+                                </span>
+                              ) : q > currentQuarter ? (
+                                <span className="text-slate-300">–</span>
+                              ) : r ? (
+                                <span className="rounded-full bg-amber-50 px-2 py-0.5 text-amber-800 ring-1 ring-amber-300">
+                                  ร่าง · ยังไม่ส่ง
                                 </span>
                               ) : (
-                                <span
-                                  className={`rounded px-1.5 py-0.5 ${scoreClass(r.scoreLevel)}`}
-                                >
-                                  {r.scoreLevel ?? "-"}
+                                <span className="rounded-full bg-red-50 px-2 py-0.5 text-red-800 ring-1 ring-red-300">
+                                  ยังไม่ส่งผล
                                 </span>
                               )}
                             </Link>
@@ -316,8 +319,9 @@ async function ReportTable({
 
           <p className="text-xs text-slate-500">
             ต้องกรอกแผนและกดส่งแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
-            ตัวเลขในช่องไตรมาสคือคะแนน 1–5 ที่ได้ · &quot;ร่าง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
-            &quot;ตีกลับ&quot; คือส่วนกลางตีกลับให้แก้ไขแล้วส่งใหม่ ·
+            ช่องไตรมาสแสดงสถานะการรายงานผล: &quot;รายงานผลแล้ว&quot; (เขียว) ·
+            &quot;ยังไม่ส่งผล&quot; (แดง) · &quot;ร่าง · ยังไม่ส่ง&quot; คือกรอกไว้แล้วแต่ยังไม่ได้ส่ง ·
+            &quot;ถูกตีกลับ&quot; คือส่วนกลางตีกลับให้แก้ไขแล้วส่งใหม่ · &quot;–&quot; คือยังไม่ถึงไตรมาสนั้น ·
             คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
           </p>
 

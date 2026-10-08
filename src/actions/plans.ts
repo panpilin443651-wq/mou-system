@@ -84,6 +84,8 @@ export type FormState = {
   error: string | null;
   success?: boolean;
   message?: string;
+  /** สำเร็จแต่ไม่ต้องขึ้น pop up (เช่นเพิ่มบรรทัด ผู้ใช้เห็นบรรทัดใหม่ในตารางอยู่แล้ว) */
+  silent?: boolean;
 };
 
 /** อ่านช่องตัวเลขรายเดือน 12 ช่องของแถวหนึ่ง (`p0_<id>` = แผนเดือนแรก) */
@@ -550,5 +552,6 @@ ${returnNote}`,
   // แผนแสดงในหน้ารายงานผลรายไตรมาสด้วย
   revalidatePath("/reports/[indicatorId]/[quarter]", "page");
   revalidatePath(`/indicators/${indicatorId}`);
-  return { error: null, success: true, message };
+  // เพิ่มบรรทัดเห็นผลในตารางทันที ไม่ต้องขึ้น pop up ให้กดปิดทุกครั้ง
+  return { error: null, success: true, message, silent: intent.startsWith("add:") };
 }

@@ -7,6 +7,7 @@ import { getQuarterStatuses, defaultQuarter } from "@/lib/submission-window";
 import { PlanTable } from "./plan-table";
 import { planInclude, planTableProps } from "./plan-data";
 import { PLAN_COMMENT_QUARTER, loadComments } from "@/lib/review-comments";
+import { StepTracker } from "@/components/step-tracker";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "แผนการดำเนินงาน | ระบบรายงานผลการดำเนินงานตามบันทึกข้อตกลงของส่วนงานและหน่วยงานที่ไม่สังกัดส่วนงาน" };
@@ -79,45 +80,32 @@ export default async function IndicatorPlanPage({
 
       {/* ขั้นตอน: 1 กรอกแผน (หน้านี้) → 2 รายงานผล (หน้ารายงานผล) */}
       {canEdit && (
-        <ol className="grid gap-2 sm:grid-cols-2">
-          <li
-            className={`rounded-xl border px-4 py-3 text-sm ${
-              confirmed
-                ? "border-slate-200 bg-surface"
-                : "border-brand-200 bg-brand-50 text-brand-900"
-            }`}
-          >
-            <p className="font-medium">ขั้นตอนที่ 1 · กรอกและส่งแผนการดำเนินงาน (หน้านี้)</p>
-            <p className="mt-0.5">
-              {confirmed ? (
-                <span className="text-emerald-800">✓ ส่งแผนแล้ว</span>
-              ) : (
-                "บันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผน"
-              )}
-            </p>
-          </li>
-          <li
-            className={`rounded-xl border px-4 py-3 text-sm ${
-              confirmed
-                ? "border-brand-200 bg-brand-50 text-brand-900"
-                : "border-slate-200 bg-surface text-slate-600"
-            }`}
-          >
-            <p className="font-medium">ขั้นตอนที่ 2 · รายงานผลการดำเนินงาน</p>
-            <p className="mt-0.5">
-              {confirmed ? (
+        <StepTracker
+          steps={[
+            {
+              title: "กรอกและส่งแผนการดำเนินงาน",
+              here: true,
+              state: confirmed ? "done" : "current",
+              detail: confirmed
+                ? "ส่งแผนแล้ว"
+                : "บันทึกร่างแผนไว้ก่อนได้ · กรอกครบแล้วหัวหน้าส่วนงาน/หัวหน้าหน่วยงานกดส่งแผน",
+            },
+            {
+              title: "รายงานผลการดำเนินงาน",
+              state: confirmed ? "current" : "upcoming",
+              detail: confirmed ? (
                 <Link
                   href={`/reports/${indicator.id}/${quarter}`}
                   className="font-medium underline underline-offset-2"
                 >
-                  ไปรายงานผลไตรมาส {quarter}
+                  ไปรายงานผลไตรมาส {quarter} →
                 </Link>
               ) : (
                 "ทำได้หลังส่งแผนแล้ว"
-              )}
-            </p>
-          </li>
-        </ol>
+              ),
+            },
+          ]}
+        />
       )}
 
       <PlanTable
