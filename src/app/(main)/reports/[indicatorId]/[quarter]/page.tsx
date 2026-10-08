@@ -28,6 +28,7 @@ import { ReportForm } from "./report-form";
 import { ReopenButton } from "./reopen-button";
 import { RETURN_FORM_ID, ReturnButton } from "./return-button";
 import { loadComments } from "@/lib/review-comments";
+import { StepTracker } from "@/components/step-tracker";
 import {
   returnedResultSections,
   returnedResultSectionsNow,
@@ -286,20 +287,13 @@ export default async function ReportPage({
 
       {/* ขั้นตอนของผู้รับผิดชอบส่วนงาน: 1 กรอกแผน → 2 รายงานผลไตรมาสปัจจุบัน */}
       {hasPermission && !isAdmin && (
-        <ol className="grid gap-2 sm:grid-cols-2">
-          <li
-            className={`rounded-xl border px-4 py-3 text-sm ${
-              planReady
-                ? "border-slate-200 bg-surface"
-                : "border-amber-200 bg-amber-50 text-amber-900"
-            }`}
-          >
-            <p className="font-medium">
-              ขั้นตอนที่ 1 · กรอกแผนดำเนินงาน และหัวหน้าส่วนงานกดส่งแผน
-            </p>
-            <p className="mt-0.5">
-              {planReady ? (
-                <span className="text-emerald-800">✓ ส่งแผนแล้ว (แผนถูกล็อก)</span>
+        <StepTracker
+          steps={[
+            {
+              title: "กรอกแผนดำเนินงาน และหัวหน้าส่วนงานกดส่งแผน",
+              state: planReady ? "done" : "current",
+              detail: planReady ? (
+                "ส่งแผนแล้ว (แผนถูกล็อก)"
               ) : (
                 <>
                   ยังไม่ได้ส่งแผน ·{" "}
@@ -307,31 +301,25 @@ export default async function ReportPage({
                     href={`/plans/${indicator.id}`}
                     className="font-medium underline underline-offset-2"
                   >
-                    ไปกรอกแผน
+                    ไปกรอกแผน →
                   </Link>
                 </>
-              )}
-            </p>
-          </li>
-          <li
-            className={`rounded-xl border px-4 py-3 text-sm ${
-              planReady && window.canWrite
-                ? "border-brand-200 bg-brand-50 text-brand-900"
-                : "border-slate-200 bg-surface text-slate-600"
-            }`}
-          >
-            <p className="font-medium">ขั้นตอนที่ 2 · รายงานผลไตรมาส {quarter}</p>
-            <p className="mt-0.5">
-              {!planReady
+              ),
+            },
+            {
+              title: `รายงานผลไตรมาส ${quarter}`,
+              here: true,
+              state: !planReady ? "upcoming" : isSubmitted ? "done" : "current",
+              detail: !planReady
                 ? "ทำได้หลังส่งแผนแล้ว"
                 : isSubmitted
-                  ? "✓ ส่งผลแล้ว"
+                  ? "ส่งผลแล้ว"
                   : window.canWrite
                     ? "กรอกผลด้านล่างแล้วกดส่งผลการดำเนินงาน"
-                    : "ไตรมาสนี้ไม่เปิดให้รายงาน"}
-            </p>
-          </li>
-        </ol>
+                    : "ไตรมาสนี้ไม่เปิดให้รายงาน",
+            },
+          ]}
+        />
       )}
 
       {carried && canEdit && (
