@@ -247,12 +247,12 @@ function CommentBox({ section, title }: { section: string; title: string }) {
  * ปุ่มตีกลับแผน (เฉพาะส่วนกลาง) - ข้อสังเกตมาจากกล่องใต้แต่ละส่วน (comment_<section>)
  * เซิร์ฟเวอร์ปลดล็อกแผน เก็บข้อสังเกต และแจ้งเตือน (กระดิ่ง) ถึงผู้รายงานและหัวหน้าส่วนงาน
  */
-/** หัวข้อของแต่ละส่วนในแบบฟอร์ม: แถบพื้นเขียวอ่อน มีขีดเขียวด้านหน้า ให้แยกส่วนได้ชัดเมื่อเลื่อนดู */
+/** หัวข้อของแต่ละส่วนในแบบฟอร์ม: แถบพื้นเขียวเข้ม ตัวหนังสือขาว ให้แยกส่วนได้ชัดเมื่อเลื่อนดู */
 function SectionHeader({ title, children }: { title: ReactNode; children?: ReactNode }) {
   return (
-    <div className="rounded-t-xl border-b border-brand-200 bg-brand-50 px-4 py-3 sm:px-5">
-      <h2 className="flex items-center gap-2.5 text-lg font-bold text-brand-ink">
-        <span className="h-6 w-1.5 shrink-0 rounded-full bg-brand-600" aria-hidden="true" />
+    <div className="rounded-t-xl bg-brand-700 px-4 py-3 text-white sm:px-5">
+      <h2 className="flex items-center gap-2.5 text-lg font-bold text-white">
+        <span className="h-6 w-1.5 shrink-0 rounded-full bg-white/80" aria-hidden="true" />
         {title}
       </h2>
       {children}
@@ -770,7 +770,7 @@ function SectionTable({
     <section className="rounded-xl border border-slate-200 bg-surface shadow-sm">
       <SectionHeader title={PLAN_SECTION_TITLE[section]}>
         {isStep && (
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-white/85">
             ค่าเกณฑ์ระดับ 1-5 และคำอธิบายมาจาก MOU แก้ไขที่นี่ไม่ได้ ·{" "}
             {isPlan
               ? "เพิ่มขั้นตอนการดำเนินงานใต้แต่ละระดับ (และเงื่อนไขอื่นๆ ถ้ามี) พร้อมแผนรายเดือน"
