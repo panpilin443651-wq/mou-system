@@ -18,7 +18,7 @@ export function SuccessDialog({
   fallbackMessage = "บันทึกเรียบร้อยแล้ว",
 }: {
   /** state จาก useActionState - เปิดเมื่อ success เป็น true */
-  state: { error?: string | null; success?: boolean; message?: string | null };
+  state: { error?: string | null; success?: boolean; message?: string | null; silent?: boolean };
   /** ข้อความที่ใช้เมื่อ Server Action ไม่ได้ส่ง message มา */
   fallbackMessage?: string;
 }) {
@@ -26,7 +26,7 @@ export function SuccessDialog({
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!state.success || state.error) return;
+    if (!state.success || state.error || state.silent) return;
     setMessage(state.message || fallbackMessage);
     const dialog = ref.current;
     if (dialog && !dialog.open) dialog.showModal();
