@@ -1076,7 +1076,8 @@ function LevelReportInput({
  *
  * table-fixed + colgroup: ถ้าปล่อยให้เบราว์เซอร์จัดเอง คอลัมน์ข้อความยาวจะไปบีบช่องตัวเลข
  * จนเลข "100" เหลือ "10" ทั้งที่ตารางเลื่อนแนวนอนได้อยู่แล้ว
- * ตารางกว้างกว่าจอเสมอเพราะมี 12 เดือน จึงเลื่อนแนวนอนในกรอบตัวเอง ไม่ให้ทั้งหน้าเลื่อนซ้ายขวา
+ * จอกว้างพอ ตารางขยายเต็มกรอบ (ส่วนที่เกินไปอยู่ที่คอลัมน์ชื่อรายการ)
+ * จอแคบกว่าความกว้างขั้นต่ำ ตารางเลื่อนแนวนอนในกรอบตัวเอง ไม่ให้ทั้งหน้าเลื่อนซ้ายขวา
  */
 function TableFrame({
   mode,
@@ -1093,11 +1094,12 @@ function TableFrame({
   return (
     <div className={className}>
       <table
-        className={`${isPlan ? "w-[82rem]" : "w-[130rem]"} table-fixed border-collapse text-sm`}
+        className={`w-full ${isPlan ? "min-w-[82rem]" : "min-w-[130rem]"} table-fixed border-collapse text-sm`}
       >
         <colgroup>
           <col className="w-14" />
-          <col className="w-72" />
+          {/* คอลัมน์ชื่อรายการไม่กำหนดความกว้าง ให้รับพื้นที่ที่เหลือ ตารางจึงเต็มกรอบพอดีบนจอกว้าง */}
+          <col />
           <col className="w-24" />
           <col className="w-20" />
           {!isPlan && <col className="w-16" />}
