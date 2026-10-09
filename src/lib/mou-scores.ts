@@ -48,7 +48,12 @@ export type MouScoreRow = {
 
 export type DepartmentMouScores = {
   rows: MouScoreRow[];
-  totals: { weight: number; cumulative: { label: string; value: number | null }[] };
+  totals: {
+    weight: number;
+    cumulative: { label: string; value: number | null }[];
+    /** คะแนนรวมถ่วงน้ำหนักของแต่ละไตรมาส = ผลรวม (คะแนน × น้ำหนัก ÷ 100) - null ถ้ายังไม่มีคะแนนเลย */
+    byQuarter: { quarter: number; value: number | null }[];
+  };
   /** ไตรมาสที่มีตัวเลขอย่างน้อยหนึ่งช่อง - ใช้ตัดสินว่าตารางจะแสดงไตรมาสไหนบ้าง */
   quartersWithData: number[];
   /** เวลาที่มีคนแก้ล่าสุด และชื่อคนแก้ - null ถ้ายังไม่เคยมีใครแก้ในระบบ */
@@ -163,6 +168,12 @@ export async function departmentMouScores(
       cumulative: CUMULATIVE_PERIODS.map((p, i) => ({
         label: p.label,
         value: sumOrNull(rows.map((r) => r.cumulative[i].value)),
+      })),
+      byQuarter: MOU_QUARTERS.map((q) => ({
+        quarter: q,
+        value: sumOrNull(
+          rows.map((r) => weighted(r.quarters.find((x) => x.quarter === q)?.score ?? null, r.weight))
+        ),
       })),
     },
     quartersWithData,
