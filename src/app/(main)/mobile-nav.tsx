@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { isActivePath } from "./top-nav";
+import { isActivePath } from "./side-nav";
 
 // เมนูสำหรับหน้าจอมือถือ - ปุ่มขีดสามขีดที่กดแล้วเมนูเลื่อนลงมา
-// ซ่อนตัวเองอัตโนมัติเมื่อจอกว้างพอ (md: ขึ้นไป) เพราะจอใหญ่ใช้เมนูแนวนอนแทน
+// ซ่อนตัวเองอัตโนมัติเมื่อจอกว้างพอ (md: ขึ้นไป) เพราะจอใหญ่ใช้เมนูแถบซ้ายแทน
 
 type NavLink = { href: string; label: string };
 
