@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { isActivePath } from "./top-nav";
 
 // เมนูสำหรับหน้าจอมือถือ - ปุ่มขีดสามขีดที่กดแล้วเมนูเลื่อนลงมา
 // ซ่อนตัวเองอัตโนมัติเมื่อจอกว้างพอ (md: ขึ้นไป) เพราะจอใหญ่ใช้เมนูแนวนอนแทน
@@ -10,6 +12,7 @@ type NavLink = { href: string; label: string };
 
 export function MobileNav({ links }: { links: NavLink[] }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <div className="md:hidden">
@@ -40,16 +43,24 @@ export function MobileNav({ links }: { links: NavLink[] }) {
             className="fixed inset-0 z-10 bg-scrim/20"
           />
           <nav className="absolute inset-x-0 top-full z-20 border-b border-slate-200 bg-surface p-2 shadow-lg">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setOpen(false)}
-                className="block rounded-lg px-3 py-3 font-medium text-slate-700 transition hover:bg-slate-100"
-              >
-                {link.label}
-              </Link>
-            ))}
+            {links.map((link) => {
+              const active = isActivePath(pathname, link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setOpen(false)}
+                  aria-current={active ? "page" : undefined}
+                  className={`block rounded-lg border-l-4 px-3 py-3 font-medium transition ${
+                    active
+                      ? "border-accent-400 bg-brand-50 font-semibold text-brand-ink"
+                      : "border-transparent text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
           </nav>
         </>
       )}
