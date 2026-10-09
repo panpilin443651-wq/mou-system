@@ -134,9 +134,24 @@ export function IndicatorScoreTable({
             <td className="px-4 py-2.5" />
             <td className="px-3 py-2.5">คะแนนรวม</td>
             <td className="px-3 py-2.5 text-right tabular-nums">{totals.weight}%</td>
-            {quarters.map((q) => (
-              <td key={q} colSpan={2} className="border-l border-slate-200" />
-            ))}
+            {/* คะแนนรวมถ่วงน้ำหนักของไตรมาส วางใต้คอลัมน์ "คะแนน" ของไตรมาสนั้น */}
+            {quarters.map((q) => {
+              const total = totals.byQuarter.find((t) => t.quarter === q)?.value ?? null;
+              return (
+                <Fragment key={q}>
+                  <td className="border-l border-slate-200" />
+                  <td className="whitespace-nowrap px-1.5 py-2.5 text-right tabular-nums">
+                    {total === null ? (
+                      <Num value={null} />
+                    ) : (
+                      <span className="inline-block rounded bg-brand-700 px-2 py-0.5 text-white">
+                        <Num value={total} digits={3} />
+                      </span>
+                    )}
+                  </td>
+                </Fragment>
+              );
+            })}
           </tr>
         </tfoot>
       </table>
