@@ -1,8 +1,9 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 
-// หน้านี้เปิดได้โดยไม่ต้อง login จึงแสดงแค่สถานะการติดตั้ง
-// ไม่แสดงข้อมูลตัวชี้วัดหรือข้อมูลส่วนงานใดๆ
+// ระบบพร้อมใช้งานแล้ว หน้านี้พาไปหน้าเข้าสู่ระบบทันที (หน้า login พาคนที่ login แล้วไปหน้าแรกของตัวเองต่อ)
+// จะแสดงหน้านี้ก็ต่อเมื่อติดตั้งยังไม่เสร็จ เพื่อบอกสาเหตุและวิธีแก้
+// หน้านี้เปิดได้โดยไม่ต้อง login จึงไม่แสดงข้อมูลตัวชี้วัดหรือข้อมูลส่วนงานใดๆ
 export const dynamic = "force-dynamic";
 
 /**
@@ -93,6 +94,10 @@ export default async function HomePage() {
   const status = await checkDatabase();
   const missingEnv = missingSupabaseEnv();
 
+  if (missingEnv.length === 0 && status.connected && status.hasData && status.hasUsers) {
+    redirect("/login");
+  }
+
   // Vercel ตั้งตัวแปรนี้ให้เองทุกครั้งที่รันบนเซิร์ฟเวอร์ของเขา
   // ใช้แยกว่าจะบอกวิธีแก้แบบ "ตั้งค่าที่ Vercel" หรือ "รันคำสั่งในเครื่อง"
   // เพราะสองกรณีนี้แก้คนละที่กันคนละวิธี บอกผิดกรณีจะยิ่งหลงทาง
@@ -124,15 +129,6 @@ export default async function HomePage() {
             · หาค่าได้ที่ Supabase &gt; Project Settings &gt; API Keys
           </p>
         </section>
-      ) : status.connected && status.hasData && status.hasUsers ? (
-        <div className="mt-8">
-          <Link
-            href="/login"
-            className="inline-block rounded-lg bg-brand-700 px-5 py-2.5 font-medium text-white transition hover:bg-brand-800"
-          >
-            เข้าสู่ระบบ
-          </Link>
-        </div>
       ) : (
         <section className="mt-8 rounded-xl border border-slate-200 bg-surface p-5 shadow-sm sm:p-6">
           <h2 className="font-semibold">ยังติดตั้งไม่เสร็จ</h2>
