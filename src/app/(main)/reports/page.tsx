@@ -6,7 +6,6 @@ import { db } from "@/lib/db";
 import { getViewFiscalYear } from "@/lib/view-year";
 import { QUARTERS } from "@/lib/plan";
 import { defaultQuarter } from "@/lib/submission-window";
-import { weightedScore } from "@/lib/scoring";
 import { compareCode } from "@/lib/mou-scores";
 import {
   visibleDepartments,
@@ -165,7 +164,6 @@ async function ReportTable({
           select: {
             quarter: true,
             status: true,
-            scoreLevel: true,
             returnedAt: true,
             returnDueAt: true,
           },
@@ -201,7 +199,7 @@ async function ReportTable({
       ) : (
         <>
           <div className="overflow-x-auto rounded-xl border border-slate-200 bg-surface shadow-sm">
-            <table className="w-full min-w-[54rem] text-sm">
+            <table className="w-full min-w-[48rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-600">
                   <th className="px-4 py-2.5 font-medium">ข้อ</th>
@@ -214,18 +212,11 @@ async function ReportTable({
                       )}
                     </th>
                   ))}
-                  <th className="whitespace-nowrap px-4 py-2.5 text-right font-medium">คะแนนถ่วงน้ำหนัก</th>
                 </tr>
               </thead>
               <tbody>
                 {/* เรียงเลขข้อแบบตัวเลข ฐานข้อมูลเรียงแบบตัวอักษรทำให้ "10" มาก่อน "2" */}
                 {[...indicators].sort((a, b) => compareCode(a.code, b.code)).map((ind) => {
-                  // ใช้คะแนนของไตรมาสล่าสุดที่ส่งแล้ว เป็นตัวแทนคะแนนสะสมของตัวชี้วัดนี้
-                  const submitted = ind.reports
-                    .filter((r) => r.status === "SUBMITTED" && r.scoreLevel !== null)
-                    .sort((a, b) => b.quarter - a.quarter);
-                  const latest = submitted[0] ?? null;
-                  const weighted = weightedScore(latest?.scoreLevel ?? null, ind.weight);
                   return (
                     <tr
                       key={ind.id}
@@ -302,14 +293,6 @@ async function ReportTable({
                           </td>
                         );
                       })}
-
-                      <td className="whitespace-nowrap px-4 py-2.5 text-right tabular-nums">
-                        {weighted === null ? (
-                          <span className="text-slate-300">–</span>
-                        ) : (
-                          weighted.toFixed(2)
-                        )}
-                      </td>
                     </tr>
                   );
                 })}
@@ -321,8 +304,7 @@ async function ReportTable({
             ต้องกรอกแผนและกดส่งแผนที่เมนูแผนการดำเนินงานก่อน จึงรายงานผลได้ · รายงานได้เฉพาะไตรมาสปัจจุบัน ไตรมาสที่ผ่านไปแล้วแก้ย้อนหลังไม่ได้ ·
             ช่องไตรมาสแสดงสถานะการรายงานผล: &quot;รายงานผลแล้ว&quot; (เขียว) ·
             &quot;ยังไม่รายงานผล&quot; (แดง) · &quot;อยู่ระหว่างดำเนินงาน&quot; (เหลือง) คือบันทึกร่างผลไว้แล้วแต่ยังไม่กดส่งผล ·
-            &quot;ถูกตีกลับ&quot; คือส่วนกลางตีกลับให้แก้ไขแล้วส่งใหม่ · &quot;–&quot; คือยังไม่ถึงไตรมาสนั้น ·
-            คะแนนถ่วงน้ำหนัก = คะแนนของไตรมาสล่าสุดที่ส่งแล้ว × น้ำหนัก ÷ 100
+            &quot;ถูกตีกลับ&quot; คือส่วนกลางตีกลับให้แก้ไขแล้วส่งใหม่ · &quot;–&quot; คือยังไม่ถึงไตรมาสนั้น
           </p>
 
           {totalPages > 1 && (
