@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { logoutAction } from "@/actions/auth";
 import { Logo } from "@/components/logo";
 import { MobileNav } from "./mobile-nav";
+import { SideNav } from "./side-nav";
 import { unreadCount } from "@/lib/notifications";
 import { getViewFiscalYear } from "@/lib/view-year";
 import { YearPicker } from "./year-picker";
@@ -49,7 +50,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
       {/* แถบหัวเว็บเขียวไล่เฉด ตัวหนังสือขาว ตามแบบระบบอื่นของ กยท. */}
       <header className="bg-gradient-to-r from-header-from to-header-to text-white shadow-md print:hidden">
         {/* relative จำเป็นสำหรับให้เมนูมือถือเลื่อนลงมาวางตำแหน่งถูกต้อง */}
-        <div className="relative mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
+        <div className="relative mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
           <MobileNav links={links} />
 
           <Link href={homePath(user)} className="flex min-w-0 flex-1 items-center gap-2.5">
@@ -67,19 +68,6 @@ export default async function MainLayout({ children }: { children: React.ReactNo
               </span>
             </span>
           </Link>
-
-          {/* เมนูแนวนอนสำหรับจอใหญ่ - จอเล็กใช้เมนูแบบเลื่อนออกแทน */}
-          <nav className="hidden items-center gap-1 md:flex">
-            {links.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-white transition hover:bg-white/15"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
 
           <Link
             href="/notifications"
@@ -116,7 +104,7 @@ export default async function MainLayout({ children }: { children: React.ReactNo
             viewYear.isActive ? "border-slate-200 bg-slate-50" : "border-amber-200 bg-amber-50"
           }`}
         >
-          <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-1 px-4 py-1.5">
             <YearPicker years={years} current={viewYear.year} />
             {!viewYear.isActive && (
               <p className="text-sm text-amber-900">
@@ -128,7 +116,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
         </div>
       )}
 
-      <main className="mx-auto max-w-6xl px-4 py-6 print:max-w-none print:p-0">{children}</main>
+      {/* เมนูอยู่แถบซ้ายบนจอใหญ่ - จอเล็กซ่อนแถบนี้แล้วใช้ปุ่มเมนูบนหัวเว็บแทน */}
+      <div className="mx-auto flex max-w-7xl gap-6 px-4 py-6 print:block print:max-w-none print:p-0">
+        <aside className="hidden w-56 shrink-0 md:block print:hidden">
+          <SideNav links={links} />
+        </aside>
+        <main className="min-w-0 flex-1">{children}</main>
+      </div>
     </div>
   );
 }
