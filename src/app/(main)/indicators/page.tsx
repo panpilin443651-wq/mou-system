@@ -248,13 +248,22 @@ async function DepartmentScores({
     <div className="space-y-4">
       {showBack && <BackToDepartments href="/indicators" />}
 
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <h2 className="text-base font-semibold">คะแนนรายตัวชี้วัด</h2>
+        {/* คะแนนรวมเป็นตัวเลขที่ผู้บริหารมองหาก่อน จึงทำเป็นกล่องเด่นสีเดียวกับแถบหัวเว็บ */}
         {latest && (
-          <p className="text-sm text-slate-600">
-            คะแนนรวมงวด {latest.label}{" "}
-            <span className="font-semibold text-brand-ink">{latest.value.toFixed(3)}</span> จาก 5
-          </p>
+          <div className="flex items-center gap-4 rounded-xl border-l-4 border-accent-400 bg-gradient-to-r from-header-from to-header-to px-5 py-3 text-white shadow-md">
+            <div className="text-sm leading-snug">
+              <p className="font-semibold">คะแนนรวม</p>
+              <p className="text-white/85">งวด {latest.label}</p>
+            </div>
+            <p className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-bold tabular-nums text-accent-300">
+                {latest.value.toFixed(3)}
+              </span>
+              <span className="text-sm text-white/85">จาก 5</span>
+            </p>
+          </div>
         )}
       </div>
 
