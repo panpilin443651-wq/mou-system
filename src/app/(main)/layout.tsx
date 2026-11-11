@@ -47,12 +47,13 @@ export default async function MainLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="relative isolate min-h-screen">
-      {/* พื้นหลังภาพเดียวกับหน้าเข้าสู่ระบบ (public/app-bg.jpg เบลอไว้แล้ว)
-          ทับด้วยสีพื้นโปร่งอีกชั้น ให้ภาพเป็นแค่บรรยากาศจางๆ ไม่แย่งสายตาจากเนื้อหา
+      {/* พื้นหลังภาพเดียวกับหน้าเข้าสู่ระบบ (public/app-bg.jpg เบลอเล็กน้อยไว้แล้ว)
+          ทับด้วยสีพื้นโปร่งไล่ระดับ ด้านบนทึบกว่า (หัวข้อหน้าอยู่ตรงนี้ ต้องอ่านง่าย)
+          ด้านล่างโปร่งกว่า ให้เห็นสวนยางและคลื่นเขียวชัดขึ้น การ์ดสีขาวยังเด่นกว่าภาพ
           fixed = ภาพอยู่กับที่เวลาเลื่อนหน้า ไม่ใช้ background-attachment เพราะมือถือหลายรุ่นไม่รองรับ */}
       <div className="pointer-events-none fixed inset-0 -z-10 print:hidden" aria-hidden>
-        <div className="absolute inset-0 scale-105 bg-[url(/app-bg.jpg)] bg-cover bg-center blur-sm" />
-        <div className="absolute inset-0 bg-page/80" />
+        <div className="absolute inset-0 bg-[url(/app-bg.jpg)] bg-cover bg-center" />
+        <div className="absolute inset-0 bg-gradient-to-b from-page/55 to-page/35" />
       </div>
 
       {/* แถบหัวเว็บเขียวไล่เฉด ตัวหนังสือขาว ตามแบบระบบอื่นของ กยท. */}
