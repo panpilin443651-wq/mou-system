@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
 import scores from "./indicator-scores.json";
 
 // ============================================================================
@@ -17,9 +16,9 @@ import scores from "./indicator-scores.json";
 // ถ้าต้องการให้ไฟล์ทับทุกอย่าง ใส่ --overwrite-edited เพิ่ม
 // ============================================================================
 
-const db = new PrismaClient({
-  adapter: new PrismaNeon({ connectionString: process.env.DATABASE_URL! }),
-});
+// ต่อ Supabase ผ่าน pooler แบบเดียวกับตัวเว็บ (src/lib/db.ts)
+// เดิมใช้ Neon adapter ซึ่งต่อ Supabase ไม่ได้หลังย้ายฐานข้อมูล
+const db = new PrismaClient({ datasourceUrl: process.env.DATABASE_URL });
 
 /** ชื่อที่ตัดช่องว่างออกหมด ใช้เทียบชื่อตัวชี้วัดที่เว้นวรรคไม่เหมือนกัน */
 const squash = (s: string) => s.replace(/\s+/g, "");
