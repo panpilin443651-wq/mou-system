@@ -268,7 +268,11 @@ async function main() {
   for (const row of rows) {
     const old = kept.find((d) => d.code === row.code)?.quarterScores;
     if (old) row.quarterScores = { ...old };
-    row.quarterScores[quarterKey] = fileQuarterScores.get(row) ?? null;
+    // ไฟล์ไตรมาส 4 ไม่มีคอลัมน์ "คะแนนไตรมาส" แยก คะแนนในคอลัมน์ "ไตรมาส 4 / คะแนนปี"
+    // คือคะแนน ณ ไตรมาส 4 ของส่วนงาน จึงใช้เป็นคะแนนไตรมาส 4 ด้วย
+    // (ไฟล์มีหัว "คะแนนไตรมาส" ค้างอยู่คอลัมน์ F แต่ไม่มีตัวเลข จึงดูที่ค่า ไม่ดูที่หัวคอลัมน์)
+    const fromFile = fileQuarterScores.get(row) ?? null;
+    row.quarterScores[quarterKey] = fromFile === null && quarter === 4 ? row.yearScore : fromFile;
   }
 
   // ---- ตรวจความถูกต้องก่อนเขียนไฟล์ ----

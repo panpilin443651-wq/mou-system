@@ -385,7 +385,7 @@ function ScoreHeader({ first, showQuarter, quarter }: { first: string; showQuart
     <>
       <th className={`${TH} w-[14%]`}>{first}</th>
       <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
-      <th className={`${TH} w-[24%]`}>คะแนนไตรมาส</th>
+      <th className={`${TH} w-[24%]`}>คะแนนไตรมาส {quarter}</th>
       <th className={`${TH} w-[24%]`}>คะแนนปี</th>
     </>
   ) : (
