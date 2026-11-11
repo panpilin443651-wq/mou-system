@@ -46,7 +46,15 @@ export default async function MainLayout({ children }: { children: React.ReactNo
   ].filter((l) => l.show);
 
   return (
-    <div className="min-h-screen">
+    <div className="relative isolate min-h-screen">
+      {/* พื้นหลังภาพเดียวกับหน้าเข้าสู่ระบบ (public/app-bg.jpg เบลอไว้แล้ว)
+          ทับด้วยสีพื้นโปร่งอีกชั้น ให้ภาพเป็นแค่บรรยากาศจางๆ ไม่แย่งสายตาจากเนื้อหา
+          fixed = ภาพอยู่กับที่เวลาเลื่อนหน้า ไม่ใช้ background-attachment เพราะมือถือหลายรุ่นไม่รองรับ */}
+      <div className="pointer-events-none fixed inset-0 -z-10 print:hidden" aria-hidden>
+        <div className="absolute inset-0 scale-105 bg-[url(/app-bg.jpg)] bg-cover bg-center blur-sm" />
+        <div className="absolute inset-0 bg-page/80" />
+      </div>
+
       {/* แถบหัวเว็บเขียวไล่เฉด ตัวหนังสือขาว ตามแบบระบบอื่นของ กยท. */}
       <header className="bg-gradient-to-r from-header-from to-header-to text-white shadow-md print:hidden">
         {/* relative จำเป็นสำหรับให้เมนูมือถือเลื่อนลงมาวางตำแหน่งถูกต้อง */}
