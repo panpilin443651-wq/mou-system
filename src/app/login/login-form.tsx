@@ -151,7 +151,7 @@ export function LoginForm() {
         </p>
       )}
 
-      <div className="pt-2">
+      <div className="pt-2 lg:pt-4">
         <SubmitButton />
       </div>
     </form>

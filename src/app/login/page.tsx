@@ -96,17 +96,23 @@ export default async function LoginPage() {
   if (isDemoLoginEnabled()) return <DemoLogin />;
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
-      <LoginBackground />
-
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center gap-8 px-4 py-10 lg:flex-row lg:justify-between lg:gap-16 lg:px-12">
-        {/* ฝั่งซ้าย: ชื่อระบบ บนพื้นขาวโปร่งให้อ่านออกบนภาพพื้นหลัง */}
-        <section className="w-full max-w-xl rounded-3xl bg-white/50 lg:max-w-2xl px-6 py-8 backdrop-blur-sm sm:px-10">
+    // พื้นหลังเป็นภาพสวนยางพารา-ภูเขา (public/login-bg.jpg) ตำแหน่งข้อความและการ์ด
+    // บนจอกว้างวางตามสัดส่วนของภาพต้นแบบ ใช้หน่วย vw จึงคงที่เมื่อย่อ-ขยายหน้าจอ
+    <div
+      className="relative isolate flex min-h-screen flex-col overflow-hidden bg-cover bg-[position:20%_center] lg:bg-center"
+      style={{
+        backgroundImage:
+          "url(/login-bg.jpg), linear-gradient(180deg, #3f9fe6 0%, #94cdf3 40%, #cfe9c4 70%, #2f8a3e 100%)",
+      }}
+    >
+      <main className="flex w-full flex-1 flex-col items-center justify-center gap-8 px-4 py-10 lg:flex-row lg:justify-between lg:gap-10 lg:py-12 lg:pl-[15vw] lg:pr-[10vw]">
+        {/* ฝั่งซ้าย: ชื่อระบบ จอเล็กมีพื้นขาวโปร่งให้อ่านออก จอกว้างวางบนหมอกขาวในภาพ */}
+        <section className="w-full max-w-xl rounded-3xl bg-white/60 px-6 py-7 backdrop-blur-sm sm:px-10 lg:max-w-none lg:flex-1 lg:-translate-y-[4.5vh] lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <MouWordmark />
-          <h1 className="mt-7 text-xl font-bold leading-snug text-brand-800 sm:text-3xl">
+          <h1 className="mt-6 text-xl font-bold leading-snug text-brand-800 sm:text-3xl lg:mt-[2.6vw] lg:text-[clamp(1.5rem,2.1vw,2.4rem)]">
             ระบบรายงานผลตามบันทึกข้อตกลง
           </h1>
-          <p className="mt-3 text-base leading-relaxed text-slate-800 sm:text-xl">
+          <p className="mt-3 text-base leading-relaxed text-slate-900 sm:text-xl lg:mt-[1.2vw] lg:text-[clamp(1.05rem,1.55vw,1.7rem)]">
             การประเมินผลการดำเนินงานของส่วนงาน
             <br />
             และหน่วยงานที่ไม่สังกัดส่วนงาน
@@ -114,23 +120,23 @@ export default async function LoginPage() {
         </section>
 
         {/* ฝั่งขวา: การ์ดเข้าสู่ระบบแบบกระจกฝ้า */}
-        <section className="w-full max-w-md rounded-3xl border border-white/70 bg-white/85 px-6 py-8 shadow-2xl shadow-brand-900/20 backdrop-blur-md sm:px-10 sm:py-10">
-          <div className="mb-7 flex items-center gap-4">
-            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-800 text-white sm:h-[4.5rem] sm:w-[4.5rem]">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-9 sm:w-9" fill="currentColor" aria-hidden>
+        <section className="w-full max-w-md shrink-0 rounded-3xl border border-white/80 bg-white/85 px-6 py-8 shadow-2xl shadow-brand-900/20 backdrop-blur-md sm:px-10 sm:py-10 lg:w-[33vw] lg:min-w-[420px] lg:max-w-[600px] lg:flex lg:min-h-[35.3vw] lg:flex-col lg:justify-center lg:px-[2.9vw] lg:py-[2.4vw]">
+          <div className="mb-7 flex items-center gap-5 lg:mb-[2.6vw] lg:pl-[1.5vw]">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-900 text-white sm:h-[4.75rem] sm:w-[4.75rem]">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-10 sm:w-10" fill="currentColor" aria-hidden>
                 <circle cx="12" cy="7.5" r="4.5" />
                 <path d="M3 21c0-4.4 4-7.5 9-7.5s9 3.1 9 7.5z" />
               </svg>
             </span>
             <div>
-              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">เข้าสู่ระบบ</h2>
-              <p className="mt-1 text-sm text-slate-600">กรุณากรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
+              <h2 className="text-2xl font-bold text-brand-900 sm:text-[2.1rem]">เข้าสู่ระบบ</h2>
+              <p className="mt-1 text-sm text-slate-700">กรุณากรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
             </div>
           </div>
 
           <LoginForm />
 
-          <p className="mt-8 border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
+          <p className="mt-8 border-t border-slate-200 pt-6 lg:mt-[2.4vw] lg:pt-[2.2vw] text-center text-sm text-slate-800">
             © สงวนลิขสิทธิ์ โดย การยางแห่งประเทศไทย
           </p>
         </section>
@@ -142,9 +148,9 @@ export default async function LoginPage() {
 /** ตัวอักษร MOU สีเขียวเข้ม มีเส้นโค้งสีทองพาดด้านบนขวาและเส้นทองขีดใต้ */
 function MouWordmark() {
   return (
-    <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-      <div className="relative inline-block pb-2">
-        <svg viewBox="0 0 200 60" className="absolute -right-6 -top-6 h-14 w-32 sm:h-16 sm:w-40" fill="none" aria-hidden>
+    <div className="flex flex-wrap items-center gap-x-[1.4vw] lg:flex-nowrap gap-y-2">
+      <div className="relative inline-block pb-2 lg:pb-[0.6vw]">
+        <svg viewBox="0 0 200 60" className="absolute -right-[18%] -top-[22%] h-[45%] w-[85%]" fill="none" aria-hidden>
           <defs>
             <linearGradient id="mou-gold" x1="0" x2="1">
               <stop offset="0" stopColor="#f5b81f" stopOpacity="0" />
@@ -152,45 +158,17 @@ function MouWordmark() {
               <stop offset="1" stopColor="#fdd34d" />
             </linearGradient>
           </defs>
-          <path d="M10 48 C 70 4, 160 -2, 192 40 C 165 16, 95 14, 18 52 Z" fill="url(#mou-gold)" />
+          <path d="M10 52 C 70 6, 160 -2, 196 34 C 165 14, 95 14, 18 56 Z" fill="url(#mou-gold)" />
         </svg>
-        <span className="relative block text-7xl font-extrabold leading-none tracking-tight text-brand-900 sm:text-8xl">
+        <span className="relative block text-7xl font-extrabold leading-none tracking-tight text-brand-900 sm:text-8xl lg:text-[clamp(4.5rem,6.9vw,8rem)]">
           MOU
         </span>
-        <span className="absolute inset-x-0 bottom-0 h-1 rounded-full bg-gradient-to-r from-accent-500 via-accent-400 to-accent-200" />
+        <span className="absolute inset-x-0 bottom-0 h-1 rounded-full bg-gradient-to-r from-accent-600 via-accent-400 to-accent-200 lg:h-[0.3vw]" />
       </div>
-      <div className="pb-3 text-base font-semibold leading-tight text-brand-800 sm:text-xl">
-        <span className="block tracking-wide">PERFORMANCE AGREEMENT</span>
-        <span className="block font-medium">Management System</span>
+      <div className="text-base font-semibold leading-snug text-brand-800 sm:text-xl lg:text-[clamp(1rem,1.38vw,1.55rem)]">
+        <span className="block">PERFORMANCE AGREEMENT</span>
+        <span className="block">Management System</span>
       </div>
-    </div>
-  );
-}
-
-/**
- * พื้นหลังหน้าเข้าสู่ระบบ: ท้องฟ้า เนินเขาเขียว และคลื่นเขียว-ทองด้านล่าง
- * ถ้าต้องการใช้ภาพถ่ายจริง (เช่น สวนยางพารา) ให้วางไฟล์ไว้ที่ public/login-bg.jpg
- * ภาพจะทับท้องฟ้าที่วาดไว้อัตโนมัติ ถ้าไม่มีไฟล์ก็แสดงภาพวาดนี้แทน
- */
-function LoginBackground() {
-  return (
-    <div className="absolute inset-0 -z-10" aria-hidden>
-      <div
-        className="absolute inset-0 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url(/login-bg.jpg), radial-gradient(circle at 10% 6%, rgba(255,250,205,0.95), rgba(255,250,205,0) 26%), linear-gradient(180deg, #3f9fe6 0%, #94cdf3 36%, #e2f2fb 56%, #c9e7bd 68%, #6fbd5e 100%)",
-        }}
-      />
-      <svg className="absolute inset-x-0 bottom-0 h-[58%] w-full" viewBox="0 0 1440 600" preserveAspectRatio="none">
-        <path d="M0 260 C 240 170, 420 230, 640 200 S 1100 120, 1440 180 V600 H0Z" fill="#8cc8a0" opacity="0.55" />
-        <path d="M0 330 C 260 250, 520 320, 760 280 S 1200 220, 1440 260 V600 H0Z" fill="#4f9f5c" opacity="0.75" />
-        <path d="M0 400 C 300 330, 600 390, 900 350 S 1300 320, 1440 340 V600 H0Z" fill="#2f8a3e" />
-        <path d="M0 470 C 360 420, 760 500, 1100 440 S 1380 400, 1440 410 V600 H0Z" fill="#dff2df" opacity="0.9" />
-        <path d="M0 500 C 420 460, 820 540, 1160 470 S 1400 440, 1440 445 V600 H0Z" fill="#f5b81f" opacity="0.85" />
-        <path d="M0 515 C 420 480, 820 560, 1160 490 S 1400 465, 1440 470 V600 H0Z" fill="#1b7a3b" />
-        <path d="M0 555 C 400 530, 900 590, 1440 520 V600 H0Z" fill="#0c5a2e" />
-      </svg>
     </div>
   );
 }
