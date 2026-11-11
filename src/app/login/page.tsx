@@ -96,52 +96,101 @@ export default async function LoginPage() {
   if (isDemoLoginEnabled()) return <DemoLogin />;
 
   return (
-    <div className="min-h-screen">
-      {/* แถบหัวเว็บ บอกว่าเป็นระบบของหน่วยงานไหนตั้งแต่ก่อนเข้าสู่ระบบ
-          เขียวไล่เฉด ตัวหนังสือขาว เหมือนหน้าหลังเข้าสู่ระบบ
-          ใช้ตราแบบไม่มีตัวหนังสือ เพราะขนาดเล็กเกินกว่าจะอ่านชื่อในตราออก */}
-      <header className="bg-gradient-to-r from-header-from to-header-to text-white shadow-md">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white ring-2 ring-white/70">
-            <Logo size={40} className="h-10 w-10" />
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-white">การยางแห่งประเทศไทย</p>
-            <p className="truncate text-xs text-white/80">Rubber Authority of Thailand</p>
-          </div>
-        </div>
-      </header>
+    <div className="relative isolate flex min-h-screen flex-col overflow-hidden">
+      <LoginBackground />
 
-      <main className="flex justify-center px-4 py-10 sm:py-16">
-        <div className="w-full max-w-md">
-          {/* overflow-hidden จำเป็น เพื่อให้เส้นคั่นในการ์ดไม่ทะลุมุมโค้ง */}
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-surface shadow-sm">
-            <div className="border-b border-slate-100 px-6 py-7 text-center sm:px-9">
-              {/* ตราฉบับเต็มพร้อมชื่อหน่วยงานไทย-อังกฤษ */}
-              <Logo variant="full" size={96} className="mx-auto mb-3 h-24 w-24" />
-              <h1 className="text-lg font-bold leading-relaxed sm:text-xl">
-                ระบบรายงานผลการดำเนินงาน
-                <br />
-                ตามบันทึกข้อตกลงของส่วนงาน
-                <br />
-                และหน่วยงานที่ไม่สังกัดส่วนงาน
-              </h1>
-            </div>
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col items-center justify-center gap-8 px-4 py-10 lg:flex-row lg:justify-between lg:gap-16 lg:px-12">
+        {/* ฝั่งซ้าย: ชื่อระบบ บนพื้นขาวโปร่งให้อ่านออกบนภาพพื้นหลัง */}
+        <section className="w-full max-w-xl rounded-3xl bg-white/50 lg:max-w-2xl px-6 py-8 backdrop-blur-sm sm:px-10">
+          <MouWordmark />
+          <h1 className="mt-7 text-xl font-bold leading-snug text-brand-800 sm:text-3xl">
+            ระบบรายงานผลตามบันทึกข้อตกลง
+          </h1>
+          <p className="mt-3 text-base leading-relaxed text-slate-800 sm:text-xl">
+            การประเมินผลการดำเนินงานของส่วนงาน
+            <br />
+            และหน่วยงานที่ไม่สังกัดส่วนงาน
+          </p>
+        </section>
 
-            <div className="px-6 py-7 sm:px-9">
-              <LoginForm />
-
-              <p className="mt-5 rounded-lg bg-brand-50 px-4 py-3 text-xs leading-relaxed text-brand-ink">
-                ระบบนี้ใช้สำหรับเจ้าหน้าที่ที่ได้รับสิทธิ์เท่านั้น การเข้าใช้งานทุกครั้งจะถูกบันทึกไว้
-              </p>
-
-              <p className="mt-5 text-center text-xs text-slate-500">
-                หากเข้าใช้งานไม่ได้ กรุณาติดต่อผู้ดูแลระบบ
-              </p>
+        {/* ฝั่งขวา: การ์ดเข้าสู่ระบบแบบกระจกฝ้า */}
+        <section className="w-full max-w-md rounded-3xl border border-white/70 bg-white/85 px-6 py-8 shadow-2xl shadow-brand-900/20 backdrop-blur-md sm:px-10 sm:py-10">
+          <div className="mb-7 flex items-center gap-4">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-brand-800 text-white sm:h-[4.5rem] sm:w-[4.5rem]">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 sm:h-9 sm:w-9" fill="currentColor" aria-hidden>
+                <circle cx="12" cy="7.5" r="4.5" />
+                <path d="M3 21c0-4.4 4-7.5 9-7.5s9 3.1 9 7.5z" />
+              </svg>
+            </span>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900 sm:text-3xl">เข้าสู่ระบบ</h2>
+              <p className="mt-1 text-sm text-slate-600">กรุณากรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
             </div>
           </div>
-        </div>
+
+          <LoginForm />
+
+          <p className="mt-8 border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
+            © สงวนลิขสิทธิ์ โดย การยางแห่งประเทศไทย
+          </p>
+        </section>
       </main>
+    </div>
+  );
+}
+
+/** ตัวอักษร MOU สีเขียวเข้ม มีเส้นโค้งสีทองพาดด้านบนขวาและเส้นทองขีดใต้ */
+function MouWordmark() {
+  return (
+    <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
+      <div className="relative inline-block pb-2">
+        <svg viewBox="0 0 200 60" className="absolute -right-6 -top-6 h-14 w-32 sm:h-16 sm:w-40" fill="none" aria-hidden>
+          <defs>
+            <linearGradient id="mou-gold" x1="0" x2="1">
+              <stop offset="0" stopColor="#f5b81f" stopOpacity="0" />
+              <stop offset="0.45" stopColor="#e0a00b" />
+              <stop offset="1" stopColor="#fdd34d" />
+            </linearGradient>
+          </defs>
+          <path d="M10 48 C 70 4, 160 -2, 192 40 C 165 16, 95 14, 18 52 Z" fill="url(#mou-gold)" />
+        </svg>
+        <span className="relative block text-7xl font-extrabold leading-none tracking-tight text-brand-900 sm:text-8xl">
+          MOU
+        </span>
+        <span className="absolute inset-x-0 bottom-0 h-1 rounded-full bg-gradient-to-r from-accent-500 via-accent-400 to-accent-200" />
+      </div>
+      <div className="pb-3 text-base font-semibold leading-tight text-brand-800 sm:text-xl">
+        <span className="block tracking-wide">PERFORMANCE AGREEMENT</span>
+        <span className="block font-medium">Management System</span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * พื้นหลังหน้าเข้าสู่ระบบ: ท้องฟ้า เนินเขาเขียว และคลื่นเขียว-ทองด้านล่าง
+ * ถ้าต้องการใช้ภาพถ่ายจริง (เช่น สวนยางพารา) ให้วางไฟล์ไว้ที่ public/login-bg.jpg
+ * ภาพจะทับท้องฟ้าที่วาดไว้อัตโนมัติ ถ้าไม่มีไฟล์ก็แสดงภาพวาดนี้แทน
+ */
+function LoginBackground() {
+  return (
+    <div className="absolute inset-0 -z-10" aria-hidden>
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url(/login-bg.jpg), radial-gradient(circle at 10% 6%, rgba(255,250,205,0.95), rgba(255,250,205,0) 26%), linear-gradient(180deg, #3f9fe6 0%, #94cdf3 36%, #e2f2fb 56%, #c9e7bd 68%, #6fbd5e 100%)",
+        }}
+      />
+      <svg className="absolute inset-x-0 bottom-0 h-[58%] w-full" viewBox="0 0 1440 600" preserveAspectRatio="none">
+        <path d="M0 260 C 240 170, 420 230, 640 200 S 1100 120, 1440 180 V600 H0Z" fill="#8cc8a0" opacity="0.55" />
+        <path d="M0 330 C 260 250, 520 320, 760 280 S 1200 220, 1440 260 V600 H0Z" fill="#4f9f5c" opacity="0.75" />
+        <path d="M0 400 C 300 330, 600 390, 900 350 S 1300 320, 1440 340 V600 H0Z" fill="#2f8a3e" />
+        <path d="M0 470 C 360 420, 760 500, 1100 440 S 1380 400, 1440 410 V600 H0Z" fill="#dff2df" opacity="0.9" />
+        <path d="M0 500 C 420 460, 820 540, 1160 470 S 1400 440, 1440 445 V600 H0Z" fill="#f5b81f" opacity="0.85" />
+        <path d="M0 515 C 420 480, 820 560, 1160 490 S 1400 465, 1440 470 V600 H0Z" fill="#1b7a3b" />
+        <path d="M0 555 C 400 530, 900 590, 1440 520 V600 H0Z" fill="#0c5a2e" />
+      </svg>
     </div>
   );
 }

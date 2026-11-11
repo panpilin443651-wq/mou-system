@@ -5,7 +5,7 @@ import "./globals.css";
 // ฟอนต์ไทยที่อ่านง่ายบนหน้าจอ - Next.js จะดาวน์โหลดมาเก็บไว้ในโปรเจกต์ให้เอง
 const notoSansThai = Noto_Sans_Thai({
   subsets: ["thai", "latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
 });
 
