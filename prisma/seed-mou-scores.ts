@@ -9,8 +9,8 @@ import scores from "./indicator-scores.json";
 // ลำดับงานทั้งหมดเมื่อได้ไฟล์ใหม่:
 //   1. วางไฟล์ทับใน "คะแนน MOU/"
 //   2. npx tsx prisma/import-indicator-scores.ts --apply   Excel -> JSON
-//   3. npx tsx prisma/seed-mou-scores.ts                   ดูก่อนว่าจะเปลี่ยนอะไร
-//   4. npx tsx prisma/seed-mou-scores.ts --apply           เขียนลงฐานข้อมูล
+//   3. npx tsx prisma/seed-mou-scores.ts --year=2569       ดูก่อนว่าจะเปลี่ยนอะไร
+//   4. npx tsx prisma/seed-mou-scores.ts --year=2569 --apply   เขียนลงฐานข้อมูล
 //
 // ค่าเริ่มต้นจะ "ไม่ทับ" แถวที่แอดมินแก้ไว้ในระบบแล้ว (ดูที่ updatedById)
 // ถ้าต้องการให้ไฟล์ทับทุกอย่าง ใส่ --overwrite-edited เพิ่ม
@@ -27,8 +27,14 @@ async function main() {
   const apply = process.argv.includes("--apply");
   const overwriteEdited = process.argv.includes("--overwrite-edited");
 
-  const fiscalYear = await db.fiscalYear.findFirst({ where: { isActive: true } });
-  if (!fiscalYear) throw new Error("ยังไม่ได้ตั้งปีบัญชีที่ใช้งานอยู่");
+  // ปีบัญชีของไฟล์คะแนน ต้องระบุเองเสมอ ไม่ใช้ "ปีที่ใช้งานอยู่"
+  // เพราะปีที่ใช้งานอยู่ในระบบอาจเป็นปีถัดไปแล้ว (เคยเขียนคะแนนปี 2569 ลงปี 2570 ผิดปีมาแล้ว)
+  const yearArg = process.argv.find((a) => a.startsWith("--year="));
+  if (!yearArg) throw new Error("ระบุปีบัญชีของไฟล์คะแนนด้วย เช่น --year=2569");
+  const year = Number(yearArg.slice("--year=".length));
+  const fiscalYear = await db.fiscalYear.findFirst({ where: { year } });
+  if (!fiscalYear) throw new Error(`ไม่พบปีบัญชี ${year} ในระบบ`);
+  console.log(`ปีบัญชีปลายทาง: ${fiscalYear.year}`);
 
   const indicators = await db.indicator.findMany({
     where: { fiscalYearId: fiscalYear.id },
