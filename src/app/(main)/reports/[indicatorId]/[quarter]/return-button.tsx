@@ -23,7 +23,7 @@ function Button({ disabled }: { disabled: boolean }) {
       onClick={(e) => {
         if (!hasAnyComment(e.currentTarget.form)) {
           e.preventDefault();
-          window.alert("กรุณาเขียนข้อสังเกตในกล่องสีแดงอย่างน้อย 1 กล่องก่อนตีกลับ");
+          window.alert("กรุณาเขียนข้อสังเกต กปม. ใต้ขั้นตอนที่ต้องแก้ อย่างน้อย 1 ขั้นตอนก่อนตีกลับ");
           return;
         }
         if (!hasReturnDueDate(e.currentTarget.form)) {
@@ -31,7 +31,7 @@ function Button({ disabled }: { disabled: boolean }) {
           window.alert("กรุณาเลือกวันที่ที่ต้องแก้ไขให้เสร็จก่อนตีกลับ");
           return;
         }
-        if (!window.confirm("ตีกลับผลการดำเนินงานพร้อมข้อสังเกตที่เขียนไว้?")) e.preventDefault();
+        if (!window.confirm("ตีกลับผลการดำเนินงานเฉพาะขั้นตอนที่เขียนข้อสังเกต กปม. ไว้?")) e.preventDefault();
       }}
       className="min-h-11 rounded-lg bg-red-700 px-5 text-sm font-medium text-white transition hover:bg-red-800 disabled:cursor-not-allowed disabled:opacity-50"
     >
@@ -63,9 +63,9 @@ export function ReturnButton({
         ตีกลับผลการดำเนินงาน
       </h2>
       <p className="mt-1 text-sm text-red-900">
-        ผลไตรมาส {quarter} · เขียนในกล่อง <strong>{COMMENT_HEADING.report}</strong> สีแดงใต้เป้าหมายตัวชี้วัด
-        และใต้ค่าเกณฑ์ระดับที่ต้องแก้ (อย่างน้อย 1 กล่อง) แล้วกดตีกลับผล ·
-        ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่งและเห็นข้อสังเกตใต้แต่ละส่วน
+        ผลไตรมาส {quarter} · ตีกลับเป็นรายขั้นตอน: กด <strong>ตีกลับขั้นตอนนี้</strong> ใต้ขั้นตอน/รายการที่ต้องแก้
+        แล้วเขียน <strong>{COMMENT_HEADING.report}</strong> (อย่างน้อย 1 ขั้นตอน) จากนั้นกดตีกลับผล ·
+        ขั้นตอนที่ไม่ถูกตีกลับจะทึบไว้ ส่วนงานแก้ไม่ได้ · ผู้รายงานและหัวหน้าส่วนงานจะได้รับแจ้งเตือนที่กระดิ่ง
       </p>
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <ReturnDueInput />

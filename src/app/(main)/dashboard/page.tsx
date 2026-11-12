@@ -55,6 +55,15 @@ export default async function DashboardPage() {
   // เปลี่ยนปีบัญชีที่ ตั้งค่าระบบ แล้วหน้านี้เปลี่ยนตามทันที ไม่ค้างเป็นปีเก่า
   const scores = departmentScoresFor(data.fiscalYear?.year ?? null);
 
+  // ไตรมาส 4 ไฟล์ของส่วนกลางมีแค่ "คะแนนปี" (คะแนน ณ ไตรมาส 4) ไม่มีคะแนนไตรมาสแยก
+  // ถ้าไตรมาสล่าสุดไม่มีคะแนนไตรมาสเลยสักส่วนงาน ให้ซ่อนคอลัมน์ ไม่โชว์ "–" ทั้งคอลัมน์
+  const showQuarterScore =
+    !!scores &&
+    scores.departments.some(
+      (d) => d.quarterScores[String(scores.latestQuarter) as QuarterKey] !== null
+    );
+  const tableCols = showQuarterScore ? 4 : 3;
+
   // ผู้รับผิดชอบส่วนงานเห็นเฉพาะแถวของตัวเอง ตามกฎการมองเห็นเดียวกับทั้งระบบ
   // ส่วนกลางและผู้บริหารเห็นทุกแถวเพื่อเปรียบเทียบกัน
   const visibleScores = !scores
@@ -100,7 +109,7 @@ export default async function DashboardPage() {
       value: averageScore === null ? "–" : averageScore.toFixed(3),
       hint: !scores
         ? `ยังไม่มีคะแนนของปีบัญชี ${data.fiscalYear?.year ?? "-"}`
-        : `คะแนนปี เต็ม 5 · สะสมถึงไตรมาส ${scores.latestQuarter}${
+        : `คะแนนปี เต็ม 5 · ณ ไตรมาส ${scores.latestQuarter}${
             isDepartmentRole(user.role) ? "" : ` · ${visibleScores.length} ส่วนงาน`
           }`,
     },
@@ -191,7 +200,7 @@ export default async function DashboardPage() {
               />
             </div>
             <p className={SECTION_FOOT}>
-              ปีบัญชี {scores.fiscalYear} · สะสมถึงไตรมาส {scores.latestQuarter} ·
+              ปีบัญชี {scores.fiscalYear} · คะแนน ณ ไตรมาส {scores.latestQuarter} ·
               เรียงจากคะแนนมากไปน้อย · คะแนนเต็ม 5
             </p>
           </section>
@@ -204,7 +213,7 @@ export default async function DashboardPage() {
           <div className={SECTION_HEAD}>
             <h2 className="font-semibold">คะแนนภาพรวมของแต่ละส่วนงาน</h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              ปีบัญชี {scores.fiscalYear} · ไตรมาส {scores.latestQuarter} ·
+              ปีบัญชี {scores.fiscalYear} · คะแนน ณ ไตรมาส {scores.latestQuarter} ·
               เรียงตามคะแนนปี · คะแนนเต็ม 5 ·
               จากไฟล์สรุปของส่วนกลาง{" "}
               <span className="text-slate-500">({scores.source})</span>
@@ -215,10 +224,7 @@ export default async function DashboardPage() {
             <table className={TABLE}>
               <thead>
                 <tr>
-                  <th className={`${TH} w-[14%]`}>ลำดับ</th>
-                  <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
-                  <th className={`${TH} w-[24%]`}>คะแนนไตรมาส</th>
-                  <th className={`${TH} w-[24%]`}>คะแนนปี</th>
+                  <ScoreHeader first="ลำดับ" showQuarter={showQuarterScore} quarter={scores.latestQuarter} />
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +254,7 @@ export default async function DashboardPage() {
                         </span>
                       )}
                     </td>
-                    <QuarterCell d={d} scores={scores} />
+                    {showQuarterScore && <QuarterCell d={d} scores={scores} />}
                     <YearCell d={d} />
                   </tr>
                 ))}
@@ -258,8 +264,9 @@ export default async function DashboardPage() {
 
           <p className={SECTION_FOOT}>
             ตัวเลขชุดนี้มาจากไฟล์สรุปของส่วนกลาง ไม่ได้คำนวณจากผลที่กรอกในระบบ
-            จึงไม่เปลี่ยนตามการกรอกผลรายไตรมาส · คะแนนไตรมาสเทียบกับแผนของไตรมาสนั้น ·
-            คะแนนปีเทียบกับแผนทั้งปี สะสมถึงไตรมาสล่าสุด
+            จึงไม่เปลี่ยนตามการกรอกผลรายไตรมาส ·{" "}
+            {showQuarterScore && "คะแนนไตรมาสเทียบกับแผนของไตรมาสนั้น · "}
+            คะแนนปีเทียบกับแผนทั้งปี ณ ไตรมาส {scores.latestQuarter}
           </p>
         </section>
 
@@ -270,7 +277,7 @@ export default async function DashboardPage() {
           <div className={SECTION_HEAD}>
             <h2 className="font-semibold">คะแนนภาพรวมส่วนงานแยกตามสายบังคับบัญชา</h2>
             <p className="mt-0.5 text-sm text-slate-600">
-              ปีบัญชี {scores.fiscalYear} · ไตรมาส {scores.latestQuarter} ·
+              ปีบัญชี {scores.fiscalYear} · คะแนน ณ ไตรมาส {scores.latestQuarter} ·
               คะแนนเต็ม 5 ·
               แต่ละสายเรียงจากคะแนนมากไปน้อย
             </p>
@@ -306,16 +313,13 @@ export default async function DashboardPage() {
                   <table className={TABLE}>
                     <thead>
                       <tr>
-                        <th className={`${TH} w-[14%]`}>ลำดับรวม</th>
-                        <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
-                        <th className={`${TH} w-[24%]`}>คะแนนไตรมาส</th>
-                        <th className={`${TH} w-[24%]`}>คะแนนปี</th>
+                        <ScoreHeader first="ลำดับรวม" showQuarter={showQuarterScore} quarter={scores.latestQuarter} />
                       </tr>
                     </thead>
                     <tbody>
                       {line.departments.length === 0 ? (
                         <tr>
-                          <td colSpan={4} className={`${TD} text-slate-500`}>
+                          <td colSpan={tableCols} className={`${TD} text-slate-500`}>
                             ไม่มีส่วนงานในสายนี้
                           </td>
                         </tr>
@@ -331,7 +335,7 @@ export default async function DashboardPage() {
                                 </span>
                               )}
                             </td>
-                            <QuarterCell d={d} scores={scores} />
+                            {showQuarterScore && <QuarterCell d={d} scores={scores} />}
                             <YearCell d={d} />
                           </tr>
                         ))
@@ -370,6 +374,27 @@ const SECTION_FOOT = "border-t border-slate-200 px-5 py-3 text-xs text-slate-500
 function rowTone(isMine: boolean, index: number): string {
   if (isMine) return "bg-accent-50";
   return index % 2 === 1 ? "bg-slate-50 hover:bg-brand-50" : "bg-surface hover:bg-brand-50";
+}
+
+/**
+ * หัวตารางคะแนน ใช้ร่วมกันทั้งตารางรวมและตารางแยกสาย ให้คอลัมน์ตรงแนวกัน
+ * ไม่มีคะแนนไตรมาส (เช่น ไตรมาส 4) จะเหลือ 3 คอลัมน์ และหัวคะแนนปีบอกว่าเป็นคะแนน ณ ไตรมาสไหน
+ */
+function ScoreHeader({ first, showQuarter, quarter }: { first: string; showQuarter: boolean; quarter: number }) {
+  return showQuarter ? (
+    <>
+      <th className={`${TH} w-[14%]`}>{first}</th>
+      <th className={`${TH} w-[38%]`}>ส่วนงาน</th>
+      <th className={`${TH} w-[24%]`}>คะแนนไตรมาส {quarter}</th>
+      <th className={`${TH} w-[24%]`}>คะแนนปี</th>
+    </>
+  ) : (
+    <>
+      <th className={`${TH} w-[14%]`}>{first}</th>
+      <th className={`${TH} w-[50%]`}>ส่วนงาน</th>
+      <th className={`${TH} w-[36%]`}>คะแนนปี ณ ไตรมาส {quarter}</th>
+    </>
+  );
 }
 
 /** คะแนนไตรมาสล่าสุดที่นำเข้า */

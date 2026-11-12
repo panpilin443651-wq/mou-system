@@ -44,8 +44,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -59,7 +59,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -86,8 +86,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -101,7 +101,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -128,8 +128,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.3333,
+              "score": 2.3333
             }
           ],
           "cumulative": [
@@ -143,7 +143,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.2333
             }
           ],
           "note": null
@@ -212,8 +212,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -227,7 +227,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -254,8 +254,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -269,7 +269,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -296,8 +296,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -311,7 +311,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -338,8 +338,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -353,7 +353,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -380,8 +380,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.58,
+              "score": 4.58
             }
           ],
           "cumulative": [
@@ -395,7 +395,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.458
             }
           ],
           "note": null
@@ -422,8 +422,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.9364,
+              "score": 3.9364
             }
           ],
           "cumulative": [
@@ -437,7 +437,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3936
             }
           ],
           "note": null
@@ -464,8 +464,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.5,
+              "score": 3.5
             }
           ],
           "cumulative": [
@@ -479,7 +479,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -506,8 +506,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -521,7 +521,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -540,7 +540,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.035
           }
         ]
       }
@@ -583,8 +583,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -598,7 +598,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -625,8 +625,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -640,7 +640,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -667,8 +667,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -682,7 +682,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -709,8 +709,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -724,7 +724,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -751,8 +751,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -766,7 +766,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -793,8 +793,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.38,
+              "score": 4.38
             }
           ],
           "cumulative": [
@@ -808,7 +808,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.438
             }
           ],
           "note": null
@@ -835,8 +835,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.2545,
+              "score": 3.2545
             }
           ],
           "cumulative": [
@@ -850,7 +850,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3255
             }
           ],
           "note": null
@@ -877,8 +877,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -892,7 +892,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -918,9 +918,9 @@
             },
             {
               "quarter": 4,
-              "plan": null,
-              "actual": null,
-              "score": null
+              "plan": 5,
+              "actual": 3.75,
+              "score": 3.75
             }
           ],
           "cumulative": [
@@ -934,7 +934,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1875
             }
           ],
           "note": null
@@ -953,7 +953,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.051
           }
         ]
       }
@@ -996,8 +996,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -1011,7 +1011,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -1080,8 +1080,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1095,7 +1095,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -1122,8 +1122,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1137,7 +1137,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -1164,8 +1164,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1179,7 +1179,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -1206,8 +1206,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1221,7 +1221,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 2
             }
           ],
           "note": null
@@ -1248,8 +1248,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.7166,
+              "score": 4.7166
             }
           ],
           "cumulative": [
@@ -1263,7 +1263,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4717
             }
           ],
           "note": null
@@ -1290,8 +1290,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3182,
+              "score": 4.3182
             }
           ],
           "cumulative": [
@@ -1305,7 +1305,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4318
             }
           ],
           "note": null
@@ -1332,8 +1332,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.75,
+              "score": 3.75
             }
           ],
           "cumulative": [
@@ -1347,7 +1347,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.375
             }
           ],
           "note": null
@@ -1366,7 +1366,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.3785
           }
         ]
       }
@@ -1409,8 +1409,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -1424,7 +1424,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -1493,8 +1493,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1508,7 +1508,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -1535,8 +1535,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1550,7 +1550,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -1577,8 +1577,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1592,7 +1592,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -1619,8 +1619,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1634,7 +1634,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 2
             }
           ],
           "note": null
@@ -1661,8 +1661,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1676,7 +1676,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -1703,8 +1703,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.2273,
+              "score": 4.2273
             }
           ],
           "cumulative": [
@@ -1718,7 +1718,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4227
             }
           ],
           "note": null
@@ -1745,8 +1745,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -1760,7 +1760,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": null
@@ -1779,7 +1779,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.3227
           }
         ]
       }
@@ -1822,8 +1822,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -1837,7 +1837,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -1906,8 +1906,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -1921,7 +1921,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -1948,8 +1948,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -1963,7 +1963,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -1990,8 +1990,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2005,7 +2005,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -2032,8 +2032,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2047,7 +2047,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 2
             }
           ],
           "note": null
@@ -2074,8 +2074,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.33,
+              "score": 4.33
             }
           ],
           "cumulative": [
@@ -2089,7 +2089,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.433
             }
           ],
           "note": null
@@ -2116,8 +2116,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3409,
+              "score": 4.3409
             }
           ],
           "cumulative": [
@@ -2131,7 +2131,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4341
             }
           ],
           "note": null
@@ -2158,8 +2158,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -2173,7 +2173,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -2192,7 +2192,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.1621
           }
         ]
       }
@@ -2235,8 +2235,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2250,7 +2250,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -2277,8 +2277,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2292,7 +2292,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -2319,8 +2319,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2334,7 +2334,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -2403,8 +2403,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2418,7 +2418,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -2445,8 +2445,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2460,7 +2460,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -2487,8 +2487,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2502,7 +2502,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -2529,8 +2529,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2544,7 +2544,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -2571,8 +2571,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.6333,
+              "score": 4.6333
             }
           ],
           "cumulative": [
@@ -2586,7 +2586,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4633
             }
           ],
           "note": null
@@ -2613,8 +2613,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -2628,7 +2628,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": null
@@ -2655,8 +2655,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.25,
+              "score": 3.25
             }
           ],
           "cumulative": [
@@ -2670,7 +2670,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.325
             }
           ],
           "note": null
@@ -2689,7 +2689,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 2.9083
           }
         ]
       }
@@ -2732,8 +2732,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2747,7 +2747,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -2774,8 +2774,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2789,7 +2789,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -2816,8 +2816,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2831,7 +2831,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -2900,8 +2900,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2915,7 +2915,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -2942,8 +2942,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -2957,7 +2957,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -2984,8 +2984,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -2999,7 +2999,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -3026,8 +3026,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -3041,7 +3041,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -3068,8 +3068,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.8,
+              "score": 4.8
             }
           ],
           "cumulative": [
@@ -3083,7 +3083,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.48
             }
           ],
           "note": null
@@ -3110,8 +3110,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.7955,
+              "score": 2.7955
             }
           ],
           "cumulative": [
@@ -3125,7 +3125,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.2796
             }
           ],
           "note": null
@@ -3151,9 +3151,9 @@
             },
             {
               "quarter": 4,
-              "plan": null,
-              "actual": null,
-              "score": null
+              "plan": 5,
+              "actual": 3.5,
+              "score": 3.5
             }
           ],
           "cumulative": [
@@ -3167,7 +3167,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -3186,7 +3186,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 2.5296
           }
         ]
       }
@@ -3229,8 +3229,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -3244,7 +3244,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -3271,8 +3271,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -3286,7 +3286,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -3313,8 +3313,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3328,7 +3328,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -3397,8 +3397,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3412,7 +3412,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -3439,8 +3439,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1.468,
+              "score": 1.468
             }
           ],
           "cumulative": [
@@ -3454,7 +3454,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1028
             }
           ],
           "note": null
@@ -3481,8 +3481,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3496,7 +3496,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -3523,8 +3523,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3538,7 +3538,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -3565,8 +3565,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3580,7 +3580,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -3607,8 +3607,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -3622,7 +3622,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -3649,8 +3649,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -3664,7 +3664,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -3683,7 +3683,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.6528
           }
         ]
       }
@@ -3726,8 +3726,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -3741,7 +3741,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -3768,8 +3768,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3783,7 +3783,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -3852,8 +3852,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3867,7 +3867,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -3894,8 +3894,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -3909,7 +3909,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -3936,8 +3936,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3951,7 +3951,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -3978,8 +3978,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -3993,7 +3993,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -4020,8 +4020,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4035,7 +4035,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -4062,8 +4062,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.8314,
+              "score": 4.8314
             }
           ],
           "cumulative": [
@@ -4077,7 +4077,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4831
             }
           ],
           "note": null
@@ -4104,8 +4104,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.0985,
+              "score": 4.0985
             }
           ],
           "cumulative": [
@@ -4119,7 +4119,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4098
             }
           ],
           "note": null
@@ -4146,8 +4146,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.25,
+              "score": 4.25
             }
           ],
           "cumulative": [
@@ -4161,7 +4161,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.425
             }
           ],
           "note": null
@@ -4180,7 +4180,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.138
           }
         ]
       }
@@ -4223,8 +4223,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -4238,7 +4238,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -4265,8 +4265,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.1713,
+              "score": 4.1713
             }
           ],
           "cumulative": [
@@ -4280,7 +4280,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.6257
             }
           ],
           "note": "EBITDA จาก ฝกค. -877,672.41"
@@ -4349,8 +4349,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4364,7 +4364,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -4391,8 +4391,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -4406,7 +4406,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -4433,8 +4433,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4448,7 +4448,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -4475,8 +4475,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4490,7 +4490,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -4517,8 +4517,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4532,7 +4532,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -4559,8 +4559,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.83,
+              "score": 4.83
             }
           ],
           "cumulative": [
@@ -4574,7 +4574,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.483
             }
           ],
           "note": null
@@ -4601,8 +4601,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3299,
+              "score": 4.3299
             }
           ],
           "cumulative": [
@@ -4616,7 +4616,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.433
             }
           ],
           "note": null
@@ -4643,8 +4643,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -4658,7 +4658,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -4677,7 +4677,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.0867
           }
         ]
       }
@@ -4720,8 +4720,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -4735,7 +4735,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -4762,8 +4762,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4777,7 +4777,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -4846,8 +4846,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4861,7 +4861,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -4888,8 +4888,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -4903,7 +4903,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -4930,8 +4930,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4945,7 +4945,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -4972,8 +4972,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -4987,7 +4987,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -5014,8 +5014,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5029,7 +5029,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": "เนื่องจาก Excelไม่มีผลการดำเนินงาน"
@@ -5056,8 +5056,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.9,
+              "score": 4.9
             }
           ],
           "cumulative": [
@@ -5071,7 +5071,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.49
             }
           ],
           "note": null
@@ -5098,8 +5098,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.4659,
+              "score": 3.4659
             }
           ],
           "cumulative": [
@@ -5113,7 +5113,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3466
             }
           ],
           "note": null
@@ -5140,8 +5140,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.5,
+              "score": 3.5
             }
           ],
           "cumulative": [
@@ -5155,7 +5155,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -5174,7 +5174,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.0066
           }
         ]
       }
@@ -5217,8 +5217,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -5232,7 +5232,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -5259,8 +5259,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5274,7 +5274,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -5343,8 +5343,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5358,7 +5358,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -5385,8 +5385,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5400,7 +5400,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -5427,8 +5427,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5442,7 +5442,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -5469,8 +5469,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5484,7 +5484,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -5511,8 +5511,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5526,7 +5526,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -5553,8 +5553,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.95,
+              "score": 4.95
             }
           ],
           "cumulative": [
@@ -5568,7 +5568,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.495
             }
           ],
           "note": null
@@ -5595,8 +5595,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.4273,
+              "score": 4.4273
             }
           ],
           "cumulative": [
@@ -5610,7 +5610,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4427
             }
           ],
           "note": null
@@ -5637,8 +5637,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.25,
+              "score": 4.25
             }
           ],
           "cumulative": [
@@ -5652,7 +5652,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.425
             }
           ],
           "note": null
@@ -5671,7 +5671,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.4627
           }
         ]
       }
@@ -5714,8 +5714,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -5729,7 +5729,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -5756,8 +5756,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5771,7 +5771,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -5840,8 +5840,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5855,7 +5855,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -5882,8 +5882,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -5897,7 +5897,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -5924,8 +5924,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5939,7 +5939,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -5966,8 +5966,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -5981,7 +5981,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -6008,8 +6008,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6023,7 +6023,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -6050,8 +6050,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6065,7 +6065,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -6092,8 +6092,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.4481,
+              "score": 4.4481
             }
           ],
           "cumulative": [
@@ -6107,7 +6107,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4448
             }
           ],
           "note": null
@@ -6134,8 +6134,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6149,7 +6149,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -6168,7 +6168,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.2648
           }
         ]
       }
@@ -6211,8 +6211,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -6226,7 +6226,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -6253,8 +6253,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -6268,7 +6268,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.7125
             }
           ],
           "note": null
@@ -6337,8 +6337,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6352,7 +6352,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -6379,8 +6379,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6394,7 +6394,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -6421,8 +6421,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6436,7 +6436,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -6463,8 +6463,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6478,7 +6478,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": "เนื่องจากไม่รายงานผล"
@@ -6505,8 +6505,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6520,7 +6520,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -6547,8 +6547,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.705,
+              "score": 4.705
             }
           ],
           "cumulative": [
@@ -6562,7 +6562,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4705
             }
           ],
           "note": null
@@ -6589,8 +6589,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.6212,
+              "score": 4.6212
             }
           ],
           "cumulative": [
@@ -6604,7 +6604,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4621
             }
           ],
           "note": null
@@ -6631,8 +6631,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -6646,7 +6646,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": "รายงานผลมาแค่วัตถุประสงค์และขอบเขต"
@@ -6665,7 +6665,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.2951
           }
         ]
       }
@@ -6708,8 +6708,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -6723,7 +6723,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -6750,8 +6750,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6765,7 +6765,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -6834,8 +6834,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6849,7 +6849,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -6876,8 +6876,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6891,7 +6891,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -6918,8 +6918,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6933,7 +6933,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -6960,8 +6960,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -6975,7 +6975,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -7002,8 +7002,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7017,7 +7017,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7044,8 +7044,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7059,7 +7059,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -7086,8 +7086,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.0305,
+              "score": 4.0305
             }
           ],
           "cumulative": [
@@ -7101,7 +7101,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4031
             }
           ],
           "note": null
@@ -7128,8 +7128,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4,
+              "score": 4
             }
           ],
           "cumulative": [
@@ -7143,7 +7143,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4
             }
           ],
           "note": null
@@ -7162,7 +7162,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.4031
           }
         ]
       }
@@ -7205,8 +7205,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -7220,7 +7220,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -7289,8 +7289,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7304,7 +7304,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -7331,8 +7331,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -7346,7 +7346,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -7372,9 +7372,9 @@
             },
             {
               "quarter": 4,
-              "plan": 4,
-              "actual": null,
-              "score": null
+              "plan": 5,
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7388,7 +7388,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -7415,8 +7415,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7430,7 +7430,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7457,8 +7457,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7472,7 +7472,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7499,8 +7499,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7514,7 +7514,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -7541,8 +7541,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7556,7 +7556,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -7583,8 +7583,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7598,7 +7598,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -7625,8 +7625,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -7640,7 +7640,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -7667,8 +7667,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -7682,7 +7682,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -7701,7 +7701,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.22
           }
         ]
       }
@@ -7744,8 +7744,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -7759,7 +7759,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -7786,8 +7786,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7801,7 +7801,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7828,8 +7828,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7843,7 +7843,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7870,8 +7870,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -7885,7 +7885,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -7912,8 +7912,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.7,
+              "score": 4.7
             }
           ],
           "cumulative": [
@@ -7927,7 +7927,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.47
             }
           ],
           "note": null
@@ -7954,8 +7954,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -7969,7 +7969,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -7996,8 +7996,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8011,7 +8011,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -8038,8 +8038,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -8053,7 +8053,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -8072,7 +8072,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.47
           }
         ]
       }
@@ -8115,8 +8115,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -8130,7 +8130,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -8157,8 +8157,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8172,7 +8172,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -8199,8 +8199,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8214,7 +8214,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -8241,8 +8241,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8256,7 +8256,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -8283,8 +8283,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8298,7 +8298,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -8325,8 +8325,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -8340,7 +8340,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -8367,8 +8367,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.2091,
+              "score": 4.2091
             }
           ],
           "cumulative": [
@@ -8382,7 +8382,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4209
             }
           ],
           "note": null
@@ -8409,8 +8409,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8424,7 +8424,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -8451,8 +8451,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -8466,7 +8466,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -8485,7 +8485,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.4459
           }
         ]
       }
@@ -8496,7 +8496,6 @@
       "file": "คะแนน MOU/คะแนน MOU ส่วนกลาง 2569.xlsx",
       "sheet": "ฝยศ",
       "quarters": [
-        1,
         2,
         3,
         4
@@ -8515,12 +8514,6 @@
           "weight": 10,
           "quarters": [
             {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
-            {
               "quarter": 2,
               "plan": 5,
               "actual": 5,
@@ -8535,8 +8528,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -8550,7 +8543,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -8562,12 +8555,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 5,
@@ -8583,8 +8570,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8598,7 +8585,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -8610,12 +8597,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8631,8 +8612,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8646,7 +8627,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -8658,12 +8639,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8679,8 +8654,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.9334,
+              "score": 4.9334
             }
           ],
           "cumulative": [
@@ -8694,7 +8669,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.74
             }
           ],
           "note": null
@@ -8706,12 +8681,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8727,8 +8696,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.7361,
+              "score": 4.7361
             }
           ],
           "cumulative": [
@@ -8742,7 +8711,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4736
             }
           ],
           "note": null
@@ -8754,12 +8723,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8775,8 +8738,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.9,
+              "score": 4.9
             }
           ],
           "cumulative": [
@@ -8790,7 +8753,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.49
             }
           ],
           "note": null
@@ -8802,12 +8765,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8823,8 +8780,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -8838,7 +8795,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -8850,12 +8807,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8871,8 +8822,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -8886,7 +8837,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -8898,12 +8849,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -8919,8 +8864,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -8934,7 +8879,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -8953,7 +8898,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.4786
           }
         ]
       }
@@ -8964,7 +8909,6 @@
       "file": "คะแนน MOU/คะแนน MOU ส่วนกลาง 2569.xlsx",
       "sheet": "ฝกค",
       "quarters": [
-        1,
         2,
         3,
         4
@@ -8983,12 +8927,6 @@
           "weight": 10,
           "quarters": [
             {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
-            {
               "quarter": 2,
               "plan": 5,
               "actual": 5,
@@ -9003,8 +8941,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -9018,7 +8956,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -9030,12 +8968,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -9051,8 +8983,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9066,7 +8998,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -9078,12 +9010,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 5,
@@ -9099,8 +9025,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -9114,7 +9040,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.7125
             }
           ],
           "note": null
@@ -9126,12 +9052,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 5,
@@ -9147,8 +9067,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9162,7 +9082,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -9174,12 +9094,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -9195,8 +9109,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.95,
+              "score": 4.95
             }
           ],
           "cumulative": [
@@ -9210,7 +9124,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.495
             }
           ],
           "note": null
@@ -9222,12 +9136,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -9243,8 +9151,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3,
+              "score": 4.3
             }
           ],
           "cumulative": [
@@ -9258,7 +9166,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.43
             }
           ],
           "note": null
@@ -9270,12 +9178,6 @@
           "isGroup": false,
           "weight": 15,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -9291,8 +9193,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9306,7 +9208,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -9318,12 +9220,6 @@
           "isGroup": false,
           "weight": 10,
           "quarters": [
-            {
-              "quarter": 1,
-              "plan": null,
-              "actual": null,
-              "score": null
-            },
             {
               "quarter": 2,
               "plan": 2,
@@ -9339,8 +9235,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -9354,7 +9250,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -9373,7 +9269,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.4375
           }
         ]
       }
@@ -9416,8 +9312,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -9431,7 +9327,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -9458,8 +9354,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9473,7 +9369,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -9500,8 +9396,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9515,7 +9411,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -9584,8 +9480,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9599,7 +9495,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -9626,8 +9522,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9641,7 +9537,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -9668,8 +9564,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9683,7 +9579,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -9752,8 +9648,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9767,7 +9663,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -9794,8 +9690,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -9809,7 +9705,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.2375
             }
           ],
           "note": null
@@ -9836,8 +9732,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.6666,
+              "score": 4.6666
             }
           ],
           "cumulative": [
@@ -9851,7 +9747,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4667
             }
           ],
           "note": null
@@ -9878,8 +9774,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9893,7 +9789,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -9920,8 +9816,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -9935,7 +9831,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -9962,8 +9858,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -9977,7 +9873,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -9996,7 +9892,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.5292
           }
         ]
       }
@@ -10039,8 +9935,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10054,7 +9950,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -10123,8 +10019,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10138,7 +10034,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.03
             }
           ],
           "note": null
@@ -10165,8 +10061,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10180,7 +10076,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -10207,8 +10103,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1.9,
+              "score": 1.9
             }
           ],
           "cumulative": [
@@ -10222,7 +10118,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.38
             }
           ],
           "note": null
@@ -10249,8 +10145,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10264,7 +10160,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.2
             }
           ],
           "note": null
@@ -10291,8 +10187,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.18,
+              "score": 4.18
             }
           ],
           "cumulative": [
@@ -10306,7 +10202,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.418
             }
           ],
           "note": null
@@ -10333,8 +10229,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3939,
+              "score": 4.3939
             }
           ],
           "cumulative": [
@@ -10348,7 +10244,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4394
             }
           ],
           "note": null
@@ -10375,8 +10271,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.208,
+              "score": 4.208
             }
           ],
           "cumulative": [
@@ -10390,7 +10286,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4208
             }
           ],
           "note": null
@@ -10417,8 +10313,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.5,
+              "score": 2.5
             }
           ],
           "cumulative": [
@@ -10432,7 +10328,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -10451,7 +10347,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 2.3082
           }
         ]
       }
@@ -10494,8 +10390,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10509,7 +10405,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -10578,8 +10474,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10593,7 +10489,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.03
             }
           ],
           "note": null
@@ -10620,8 +10516,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10635,7 +10531,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -10704,8 +10600,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -10719,7 +10615,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -10746,8 +10642,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -10761,7 +10657,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -10788,8 +10684,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -10803,7 +10699,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -10830,8 +10726,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -10845,7 +10741,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -10872,8 +10768,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -10887,7 +10783,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -10914,8 +10810,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -10929,7 +10825,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -10956,8 +10852,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3,
+              "score": 4.3
             }
           ],
           "cumulative": [
@@ -10971,7 +10867,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.43
             }
           ],
           "note": null
@@ -10998,8 +10894,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11013,7 +10909,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11040,8 +10936,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.25,
+              "score": 2.25
             }
           ],
           "cumulative": [
@@ -11055,7 +10951,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.225
             }
           ],
           "note": null
@@ -11074,7 +10970,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.55
           }
         ]
       }
@@ -11117,8 +11013,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -11132,7 +11028,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -11159,8 +11055,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -11174,7 +11070,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": null
@@ -11201,8 +11097,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5333,
+              "score": 4.5333
             }
           ],
           "cumulative": [
@@ -11216,7 +11112,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4533
             }
           ],
           "note": null
@@ -11243,8 +11139,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11258,7 +11154,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -11284,9 +11180,9 @@
             },
             {
               "quarter": 4,
-              "plan": null,
-              "actual": null,
-              "score": null
+              "plan": 5,
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11300,7 +11196,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -11327,8 +11223,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.9,
+              "score": 4.9
             }
           ],
           "cumulative": [
@@ -11342,7 +11238,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.49
             }
           ],
           "note": null
@@ -11369,8 +11265,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.3182,
+              "score": 3.3182
             }
           ],
           "cumulative": [
@@ -11384,7 +11280,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3318
             }
           ],
           "note": null
@@ -11411,8 +11307,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -11426,7 +11322,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -11453,8 +11349,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11468,7 +11364,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -11495,8 +11391,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.75,
+              "score": 3.75
             }
           ],
           "cumulative": [
@@ -11510,7 +11406,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.375
             }
           ],
           "note": null
@@ -11529,7 +11425,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.6502
           }
         ]
       }
@@ -11572,8 +11468,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -11587,7 +11483,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -11614,8 +11510,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11629,7 +11525,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11655,7 +11551,7 @@
             },
             {
               "quarter": 4,
-              "plan": 5,
+              "plan": null,
               "actual": null,
               "score": null
             }
@@ -11698,8 +11594,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11713,7 +11609,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11740,8 +11636,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11755,7 +11651,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11782,8 +11678,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11797,7 +11693,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11824,8 +11720,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11839,7 +11735,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11866,8 +11762,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11881,7 +11777,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11908,8 +11804,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11923,7 +11819,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11950,8 +11846,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -11965,7 +11861,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -11992,8 +11888,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.7,
+              "score": 4.7
             }
           ],
           "cumulative": [
@@ -12007,7 +11903,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.47
             }
           ],
           "note": null
@@ -12034,8 +11930,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3,
+              "score": 4.3
             }
           ],
           "cumulative": [
@@ -12049,7 +11945,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.43
             }
           ],
           "note": null
@@ -12076,8 +11972,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12091,7 +11987,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -12118,8 +12014,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12133,7 +12029,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -12160,8 +12056,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -12175,7 +12071,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -12194,7 +12090,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.475
           }
         ]
       }
@@ -12237,8 +12133,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12252,7 +12148,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -12279,8 +12175,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12294,7 +12190,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -12363,8 +12259,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12378,7 +12274,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.03
             }
           ],
           "note": null
@@ -12405,8 +12301,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12420,7 +12316,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -12447,8 +12343,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12462,7 +12358,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -12489,8 +12385,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -12504,7 +12400,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -12531,8 +12427,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.46,
+              "score": 4.46
             }
           ],
           "cumulative": [
@@ -12546,7 +12442,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.446
             }
           ],
           "note": null
@@ -12573,8 +12469,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.8939,
+              "score": 3.8939
             }
           ],
           "cumulative": [
@@ -12588,7 +12484,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3894
             }
           ],
           "note": null
@@ -12614,9 +12510,9 @@
             },
             {
               "quarter": 4,
-              "plan": 4,
-              "actual": null,
-              "score": null
+              "plan": 5,
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12630,7 +12526,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -12657,8 +12553,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12672,7 +12568,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -12699,8 +12595,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.375,
+              "score": 3.375
             }
           ],
           "cumulative": [
@@ -12714,7 +12610,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3375
             }
           ],
           "note": null
@@ -12733,7 +12629,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 3.0229
           }
         ]
       }
@@ -12776,8 +12672,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -12791,7 +12687,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -12818,8 +12714,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -12833,7 +12729,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -12902,8 +12798,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12917,7 +12813,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -12944,8 +12840,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -12959,7 +12855,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.35
             }
           ],
           "note": null
@@ -12986,8 +12882,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13001,7 +12897,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -13028,8 +12924,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13043,7 +12939,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -13070,8 +12966,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.66,
+              "score": 4.66
             }
           ],
           "cumulative": [
@@ -13085,7 +12981,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.466
             }
           ],
           "note": null
@@ -13112,8 +13008,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -13127,7 +13023,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -13154,8 +13050,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.15,
+              "score": 4.15
             }
           ],
           "cumulative": [
@@ -13169,7 +13065,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.415
             }
           ],
           "note": "มีแผนแต่ไม่มีผลเลยเทียบหน้าเป้าหมาย"
@@ -13196,8 +13092,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13211,7 +13107,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -13238,8 +13134,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.5,
+              "score": 4.5
             }
           ],
           "cumulative": [
@@ -13253,7 +13149,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.45
             }
           ],
           "note": null
@@ -13272,7 +13168,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.356
           }
         ]
       }
@@ -13315,8 +13211,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -13330,7 +13226,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -13357,8 +13253,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -13372,7 +13268,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -13441,8 +13337,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13456,7 +13352,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -13483,8 +13379,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -13498,7 +13394,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.07
             }
           ],
           "note": null
@@ -13525,8 +13421,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4,
+              "score": 4
             }
           ],
           "cumulative": [
@@ -13540,7 +13436,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4
             }
           ],
           "note": null
@@ -13567,8 +13463,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13582,7 +13478,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -13609,8 +13505,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13624,7 +13520,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -13693,8 +13589,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4,
+              "score": 4
             }
           ],
           "cumulative": [
@@ -13708,7 +13604,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -13735,8 +13631,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13750,7 +13646,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.125
             }
           ],
           "note": null
@@ -13777,8 +13673,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.88,
+              "score": 4.88
             }
           ],
           "cumulative": [
@@ -13792,7 +13688,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.488
             }
           ],
           "note": null
@@ -13819,8 +13715,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.3952,
+              "score": 4.3952
             }
           ],
           "cumulative": [
@@ -13834,7 +13730,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4395
             }
           ],
           "note": null
@@ -13861,8 +13757,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13876,7 +13772,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -13903,8 +13799,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -13918,7 +13814,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -13945,8 +13841,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -13960,7 +13856,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -13979,7 +13875,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 4.0725
           }
         ]
       }
@@ -13996,7 +13892,6 @@
       ],
       "cumulativeLabels": [
         "6 เดือน",
-        "9 เดือน",
         "12 เดือน"
       ],
       "rows": [
@@ -14022,8 +13917,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14032,12 +13927,8 @@
               "value": 0.5
             },
             {
-              "label": "9 เดือน",
-              "value": 0.4621
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -14064,8 +13955,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14074,12 +13965,8 @@
               "value": 0.1
             },
             {
-              "label": "9 เดือน",
-              "value": 0.1
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -14106,8 +13993,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -14116,12 +14003,8 @@
               "value": 0.1
             },
             {
-              "label": "9 เดือน",
-              "value": 0.2
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": null
@@ -14148,8 +14031,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.5,
+              "score": 2.5
             }
           ],
           "cumulative": [
@@ -14158,12 +14041,8 @@
               "value": 0.1
             },
             {
-              "label": "9 เดือน",
-              "value": 0.3
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.25
             }
           ],
           "note": null
@@ -14190,8 +14069,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.425,
+              "score": 2.425
             }
           ],
           "cumulative": [
@@ -14200,12 +14079,8 @@
               "value": null
             },
             {
-              "label": "9 เดือน",
-              "value": 0.177
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.2425
             }
           ],
           "note": null
@@ -14232,8 +14107,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.935,
+              "score": 3.935
             }
           ],
           "cumulative": [
@@ -14242,12 +14117,8 @@
               "value": 0.1962
             },
             {
-              "label": "9 เดือน",
-              "value": 0.2118
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3935
             }
           ],
           "note": null
@@ -14274,8 +14145,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1.1818,
+              "score": 1.1818
             }
           ],
           "cumulative": [
@@ -14284,12 +14155,8 @@
               "value": null
             },
             {
-              "label": "9 เดือน",
-              "value": 0.1182
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1182
             }
           ],
           "note": null
@@ -14316,8 +14183,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14326,12 +14193,8 @@
               "value": null
             },
             {
-              "label": "9 เดือน",
-              "value": 0.1
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -14358,8 +14221,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.75,
+              "score": 4.75
             }
           ],
           "cumulative": [
@@ -14368,12 +14231,8 @@
               "value": 0.1
             },
             {
-              "label": "9 เดือน",
-              "value": 0.475
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.475
             }
           ],
           "note": null
@@ -14400,8 +14259,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 2.75,
+              "score": 2.75
             }
           ],
           "cumulative": [
@@ -14410,12 +14269,8 @@
               "value": null
             },
             {
-              "label": "9 เดือน",
-              "value": 0.275
-            },
-            {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.275
             }
           ],
           "note": null
@@ -14429,12 +14284,8 @@
             "value": 1.0962
           },
           {
-            "label": "9 เดือน",
-            "value": 1.957
-          },
-          {
             "label": "12 เดือน",
-            "value": null
+            "value": 2.3542
           }
         ]
       }
@@ -14477,8 +14328,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14492,7 +14343,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -14519,8 +14370,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14534,7 +14385,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1
             }
           ],
           "note": null
@@ -14561,8 +14412,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3,
+              "score": 3
             }
           ],
           "cumulative": [
@@ -14576,7 +14427,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.3
             }
           ],
           "note": null
@@ -14603,8 +14454,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -14618,7 +14469,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.75
             }
           ],
           "note": null
@@ -14645,8 +14496,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 5,
+              "score": 5
             }
           ],
           "cumulative": [
@@ -14660,7 +14511,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.5
             }
           ],
           "note": null
@@ -14687,8 +14538,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 4.415,
+              "score": 4.415
             }
           ],
           "cumulative": [
@@ -14702,7 +14553,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.4415
             }
           ],
           "note": null
@@ -14729,8 +14580,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1.0909,
+              "score": 1.0909
             }
           ],
           "cumulative": [
@@ -14744,10 +14595,10 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.1091
             }
           ],
-          "note": null
+          "note": "ไตรมาส 2 ไม่ได้รายงานผลไปที่ ฝทม"
         },
         {
           "code": "8",
@@ -14771,8 +14622,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 1,
+              "score": 1
             }
           ],
           "cumulative": [
@@ -14786,7 +14637,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.15
             }
           ],
           "note": null
@@ -14813,8 +14664,8 @@
             {
               "quarter": 4,
               "plan": 5,
-              "actual": null,
-              "score": null
+              "actual": 3.75,
+              "score": 3.75
             }
           ],
           "cumulative": [
@@ -14828,7 +14679,7 @@
             },
             {
               "label": "12 เดือน",
-              "value": null
+              "value": 0.375
             }
           ],
           "note": null
@@ -14847,7 +14698,7 @@
           },
           {
             "label": "12 เดือน",
-            "value": null
+            "value": 2.8256
           }
         ]
       }

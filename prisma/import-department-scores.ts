@@ -25,7 +25,7 @@ import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import ExcelJS from "exceljs";
 import { departments } from "./departments";
 
-const SOURCE = "คะแนน MOU/คะแนนจัดลำดับ MOU 69.xlsx";
+const SOURCE = "คะแนน MOU/คะแนนจัดลำดับ MOU 69 ไตรมาส 4.xlsx";
 const SCORE_SHEET = "คะแนนรวม";
 const OUTPUT = "prisma/department-scores.json";
 // ปีบัญชีของไฟล์ต้นทาง - ปีใหม่ให้เปลี่ยน SOURCE และตัวเลขนี้ แล้วรันใหม่ ปีเก่ายังอยู่ครบ
@@ -33,13 +33,13 @@ const FISCAL_YEAR = 2569;
 
 // สายบังคับบัญชา เรียงตามลำดับที่ต้องการให้แสดงบนหน้าเว็บ
 //
-// "ผวก.กยท." ไม่มีชีตของตัวเองในไฟล์ปีนี้ จึงยังไม่มีส่วนงานในสาย
-// คงหัวข้อไว้เพื่อให้โครงหน้าเว็บครบทั้ง 4 สาย พอปีหน้าไฟล์มีข้อมูลก็เติมชีตเข้ามาได้เลย
+// "ผวก.กยท." ไฟล์ไตรมาส 3 ยังไม่มีชีตของตัวเอง ไฟล์ไตรมาส 4 เพิ่มชีต "รักษาการ"
+// (หัวเรื่องในชีตเขียนว่า "(ผวก.กยท.)") มี สตส. ฝกม. สผว. หกป.
 //
-// หมายเหตุ: ชีต "ร.ผวก.(ธ)" เขียนหัวเรื่องข้างในว่า "(ผวก.กยท.)" ซึ่งขัดกับชื่อแท็บ
+// หมายเหตุ: ไฟล์ไตรมาส 3 ชีต "ร.ผวก.(ธ)" เคยเขียนหัวเรื่องว่า "(ผวก.กยท.)" ซึ่งขัดกับชื่อแท็บ
 // ที่นี่ยึดตามชื่อแท็บ คือนับเป็นสายรองผู้ว่าการ (ธ.)
 const LINES: { name: string; sheet: string | null }[] = [
-  { name: "ผวก.กยท.", sheet: null },
+  { name: "ผวก.กยท.", sheet: "รักษาการ" },
   { name: "รองผวก. (ป.)", sheet: "ร.ผวก. (ป)" },
   { name: "รองผวก. (บ.)", sheet: "ร.ผวก. (บ)" },
   { name: "รองผวก. (ธ.)", sheet: "ร.ผวก.(ธ)" },
@@ -146,6 +146,20 @@ async function main() {
   const scoreSheet = workbook.getWorksheet(SCORE_SHEET);
   if (!scoreSheet) throw new Error(`ไม่พบชีต "${SCORE_SHEET}" ในไฟล์ ${SOURCE}`);
 
+  // ตำแหน่งคอลัมน์ไม่เหมือนกันทุกไตรมาส - ไฟล์ไตรมาส 3 มี "คะแนนไตรมาส" (C) และ "คะแนนปี" (D)
+  // ไฟล์ไตรมาส 4 มีแค่ "คะแนนปี" (C) เพราะคะแนนสิ้นปีคือผลทั้งปี
+  // จึงหาคอลัมน์จากหัวตารางแถว 2 เอาช่องแรกที่เจอ (ช่องท้ายๆ ของไฟล์ไตรมาส 4 เป็นหัวค้างที่ไม่มีข้อมูล)
+  const findColumn = (label: string): number | null => {
+    let found: number | null = null;
+    scoreSheet.getRow(2).eachCell({ includeEmpty: false }, (cell, col) => {
+      if (found === null && toText(cell.value).replace(/\s+/g, "") === label) found = col;
+    });
+    return found;
+  };
+  const yearCol = findColumn("คะแนนปี");
+  if (yearCol === null) throw new Error(`ไม่พบหัวคอลัมน์ "คะแนนปี" ในชีต "${SCORE_SHEET}"`);
+  const quarterCol = findColumn("คะแนนไตรมาส");
+
   const rows: Row[] = [];
   const fileQuarterScores = new Map<Row, number | null>();
 
@@ -166,12 +180,12 @@ async function main() {
       sourceName,
       // ใส่ไตรมาสที่ถูกต้องทีหลัง เมื่ออ่านหัวตารางของชีตสายแล้ว
       quarterScores: { "1": null, "2": null, "3": null, "4": null },
-      yearScore: toNumber(row.getCell(4).value),
+      yearScore: toNumber(row.getCell(yearCol).value),
       line: null,
       inSystem: code !== null,
     };
     rows.push(newRow);
-    fileQuarterScores.set(newRow, toNumber(row.getCell(3).value));
+    fileQuarterScores.set(newRow, quarterCol === null ? null : toNumber(row.getCell(quarterCol).value));
   });
 
   // ---- ส่วนที่ 2: สายบังคับบัญชา จากอีก 3 ชีต ----
@@ -205,7 +219,10 @@ async function main() {
       .filter((v): v is number => typeof v === "number");
     const computed = scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
 
-    if (computed !== null && sourceAverage !== null && Math.abs(computed - sourceAverage) > 1e-6) {
+    // ยอมให้ต่างได้ไม่เกิน 0.0001 เพราะชีตสายบางแถวปัดทศนิยม 4 ตำแหน่ง
+    // (ไตรมาส 4: กจร.1 ชีตคะแนนรวม 3.034973 แต่ชีตสายเขียน 3.035)
+    // ถ้าแบ่งสายผิดกลุ่ม ค่าเฉลี่ยจะต่างกันตั้งแต่ทศนิยมแรกๆ จึงยังจับได้
+    if (computed !== null && sourceAverage !== null && Math.abs(computed - sourceAverage) > 1e-4) {
       averageMismatch.push(
         `สาย "${line.name}": คำนวณได้ ${computed.toFixed(6)} แต่ในไฟล์เขียน ${sourceAverage.toFixed(6)}`
       );
@@ -251,7 +268,11 @@ async function main() {
   for (const row of rows) {
     const old = kept.find((d) => d.code === row.code)?.quarterScores;
     if (old) row.quarterScores = { ...old };
-    row.quarterScores[quarterKey] = fileQuarterScores.get(row) ?? null;
+    // ไฟล์ไตรมาส 4 ไม่มีคอลัมน์ "คะแนนไตรมาส" แยก คะแนนในคอลัมน์ "ไตรมาส 4 / คะแนนปี"
+    // คือคะแนน ณ ไตรมาส 4 ของส่วนงาน จึงใช้เป็นคะแนนไตรมาส 4 ด้วย
+    // (ไฟล์มีหัว "คะแนนไตรมาส" ค้างอยู่คอลัมน์ F แต่ไม่มีตัวเลข จึงดูที่ค่า ไม่ดูที่หัวคอลัมน์)
+    const fromFile = fileQuarterScores.get(row) ?? null;
+    row.quarterScores[quarterKey] = fromFile === null && quarter === 4 ? row.yearScore : fromFile;
   }
 
   // ---- ตรวจความถูกต้องก่อนเขียนไฟล์ ----

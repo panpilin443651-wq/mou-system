@@ -15,12 +15,15 @@ import { readReturnDueDate } from "@/lib/return-due";
 import {
   PLAN_COMMENT_QUARTER,
   clearComments,
+  canEditReturnedRow,
   combineComments,
   commentSections,
   levelCommentKey,
   readComments,
   replaceCommentsOps,
   returnedEditableSections,
+  returnedSectionTouched,
+  rowCommentLabels,
 } from "@/lib/review-comments";
 import {
   planHeaderSchema,
@@ -65,7 +68,7 @@ import { writeAudit } from "@/lib/audit";
 //   add:STEP:<ระดับ>   บันทึกทั้งตาราง แล้วเพิ่มขั้นตอนต่อท้ายค่าเกณฑ์ระดับนั้น
 //   delete:<rowId>     บันทึกทั้งตาราง แล้วลบบรรทัดนั้น
 //   confirm            บันทึกทั้งตาราง แล้ว "ส่งแผน" (ล็อกโครงแผน เปิดให้รายงานผลได้) - หัวหน้าส่วนงาน/ส่วนกลาง
-//   unlock             บันทึกทั้งตาราง แล้ว "ตีกลับแผน" พร้อมข้อสังเกตใต้แต่ละส่วน (comment_<section>) และแจ้งเตือนส่วนงาน - ส่วนกลาง
+//   unlock             บันทึกทั้งตาราง แล้ว "ตีกลับแผน" พร้อมข้อสังเกต กปม. รายขั้นตอน (comment_ROW_<rowId>) และแจ้งเตือนส่วนงาน - ส่วนกลาง
 //
 // ส่งแผนแล้ว ผู้รับผิดชอบส่วนงานแก้ "โครงแผน" ไม่ได้อีก: แผนรายเดือน เป้าหมายตัวชี้วัด
 // ค่าเป้าหมาย หน่วยนับ ขั้นตอนการดำเนินงาน และเพิ่ม/ลบบรรทัดไม่ได้
@@ -152,38 +155,27 @@ export async function savePlanAction(
   if (structureLocked && (intent.startsWith("add:") || intent.startsWith("delete:"))) {
     return { error: "ส่งแผนแล้ว เพิ่มหรือลบบรรทัดไม่ได้ ติดต่อส่วนกลางหากต้องแก้แผน" };
   }
-  // ตีกลับแผนแล้ว (ยังไม่ส่งใหม่): ผู้รับผิดชอบส่วนงานแก้ได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้
+  // ตีกลับแผนแล้ว (ยังไม่ส่งใหม่): ผู้รับผิดชอบส่วนงานแก้ได้เฉพาะขั้นตอนที่ กปม. ตีกลับ (มีข้อสังเกต)
   // null = ไม่จำกัด (ส่วนกลาง, ไม่ได้ถูกตีกลับ หรือตีกลับก่อนมีข้อสังเกตรายส่วน)
   const editableSections = await returnedEditableSections(
     indicatorId,
     !isAdmin && planHeader?.confirmedAt == null && planHeader?.returnedAt != null,
   );
-  const sectionKey = (r: { section: PlanSection; criteriaLevel: number | null }) =>
-    r.section === "TARGET" ? "TARGET" : levelCommentKey(r.criteriaLevel ?? -1);
-  const canEditRow = (r: { section: PlanSection; criteriaLevel: number | null }) =>
-    editableSections === null || editableSections.has(sectionKey(r));
+  const canEditRow = (r: { id: string; section: PlanSection; criteriaLevel: number | null }) =>
+    canEditReturnedRow(editableSections, r);
+  // เพิ่มบรรทัดใหม่ได้เฉพาะเมื่อตีกลับทั้งส่วน (แบบเดิม) - ตีกลับรายขั้นตอนแก้ได้เฉพาะขั้นตอนนั้น
+  const canAddToSection = (key: string) => editableSections === null || editableSections.has(key);
   const RESTRICTED_MESSAGE =
-    "แผนถูกตีกลับ แก้ไขได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้เท่านั้น";
+    "แผนถูกตีกลับ แก้ไขได้เฉพาะขั้นตอนที่ กปม. ตีกลับ (มีข้อสังเกต กปม.) เท่านั้น";
   // ส่งแผน = หัวหน้าส่วนงาน/หน่วยงาน (หรือส่วนกลาง) เท่านั้น ผู้รายงานบันทึกร่างได้อย่างเดียว
   if (intent === "confirm" && !canSendForDepartment(user, indicator.departmentId)) {
     return {
       error: "ผู้กดส่งแผนการดำเนินงานต้องเป็นหัวหน้าส่วนงาน/หัวหน้าหน่วยงาน · บันทึกร่างแผนไว้แล้วแจ้งหัวหน้าให้กดส่ง",
     };
   }
-  // ตีกลับแผน (intent "unlock") = ส่วนกลางเท่านั้น และต้องบอกเหตุผล
-  // ข้อสังเกตจากกล่องใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ (ไล่ตามส่วนที่ตัวชี้วัดมีจริง)
-  const comments =
-    intent === "unlock"
-      ? readComments(formData, commentSections(indicator.criteria.map((c) => c.level)))
-      : [];
-  const returnNote = combineComments(comments);
-  if (intent === "unlock") {
-    if (!canReturnSubmission(user)) {
-      return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับแผนได้" };
-    }
-    if (comments.length === 0) {
-      return { error: "กรุณาเขียนข้อสังเกตในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
-    }
+  // ตีกลับแผน (intent "unlock") = ส่วนกลางเท่านั้น
+  if (intent === "unlock" && !canReturnSubmission(user)) {
+    return { error: "เฉพาะส่วนกลางเท่านั้นที่ตีกลับแผนได้" };
   }
   const due = intent === "unlock" ? readReturnDueDate(formData) : null;
   if (due?.error) return { error: due.error };
@@ -225,6 +217,23 @@ export async function savePlanAction(
       actualMonths: true,
     },
   });
+
+  // ข้อสังเกต กปม. รายขั้นตอน (กล่องใต้แต่ละบรรทัด) ไล่ตามบรรทัดที่มีจริง ไม่เชื่อฟอร์ม
+  // ต้องมีอย่างน้อย 1 ขั้นตอนจึงตีกลับได้ ขั้นตอนที่ไม่มีข้อสังเกตจะถูกล็อกไว้ระหว่างแก้
+  const comments =
+    intent === "unlock"
+      ? readComments(
+          formData,
+          commentSections(
+            indicator.criteria.map((c) => c.level),
+            rows.map((r) => r.id),
+          ),
+        )
+      : [];
+  const returnNote = combineComments(comments, rowCommentLabels(rows));
+  if (intent === "unlock" && comments.length === 0) {
+    return { error: "กรุณาเขียนข้อสังเกต กปม. ใต้ขั้นตอนที่ต้องแก้ อย่างน้อย 1 ขั้นตอนก่อนตีกลับ" };
+  }
   // ระดับ 1-5 ตามค่าเกณฑ์ + กลุ่มเงื่อนไขอื่นๆ ต่อท้าย
   const groups = planLevelGroups(
     indicator.criteria.map((c) => ({ level: c.level, targetValue: null, description: null })),
@@ -254,7 +263,9 @@ export async function savePlanAction(
   const resultSections = isReportMode
     ? await returnedResultSectionsNow({ indicatorId, statuses, isAdmin })
     : null;
-  const canEditResultKey = (key: string) => resultSections === null || resultSections.has(key);
+  // ผลรายบรรทัด: แก้ได้เฉพาะขั้นตอนที่ถูกตีกลับ · รายงานผลรายระดับ: แก้ได้เมื่อระดับนั้นมีขั้นตอนที่ถูกตีกลับ
+  const canEditResultRow = (r: (typeof rows)[number]) => canEditReturnedRow(resultSections, r);
+  const canEditResultSection = (key: string) => returnedSectionTouched(resultSections, key, rows);
 
   /** แถวที่อยู่กลุ่มเดียวกัน (ตารางเดียวกันและระดับเดียวกัน) ใช้ไล่เลขลำดับ */
   const sameGroup =
@@ -270,7 +281,7 @@ export async function savePlanAction(
     // โครงแผนส่งมาจากหน้าแผน ผลส่งมาจากหน้ารายงานผล ส่วนที่ไม่ถูกส่งมาปล่อยไว้ตามเดิม
     const hasStructure = formData.has(`title_${row.id}`) && !structureLocked && canEditRow(row);
     const hasResult =
-      formData.has(`a0_${row.id}`) && !resultsLocked && canEditResultKey(sectionKey(row));
+      formData.has(`a0_${row.id}`) && !resultsLocked && canEditResultRow(row);
     if (!hasStructure && !hasResult) continue;
 
     const label = PLAN_SECTION_ITEM_LABEL[row.section];
@@ -334,7 +345,7 @@ export async function savePlanAction(
   // ---- รายงานผลการดำเนินงานของแต่ละระดับ (เฉพาะหน้ารายงานผล) ----
   // ไล่จากระดับที่ตัวชี้วัดมีจริง ไม่เชื่อว่าฟอร์มส่งระดับอะไรมา
   for (const level of resultsLocked ? [] : levels) {
-    if (!canEditResultKey(levelCommentKey(level))) continue;
+    if (!canEditResultSection(levelCommentKey(level))) continue;
     const raw = formData.get(`levelReport_${level}`);
     if (raw === null) continue;
     const parsed = planLevelReportText.safeParse(raw);
@@ -380,7 +391,7 @@ export async function savePlanAction(
     } else if (section !== "TARGET") {
       return { error: "ไม่รู้จักตารางที่จะเพิ่มบรรทัด" };
     }
-    if (!canEditRow({ section: section as PlanSection, criteriaLevel })) {
+    if (!canAddToSection(section === "TARGET" ? "TARGET" : levelCommentKey(criteriaLevel ?? -1))) {
       return { error: `${RESTRICTED_MESSAGE} (บันทึกส่วนที่แก้ไว้แล้ว)` };
     }
 
@@ -522,7 +533,7 @@ export async function savePlanAction(
     const notified = await notifyDepartmentUsers(indicator.departmentId, {
       title: `ส่วนกลางตีกลับแผนการดำเนินงาน ข้อ ${indicator.code}`,
       body: `${indicator.name}
-ข้อสังเกตเพื่อให้แผนมีความชัดเจน:
+ข้อสังเกต กปม. (ขั้นตอนที่ต้องแก้):
 ${returnNote}`,
       link: `/plans/${indicatorId}#return`,
       dueAt: returnDueAt,
