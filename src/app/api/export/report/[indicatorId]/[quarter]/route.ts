@@ -330,7 +330,7 @@ export async function GET(
           ...(doc.returned.due
             ? [body(`! ${doc.returned.due}`, 0, { bold: true, color: "B91C1C" })]
             : []),
-          body(`ข้อสังเกตเพื่อให้ผลมีความชัดเจน: ${doc.returned.note}`),
+          body(`ข้อสังเกต กปม.: ${doc.returned.note}`),
         ]
       : []),
   ];

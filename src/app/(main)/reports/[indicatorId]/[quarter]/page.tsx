@@ -35,7 +35,7 @@ import {
   submittedLockMessage,
   submittedResultsLock,
 } from "@/lib/report-lock";
-import { commentSectionLabel } from "@/lib/review-comments";
+import { COMMENT_HEADING, commentSectionLabel, rowCommentLabels } from "@/lib/review-comments";
 import { returnDueText } from "@/lib/return-due";
 import { DueBadge } from "@/components/return-due-input";
 
@@ -476,14 +476,17 @@ export default async function ReportPage({
             ส่วนกลางตีกลับผลไตรมาส {quarter} เมื่อ {formatThaiDateTime(report.returnedAt)}
           </p>
           {report.returnDueAt && <DueBadge text={returnDueText(report.returnDueAt)} />}
-          <p className="mt-1 font-medium">ข้อสังเกตเพื่อให้ผลมีความชัดเจน (จากส่วนกลาง):</p>
+          <p className="mt-1 font-medium">{COMMENT_HEADING.report}:</p>
           <p className="mt-0.5 whitespace-pre-line rounded-lg bg-surface px-3 py-2 text-base text-red-900">
             {report.returnNote}
           </p>
           {quarterSections && (
             <p className="mt-1 font-semibold">
-              แก้ไขได้เฉพาะผลของส่วนที่มีข้อสังเกต:{" "}
-              {[...quarterSections].map(commentSectionLabel).join(" · ")} · ส่วนอื่นล็อกไว้ (ช่องสีเทา)
+              แก้ไขได้เฉพาะผลของขั้นตอนที่ถูกตีกลับ:{" "}
+              {[...quarterSections]
+                .map((k) => commentSectionLabel(k, rowCommentLabels(indicator.plans)))
+                .join(" · ")}{" "}
+              · ขั้นตอนอื่นล็อกไว้ (แถวสีเทาทึบ)
             </p>
           )}
           <p className="mt-1">

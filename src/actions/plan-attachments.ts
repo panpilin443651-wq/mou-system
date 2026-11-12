@@ -13,9 +13,9 @@ import {
   MAX_PLAN_FILES_PER_ROW,
 } from "@/lib/attachments";
 import { writeAudit } from "@/lib/audit";
+import { canEditReturnedRow } from "@/lib/review-comments";
 import {
   RETURNED_RESULT_MESSAGE,
-  planRowSectionKey,
   returnedResultSectionsFor,
   submittedLockMessage,
   submittedResultsLockFor,
@@ -86,9 +86,9 @@ export async function recordPlanAttachmentAction(
     await del(blobUrl).catch(() => {});
     return { error: submittedLockMessage(lockedQuarter) };
   }
-  // ผลถูกตีกลับ: แนบหลักฐานได้เฉพาะบรรทัดในส่วนที่มีข้อสังเกต
+  // ผลถูกตีกลับ: แนบหลักฐานได้เฉพาะขั้นตอนที่ กปม. ตีกลับ
   const returnedSections = await returnedResultSectionsFor(plan.indicator, user);
-  if (returnedSections && !returnedSections.has(planRowSectionKey(plan))) {
+  if (!canEditReturnedRow(returnedSections, plan)) {
     await del(blobUrl).catch(() => {});
     return { error: RETURNED_RESULT_MESSAGE };
   }
@@ -155,6 +155,7 @@ export async function deletePlanAttachmentAction(
     include: {
       actionPlan: {
         select: {
+          id: true,
           section: true,
           criteriaLevel: true,
           indicator: { select: { id: true, code: true, departmentId: true, fiscalYearId: true } },
@@ -171,7 +172,7 @@ export async function deletePlanAttachmentAction(
   const lockedQuarter = await submittedResultsLockFor(indicator, user);
   if (lockedQuarter !== null) return { error: submittedLockMessage(lockedQuarter) };
   const returnedSections = await returnedResultSectionsFor(indicator, user);
-  if (returnedSections && !returnedSections.has(planRowSectionKey(attachment.actionPlan))) {
+  if (!canEditReturnedRow(returnedSections, attachment.actionPlan)) {
     return { error: RETURNED_RESULT_MESSAGE };
   }
 

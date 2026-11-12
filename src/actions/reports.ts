@@ -16,6 +16,8 @@ import {
   commentSections,
   readComments,
   replaceCommentsOps,
+  returnedSectionTouched,
+  rowCommentLabels,
 } from "@/lib/review-comments";
 import { reportSchema, firstError } from "@/lib/validation";
 import { calcProgressPct, calcScoreLevel } from "@/lib/scoring";
@@ -104,10 +106,16 @@ export async function saveReportAction(
   if (!parsed.success) return { error: firstError(parsed.error) };
   const input = parsed.data;
 
-  // ผลถูกตีกลับ และส่วนกลางไม่ได้เขียนข้อสังเกตที่ "เป้าหมายตัวชี้วัด":
+  // ผลถูกตีกลับ และ กปม. ไม่ได้ตีกลับรายการใดในตาราง "เป้าหมายตัวชี้วัด":
   // ผลงานที่ทำได้จริงและคะแนนของไตรมาสคงค่าเดิม (ค่าที่ฟอร์มส่งมาถูกทิ้ง) แต่ยังบันทึก/ส่งผลใหม่ได้
   const returnedSections = await returnedResultSections(indicatorId, quarter, user.role === "ADMIN");
-  if (returnedSections && !returnedSections.has("TARGET")) {
+  const targetRows = returnedSections
+    ? await db.actionPlan.findMany({
+        where: { indicatorId, section: "TARGET" },
+        select: { id: true, section: true, criteriaLevel: true },
+      })
+    : [];
+  if (returnedSections && !returnedSectionTouched(returnedSections, "TARGET", targetRows)) {
     const before = await db.quarterlyReport.findUnique({
       where: { indicatorId_quarter: { indicatorId, quarter } },
       select: { actualValue: true, scoreLevel: true, scoreOverridden: true, scoreNote: true },
@@ -333,16 +341,23 @@ export async function returnReportAction(
       name: true,
       departmentId: true,
       criteria: { select: { level: true }, orderBy: { level: "asc" } },
+      plans: { select: { id: true, section: true, criteriaLevel: true, sortOrder: true } },
     },
   });
   if (!indicator) return { error: "ไม่พบตัวชี้วัดนี้" };
 
-  // ข้อสังเกตจากกล่องใต้เป้าหมายตัวชี้วัดและใต้ค่าเกณฑ์แต่ละระดับ
-  const comments = readComments(formData, commentSections(indicator.criteria.map((c) => c.level)));
+  // ข้อสังเกต กปม. รายขั้นตอน (กล่องใต้แต่ละบรรทัด) ขั้นตอนที่ไม่มีข้อสังเกตจะถูกล็อกไว้ระหว่างแก้
+  const comments = readComments(
+    formData,
+    commentSections(
+      indicator.criteria.map((c) => c.level),
+      indicator.plans.map((p) => p.id),
+    ),
+  );
   if (comments.length === 0) {
-    return { error: "กรุณาเขียนข้อสังเกตในกล่องสีแดง (ใต้เป้าหมายตัวชี้วัดหรือค่าเกณฑ์) อย่างน้อย 1 กล่องก่อนตีกลับ" };
+    return { error: "กรุณาเขียนข้อสังเกต กปม. ใต้ขั้นตอนที่ต้องแก้ อย่างน้อย 1 ขั้นตอนก่อนตีกลับ" };
   }
-  const returnNote = combineComments(comments);
+  const returnNote = combineComments(comments, rowCommentLabels(indicator.plans));
   const due = readReturnDueDate(formData);
   if (due.error) return { error: due.error };
   const returnDueAt = due.dueAt;
@@ -372,7 +387,7 @@ export async function returnReportAction(
   await notifyDepartmentUsers(indicator.departmentId, {
     title: `ส่วนกลางตีกลับผลการดำเนินงาน ข้อ ${indicator.code} ไตรมาส ${quarter}`,
     body: `${indicator.name}
-ข้อสังเกตเพื่อให้ผลมีความชัดเจน:
+ข้อสังเกต กปม. (ขั้นตอนที่ต้องแก้):
 ${returnNote}`,
     link: `/reports/${indicatorId}/${quarter}#return`,
     dueAt: returnDueAt,

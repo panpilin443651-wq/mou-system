@@ -187,7 +187,7 @@ export default async function PrintReportPage({
                 <p className="font-semibold text-red-700">! {doc.returned.due}</p>
               )}
               <p className="whitespace-pre-line">
-                ข้อสังเกตเพื่อให้ผลมีความชัดเจน: {doc.returned.note}
+                ข้อสังเกต กปม.: {doc.returned.note}
               </p>
             </div>
           )}

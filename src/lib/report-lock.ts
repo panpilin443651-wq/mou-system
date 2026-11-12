@@ -50,8 +50,8 @@ export async function submittedResultsLockFor(
 }
 
 // ----------------------------------------------------------------------------
-// ผลถูกตีกลับ: แก้ได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้ (เหมือนแผนที่ถูกตีกลับ)
-// ส่วน = "TARGET" (เป้าหมายตัวชี้วัด + ผลงานที่ทำได้จริงของไตรมาส) หรือ "L1".."L6" (ค่าเกณฑ์แต่ละระดับ)
+// ผลถูกตีกลับ: แก้ได้เฉพาะขั้นตอนที่ กปม. ตีกลับ (เหมือนแผนที่ถูกตีกลับ)
+// key = "ROW_<id>" รายขั้นตอน · แบบเดิม "TARGET"/"L1".."L6" ทั้งส่วน (ตรวจด้วย canEditReturnedRow)
 // null = ไม่จำกัด (ส่วนกลาง, ผลไม่ได้ถูกตีกลับ หรือตีกลับก่อนมีข้อสังเกตรายส่วน)
 // ----------------------------------------------------------------------------
 
@@ -110,13 +110,8 @@ export async function returnedResultSectionsFor(
   return returnedResultSectionsNow({ indicatorId: indicator.id, statuses, isAdmin: false });
 }
 
-/** ส่วนของบรรทัดในตารางแผน: "TARGET" หรือ "L<ระดับ>" (ตรงกับกล่องข้อสังเกต) */
-export function planRowSectionKey(row: { section: string; criteriaLevel: number | null }): string {
-  return row.section === "TARGET" ? "TARGET" : `L${row.criteriaLevel ?? -1}`;
-}
-
 export const RETURNED_RESULT_MESSAGE =
-  "ผลถูกตีกลับ แก้ไขได้เฉพาะส่วนที่ส่วนกลางเขียนข้อสังเกตไว้เท่านั้น";
+  "ผลถูกตีกลับ แก้ไขได้เฉพาะขั้นตอนที่ กปม. ตีกลับ (มีข้อสังเกต กปม.) เท่านั้น";
 
 export function submittedLockMessage(quarter: number): string {
   return `ส่งผลไตรมาส ${quarter} แล้ว แก้ไขไม่ได้ · ถ้าต้องแก้ติดต่อส่วนกลางให้ตีกลับผล`;

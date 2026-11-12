@@ -1,21 +1,24 @@
 import { db } from "@/lib/db";
-import { planLevelGroups } from "@/lib/plan";
+import type { PlanSection } from "@prisma/client";
+import { PLAN_SECTION_ITEM_LABEL, planLevelGroups, planRowLabel } from "@/lib/plan";
 
 // ============================================================================
-// ข้อสังเกต แยกตามส่วนของตารางแผน (ตอนตีกลับแผน/ผล)
+// ข้อสังเกต กปม. ตอนตีกลับแผน/ผล - ตีกลับเป็นรายขั้นตอนการดำเนินงาน
 // ============================================================================
-// ส่วน (section):  "TARGET" = ใต้ตารางเป้าหมายตัวชี้วัด
-//                  "L1".."L6" = ใต้ค่าเกณฑ์ระดับ 1-5 และกลุ่มเงื่อนไขอื่นๆ (ระดับ 6)
+// ส่วน (section):  "ROW_<id>" = ข้อสังเกตของบรรทัดหนึ่ง (ขั้นตอนการดำเนินงาน / รายการเป้าหมาย)
+//                  บรรทัดที่ไม่มีข้อสังเกต = ไม่ถูกตีกลับ ล็อกไว้ (ช่องสีเทา) ระหว่างแก้
+//                  แบบเดิม (ก่อนตีกลับรายขั้นตอน) ยังอ่านได้ ข้อมูลเก่าจะไม่พัง:
+//                  "TARGET" = ทั้งตารางเป้าหมายตัวชี้วัด · "L1".."L6" = ทั้งค่าเกณฑ์ระดับนั้น
 // quarter:         0 = ข้อสังเกตต่อแผน · 1-4 = ข้อสังเกตต่อผลของไตรมาสนั้น
-// ช่องในฟอร์มชื่อ comment_<section> เช่น comment_TARGET, comment_L3
+// ช่องในฟอร์มชื่อ comment_<section> เช่น comment_ROW_ck123
 // ============================================================================
 
 export const PLAN_COMMENT_QUARTER = 0;
 
-/** หัวกล่องข้อสังเกต: หน้าแผนพูดถึงแผน หน้ารายงานผลพูดถึงผล */
+/** หัวกล่องข้อสังเกต (หน้าแผนและหน้ารายงานผล) */
 export const COMMENT_HEADING = {
-  plan: "ข้อสังเกตเพื่อให้แผนมีความชัดเจน",
-  report: "ข้อสังเกตเพื่อให้ผลมีความชัดเจน",
+  plan: "ข้อสังเกต กปม.",
+  report: "ข้อสังเกต กปม.",
 } as const;
 export const COMMENT_MAX_LENGTH = 2000;
 
@@ -23,21 +26,80 @@ export function levelCommentKey(level: number): string {
   return `L${level}`;
 }
 
-/** ชื่อส่วนสำหรับแสดงในแจ้งเตือนและแถบสรุป เช่น "เป้าหมายตัวชี้วัด", "ค่าเกณฑ์ระดับ 3" */
-export function commentSectionLabel(section: string): string {
+const ROW_PREFIX = "ROW_";
+
+/** key ของข้อสังเกตรายบรรทัด (ขั้นตอนการดำเนินงาน / รายการเป้าหมาย) */
+export function rowCommentKey(rowId: string): string {
+  return `${ROW_PREFIX}${rowId}`;
+}
+
+type PlanRowRef = { id: string; section: string; criteriaLevel: number | null };
+
+/** ส่วนของบรรทัด: "TARGET" หรือ "L<ระดับ>" */
+export function rowSectionKey(row: { section: string; criteriaLevel: number | null }): string {
+  return row.section === "TARGET" ? "TARGET" : levelCommentKey(row.criteriaLevel ?? -1);
+}
+
+/**
+ * ระหว่างถูกตีกลับ บรรทัดนี้แก้ได้ไหม = ถูกตีกลับรายบรรทัด (หรือทั้งส่วน แบบเดิม)
+ * keys = null คือไม่จำกัด
+ */
+export function canEditReturnedRow(
+  keys: ReadonlySet<string> | readonly string[] | null,
+  row: PlanRowRef,
+): boolean {
+  if (keys === null) return true;
+  const has = (k: string) => ("has" in keys ? keys.has(k) : keys.includes(k));
+  return has(rowSectionKey(row)) || has(rowCommentKey(row.id));
+}
+
+/**
+ * ส่วนนี้มีอะไรถูกตีกลับไหม (ทั้งส่วน หรือบรรทัดใดบรรทัดหนึ่งในส่วน)
+ * ใช้กับช่องที่เป็นของทั้งส่วน: รายงานผลรายระดับ และผลงานที่ทำได้จริงของไตรมาส (TARGET)
+ */
+export function returnedSectionTouched(
+  keys: ReadonlySet<string> | readonly string[] | null,
+  section: string,
+  rows: PlanRowRef[],
+): boolean {
+  if (keys === null) return true;
+  const has = (k: string) => ("has" in keys ? keys.has(k) : keys.includes(k));
+  return has(section) || rows.some((r) => rowSectionKey(r) === section && has(rowCommentKey(r.id)));
+}
+
+/** ชื่อของแต่ละบรรทัดสำหรับแจ้งเตือน เช่น "ขั้นตอนการดำเนินงาน 3.1" - key = ROW_<id> */
+export function rowCommentLabels(
+  rows: (PlanRowRef & { sortOrder: number })[],
+): Record<string, string> {
+  return Object.fromEntries(
+    rows.map((r) => {
+      const section = r.section as PlanSection;
+      const label = planRowLabel({ section, criteriaLevel: r.criteriaLevel, sortOrder: r.sortOrder });
+      return [rowCommentKey(r.id), `${PLAN_SECTION_ITEM_LABEL[section]} ${label}`];
+    }),
+  );
+}
+
+/** ชื่อส่วน/บรรทัดสำหรับแสดงในแจ้งเตือนและแถบสรุป เช่น "ขั้นตอนการดำเนินงาน 3.1", "ค่าเกณฑ์ระดับ 3" */
+export function commentSectionLabel(section: string, labels?: Record<string, string>): string {
+  if (labels?.[section]) return labels[section];
+  if (section.startsWith(ROW_PREFIX)) return "ขั้นตอนการดำเนินงาน";
   if (section === "TARGET") return "เป้าหมายตัวชี้วัด";
   const level = Number(section.slice(1));
   return level === 6 ? "เงื่อนไขอื่นๆ" : `ค่าเกณฑ์ระดับ ${level}`;
 }
 
-/** ส่วนทั้งหมดที่ตัวชี้วัดนี้มีกล่องข้อสังเกตได้ (ไล่จากค่าเกณฑ์ที่มีจริง ไม่เชื่อฟอร์ม) */
-export function commentSections(criteriaLevels: number[]): string[] {
+/**
+ * ทุก key ที่ตัวชี้วัดนี้มีกล่องข้อสังเกตได้ (ไล่จากค่าเกณฑ์และบรรทัดที่มีจริง ไม่เชื่อฟอร์ม)
+ * ส่วนทั้งส่วน (TARGET/L<n>) ยังอยู่ ให้ส่วนกลางแก้/ล้างข้อสังเกตแบบเดิมที่ค้างอยู่ได้
+ */
+export function commentSections(criteriaLevels: number[], rowIds: string[] = []): string[] {
   const groups = planLevelGroups(
     criteriaLevels.map((level) => ({ level, targetValue: null, description: null })),
     "",
     [],
   );
-  return ["TARGET", ...groups.map((g) => levelCommentKey(g.level))];
+  return ["TARGET", ...groups.map((g) => levelCommentKey(g.level)), ...rowIds.map(rowCommentKey)];
 }
 
 /** อ่านข้อสังเกตจากฟอร์ม คืนเฉพาะช่องที่มีข้อความ (ตัดยาวเกินทิ้ง) เรียงตามลำดับส่วน */
@@ -54,8 +116,11 @@ export function readComments(
 }
 
 /** รวมข้อสังเกตเป็นข้อความเดียว ใช้เป็น returnNote (แถบแดงด้านบน) และเนื้อหาแจ้งเตือน */
-export function combineComments(comments: { section: string; text: string }[]): string {
-  return comments.map((c) => `${commentSectionLabel(c.section)}: ${c.text}`).join("\n");
+export function combineComments(
+  comments: { section: string; text: string }[],
+  labels?: Record<string, string>,
+): string {
+  return comments.map((c) => `${commentSectionLabel(c.section, labels)}: ${c.text}`).join("\n");
 }
 
 /** แทนข้อสังเกตของตัวชี้วัด/ไตรมาสนี้ทั้งชุด (ลบของเก่าแล้วเขียนใหม่) */
